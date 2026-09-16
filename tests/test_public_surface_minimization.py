@@ -63,11 +63,13 @@ async def test_public_auth_status_is_not_cacheable(monkeypatch):
 async def test_missing_dashboard_does_not_disclose_absolute_repo_path(
     monkeypatch, tmp_path
 ):
+    # 根路径已交给 Vue SPA（web/spa.py，同一条「不回显绝对路径」准则由
+    # tests/test_spa_app_surface.py 覆盖）；老单文件面板搬到 /legacy-dashboard。
     monkeypatch.setattr(dashboard_web.sh, "repo_root", str(tmp_path), raising=False)
     mcp = _MCP()
     dashboard_web.register(mcp)
 
-    response = await mcp.routes[("GET", "/")](object())
+    response = await mcp.routes[("GET", "/legacy-dashboard")](object())
     body = response.body.decode("utf-8")
 
     assert response.status_code == 404

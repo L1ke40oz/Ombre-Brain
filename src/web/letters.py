@@ -220,15 +220,10 @@ def register(mcp) -> None:
             return JSONResponse({"error": str(e)}, status_code=500)
 
 
-    @mcp.custom_route("/letters", methods=["GET"])
-    async def letters_page(request: Request) -> Response:
-        """Legacy alias: /letters 永久跳到 dashboard 的「信」分页。
-
-        我把 letters 合并进 dashboard 的一个 tab 后，这条老路径只保留 301 软迁移，
-        避免独立维护两套 HTML/JS。
-        """
-        from starlette.responses import RedirectResponse
-        return RedirectResponse(url="/#letters", status_code=301)
+    # /letters 不再由后端处理：它现在是 Vue SPA 的一个前端路由（web/spa.py 兜底
+    # 到 index.html，前端自己渲染信件页）。这里若保留 301 → /#letters，因为
+    # letters 模块比 spa 先注册，SPA 的 /letters 会永远到不了。
+    # 老的 hash 锚点 /#letters 仍然无害：前端 history 路由会忽略它。
 
 
     @mcp.custom_route("/api/letter/{letter_id}", methods=["PATCH"])

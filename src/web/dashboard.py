@@ -3,8 +3,10 @@
 web/dashboard.py — 仪表板页面 + 静态资源 + 健康检查
 ========================================
 
-承载根路径仪表板、前端静态资源（icon/favicon/manifest/字体）、/favicon.ico 跳转、
-以及 /health 健康检查。
+承载老单文件仪表板（/legacy-dashboard）、前端静态资源（icon/favicon/manifest/字体）、
+/favicon.ico 跳转、以及 /health 健康检查。
+
+根路径 `/` 已交给 Vue SPA，见 web/spa.py。
 
 对外暴露：register(mcp)。
 ========================================
@@ -20,13 +22,12 @@ from . import _shared as sh
 
 def register(mcp) -> None:
 
-    @mcp.custom_route("/", methods=["GET"])
+    @mcp.custom_route("/legacy-dashboard", methods=["GET"])
     async def root_dashboard(request: Request) -> Response:
-        """Serve dashboard HTML directly at root.
+        """老单文件仪表板。根路径已交给 Vue SPA（web/spa.py），这里保留旧面板。
 
-        历史上 / 会 307 → /dashboard，但叠加 Cloudflare Tunnel 的 Always Use HTTPS /
-        Page Rule 时容易触发 ERR_TOO_MANY_REDIRECTS。直接返回 HTML，少一次跳转，
-        既能修复回环，也省一个 RTT。
+        没直接删掉：它带着一批运维面（GitHub 配置、热更新、V3 调试视图、
+        宿主挂载设置），新前端未必全部实现了。等新前端补齐再考虑退役。
         """
         from starlette.responses import HTMLResponse
         dashboard_path = os.path.join(sh.repo_root, "frontend", "dashboard.html")

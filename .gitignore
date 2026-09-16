@@ -58,6 +58,36 @@ tmp/
 diag*.py
 fix_key.py
 check_cfg.py
+
+# 本地启动脚本 —— 里面写着 OMBRE_MCP_TOKEN 等凭据，绝不能进仓库。
+ob _start.bat
+*_start.bat
+
+# Visual Studio 本地目录（含用户级配置与索引，纯本地产物）
+.vs/
+
+# 前端改写过程的本地中间产物 —— 不上传
+# dashboard-src 是早期单文件 Vue 尝试（102M，含 node_modules）；
+# 备份/v2/v3/demo 等都是改写途中的快照；REWRITE_SUMMARY 是过程笔记。
+REWRITE_SUMMARY.md
+frontend/dashboard-src/
+frontend/dashboard - 备份.html
+frontend/dashboard-v2.html
+frontend/dashboard-v3.html
+frontend/dashboard-new.html
+frontend/dashboard-demo.html
+test-dashboard-v3.bat
+dashboard改写计划/
+
+# 前端 Vue 工程（源码提交，依赖与构建产物不提交）
+frontend/dashboard-src/node_modules/
+frontend/dashboard-src/dist/
+
+# frontend/app/ 是 ombre-brain-galaxy-mobile 的构建产物，故意「不」忽略：
+# 1. Dockerfile 的 COPY frontend/ ./frontend/ 只带走构建上下文里的文件；
+# 2. deploy/gen_update_manifest.py 只给 git 已跟踪的文件算哈希，未跟踪的
+#    产物不会进热更新清单，Docker 用户永远收不到新前端。
+# 所以每次改完前端要 build 一次并把产物一起提交。别在这里加 frontend/app/。
 start_stdio.sh
 
 # Ollama 模型权重 —— 体积大，不上传

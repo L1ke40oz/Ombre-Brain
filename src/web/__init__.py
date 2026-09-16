@@ -18,6 +18,7 @@ from . import auth
 from . import tunnel
 from . import oauth
 from . import dashboard
+from . import spa
 from . import system
 from . import meta
 from . import search
@@ -55,6 +56,10 @@ _WEB_MODULES = (
     ("web.onboarding", onboarding.register),
     ("web.them", them.register),
     ("web.you", you.register),
+    # web.spa 必须排在最后：它的兜底路由是 `/{path:path}`，Starlette 按注册
+    # 顺序匹配、先注册者胜，放前面会吃掉上面所有 /api/*、/auth/* 路由。
+    # 这条顺序约束由 tests/test_spa_app_surface.py 钉住。
+    ("web.spa", spa.register),
 )
 
 
