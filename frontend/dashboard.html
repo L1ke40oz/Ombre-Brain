@@ -390,6 +390,80 @@
     overflow-y: auto;
     box-shadow: inset 3px 3px 6px var(--shadow-dark-subtle), inset -3px -3px 6px var(--shadow-light);
   }
+  /* —— 记忆附件：图片就地铺开，其余类型给一枚可下载的条目 —— */
+  .media-block { margin: 8px 0 16px; }
+  .media-block-label {
+    margin-bottom: 8px;
+    color: var(--text-dim);
+    font-family: 'Share Tech Mono', 'Noto Sans SC', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.4px;
+  }
+  .media-grid { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; }
+  .media-item { margin: 0; max-width: 100%; }
+  .media-item img {
+    display: block;
+    max-width: 100%;
+    max-height: 280px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: var(--surface-solid);
+    cursor: zoom-in;
+    box-shadow: 3px 3px 7px var(--shadow-dark-subtle), -3px -3px 6px var(--shadow-light);
+  }
+  .media-item audio, .media-item video {
+    display: block;
+    max-width: 100%;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: var(--surface-solid);
+  }
+  .media-file {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: var(--surface-solid);
+    color: var(--text);
+    text-decoration: none;
+    font-size: 12px;
+  }
+  .media-file:hover { border-color: var(--accent); color: var(--accent); }
+  .media-caption {
+    margin-top: 5px;
+    font-size: 11px;
+    color: var(--text-dim);
+    word-break: break-all;
+    max-width: 280px;
+  }
+  .media-lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 4000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(10, 10, 12, 0.86);
+    cursor: zoom-out;
+  }
+  .media-lightbox.open { display: flex; }
+  .media-lightbox img {
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 4px;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
+  }
+  .bucket-row .media-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 10px;
+    color: var(--text-dim);
+    white-space: nowrap;
+  }
   .meaning-block {
     margin: 8px 0 16px;
     padding: 10px 14px;
@@ -5619,6 +5693,10 @@ function _paintBuckets() {
     else                     iconHtml = '<i data-lucide="message-circle"></i>';
     var firstBadge = b.first_of_kind ? ' <i data-lucide="sparkles" title="首次出现" style="width:12px;height:12px;color:var(--accent);vertical-align:-1px;"></i>' : '';
     var importedBadge = b.imported ? ' <span title="由对话导入" style="font-size:10px;color:var(--accent);border:1px solid var(--accent);border-radius:999px;padding:1px 5px;white-space:nowrap;">被导入</span>' : '';
+    // 列表页只画一枚回形针：字节要点开详情才去要。
+    var mediaBadge = (Number(b.media_count) > 0)
+      ? ' <span class="media-badge" title="' + Number(b.media_count) + ' 个附件"><i data-lucide="paperclip" style="width:11px;height:11px;"></i>' + Number(b.media_count) + '</span>'
+      : '';
     var vPos = Math.round(b.valence * 100);
     var modelV = b.model_valence != null ? ' → V' + b.model_valence.toFixed(1) : '';
     var activityTime = firstValidBucketTime(
@@ -5647,7 +5725,7 @@ function _paintBuckets() {
       '<div class="bucket-row-top">' +
         '<input class="bucket-select" type="checkbox" data-id="' + escAttr(b.id) + '" onclick="event.stopPropagation()" onchange="toggleBucketSelection(this.dataset.id,this.checked)"' + (selectedBucketIds.has(b.id) ? ' checked' : '') + '>' +
         '<span class="' + iconCls + '">' + iconHtml + '</span>' +
-        '<span class="name" title="' + escAttr(b.name) + '">' + esc(b.name) + firstBadge + importedBadge + '</span>' +
+        '<span class="name" title="' + escAttr(b.name) + '">' + esc(b.name) + firstBadge + importedBadge + mediaBadge + '</span>' +
         '<div class="bucket-row-tags">' +
           domainHtml +
           emotionHtml +
@@ -5683,6 +5761,127 @@ function _localBucketMatches(query) {
         fuzzy((b.domain || []).join(' ')) || fuzzy((b.tags || []).join(' '))) other.push(b);
   });
   return name.concat(other);                          // 桶名匹配排最前
+}
+
+// ---- 记忆附件渲染 ----
+// 后端只认桶自己登记过的文件名，所以这里的 URL 一律由 metadata.media 拼出来，
+// 不接受任何手写的相对路径。svg 归到「下载」那一类：服务端对它发的是
+// attachment，塞进 <img> 只会触发下载而不是显示。
+var _MEDIA_IMAGE_EXT = { jpg: 1, jpeg: 1, png: 1, gif: 1, webp: 1, avif: 1, bmp: 1, ico: 1 };
+var _MEDIA_AUDIO_EXT = { mp3: 1, wav: 1, ogg: 1, oga: 1, m4a: 1, flac: 1, aac: 1, opus: 1 };
+var _MEDIA_VIDEO_EXT = { mp4: 1, webm: 1, mov: 1, m4v: 1, ogv: 1 };
+
+function _mediaBasename(rawPath) {
+  var text = String(rawPath || '').trim();
+  if (!text) return '';
+  return text.replace(/\\/g, '/').split('/').pop() || '';
+}
+
+function _mediaExtKind(filename) {
+  var dot = String(filename).lastIndexOf('.');
+  if (dot < 0 || dot === String(filename).length - 1) return 'file';
+  var ext = String(filename).slice(dot + 1).toLowerCase();
+  if (_MEDIA_IMAGE_EXT[ext]) return 'image';
+  if (_MEDIA_AUDIO_EXT[ext]) return 'audio';
+  if (_MEDIA_VIDEO_EXT[ext]) return 'video';
+  return 'file';
+}
+
+function _mediaSizeLabel(size) {
+  var bytes = Number(size);
+  if (!Number.isFinite(bytes) || bytes <= 0) return '';
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function renderMediaHtml(bucketId, media) {
+  var entries = Array.isArray(media) ? media : [];
+  var items = entries
+    .map(function(entry, index) {
+      var record = (entry && typeof entry === 'object') ? entry : { path: entry };
+      var filename = _mediaBasename(record.path);
+      if (!filename) return '';
+      var url = BASE + '/api/bucket/' + encodeURIComponent(bucketId) +
+                '/media/' + encodeURIComponent(filename);
+      var kind = _mediaExtKind(filename);
+      var captionBits = [];
+      if (record.title) captionBits.push(String(record.title));
+      if (record.note) captionBits.push(String(record.note));
+      var sizeLabel = _mediaSizeLabel(record.size);
+      if (sizeLabel) captionBits.push(sizeLabel);
+      var caption = captionBits.length
+        ? '<figcaption class="media-caption">' + esc(captionBits.join(' · ')) + '</figcaption>'
+        : '';
+      var body;
+      if (kind === 'image') {
+        body = '<img src="' + escAttr(url) + '" alt="' + escAttr(record.title || filename) +
+               '" loading="lazy" decoding="async" onclick="openMediaLightbox(this.src)"' +
+               ' onerror="mediaLoadFailed(this)">';
+      } else if (kind === 'audio') {
+        body = '<audio controls preload="none" src="' + escAttr(url) + '"></audio>';
+      } else if (kind === 'video') {
+        body = '<video controls preload="none" playsinline src="' + escAttr(url) + '"></video>';
+      } else {
+        body = '<a class="media-file" href="' + escAttr(url) + '" download>' +
+               '<i data-lucide="paperclip" style="width:13px;height:13px;"></i>' +
+               esc(filename) + '</a>';
+      }
+      return '<figure class="media-item" data-media-index="' + index + '">' + body + caption + '</figure>';
+    })
+    .filter(function(html) { return html.length > 0; });
+  if (!items.length) return '';
+  return '<section class="media-block" aria-label="附件 / Media">' +
+    '<div class="media-block-label">MEDIA · 附件 ' + items.length + ' 项</div>' +
+    '<div class="media-grid">' + items.join('') + '</div>' +
+  '</section>';
+}
+
+function mediaLoadFailed(img) {
+  var wrap = img && img.closest ? img.closest('.media-item') : null;
+  if (!wrap) return;
+  img.remove();
+  var note = document.createElement('div');
+  note.className = 'media-caption';
+  note.textContent = '这一项没能显示出来（文件可能已被移动或删除）';
+  wrap.insertBefore(note, wrap.firstChild);
+}
+
+function _mediaLightboxEl() {
+  var box = document.getElementById('media-lightbox');
+  if (box) return box;
+  box = document.createElement('div');
+  box.id = 'media-lightbox';
+  box.className = 'media-lightbox';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-label', '附件大图');
+  box.addEventListener('click', closeMediaLightbox);
+  document.body.appendChild(box);
+  return box;
+}
+
+function openMediaLightbox(src) {
+  if (!src) return;
+  var box = _mediaLightboxEl();
+  box.innerHTML = '';
+  var big = document.createElement('img');
+  big.src = src;
+  big.alt = '附件大图';
+  box.appendChild(big);
+  box.classList.add('open');
+  document.addEventListener('keydown', _mediaLightboxKey);
+}
+
+function closeMediaLightbox() {
+  var box = document.getElementById('media-lightbox');
+  if (!box) return;
+  box.classList.remove('open');
+  box.innerHTML = '';
+  document.removeEventListener('keydown', _mediaLightboxKey);
+}
+
+function _mediaLightboxKey(e) {
+  if (e.key === 'Escape') closeMediaLightbox();
 }
 
 function normalizeMeaningItems(value) {
@@ -5769,6 +5968,8 @@ async function showDetail(id) {
     var whyHtml = meta.why_remembered ? ('<div style="margin:8px 0 16px;padding:10px 14px;border-left:3px solid var(--accent);background:var(--surface-solid);font-style:italic;color:var(--accent);font-family:\'Cormorant Garamond\',\'Noto Serif SC\',serif;line-height:1.7;">❝ ' + esc(meta.why_remembered) + ' ❞</div>') : '';
     // meaning 是可累积的体验锚点；兼容早期手写桶中的单字符串格式。
     var meaningHtml = renderMeaningHtml(meta.meaning);
+    // 附件：frontmatter 里的 media 列表 → 图片/音频/视频就地渲染，其余给下载条目。
+    var mediaHtml = renderMediaHtml(id, meta.media);
     var firstBadge = meta.first_of_kind ? '<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--accent);margin-left:8px;"><i data-lucide="sparkles" style="width:12px;height:12px;"></i>首次出现</span>' : '';
     var weightHtml = (meta.type === 'plan' && meta.weight != null) ? ('<div class="field"><label>承诺重量</label><span style="display:inline-block;width:80px;height:6px;background:var(--border);border-radius:3px;vertical-align:middle;overflow:hidden;"><span style="display:block;width:' + Math.round(meta.weight*100) + '%;height:100%;background:var(--accent);"></span></span> ' + (meta.weight*100).toFixed(0) + '% · ' + weightAnchorLabel(meta.weight) + '</div>') : '';
     // iter 1.9 D3: triggered_by 渲染成可跳转链接
@@ -5825,6 +6026,7 @@ async function showDetail(id) {
         '<button data-bucket-id="' + escAttr(id) + '" onclick="bucketForget(this.dataset.bucketId)" class="icon-btn">' + (meta.dont_surface ? '<i data-lucide="eye"></i> 重新允许浮现' : '<i data-lucide="eye-off"></i> 主动遗忘') + '</button>' +
         '<button data-bucket-id="' + escAttr(id) + '" onclick="bucketArchive(this.dataset.bucketId)" class="icon-btn"><i data-lucide="archive"></i> 归档</button>' +
       '</div>' +
+      mediaHtml +
       '<div class="detail-content">' + esc(displayContent) + '</div>' +
       renderEditForm(id, Object.assign({}, meta, {_content_for_edit: b.content}));
     return true;

@@ -94,6 +94,14 @@ hooks:
 # 保持默认则使用内置的 ./buckets/ 目录
 # buckets_dir: "/path/to/your/Obsidian Vault/Ombre Brain"
 
+# --- Media attachment allowlist / 媒体附件白名单 ---
+# media=path 只接受「系统临时目录」下的文件，防止把服务器上任意可读文件
+# 复制进记忆库。若你的客户端把上传文件放在自己的目录（例如 AstrBot 的
+# data/temp），把那个目录显式列进来即可。不配则行为与从前完全一致。
+# 列表或逗号字符串都行；环境变量 OMBRE_MEDIA_ALLOWED_ROOTS 优先级更高。
+# media_allowed_roots:
+#   - "/absolute/path/to/client/media/dir"
+
 # Detect Markdown changes made outside OB (Obsidian / Git / manual edits).
 # Only file metadata is polled; Markdown is reparsed when a change is detected.
 storage:

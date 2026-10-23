@@ -650,6 +650,33 @@ def load_config(config_path: Optional[str] = None) -> dict:
     except (TypeError, ValueError, OverflowError):
         config["media_max_bytes"] = 25 * 1024 * 1024
 
+    # media=path 这条路默认只认系统临时目录（见 MediaStore._default_allowed_roots）。
+    # 但并非所有客户端都把上传文件放进系统临时目录：AstrBot 把收到的图片存在
+    # 自己的 data/temp 下，于是永远进不了白名单。而报错文案建议的 data_base64
+    # 对聊天图片是条死路——模型拿到的是图片描述，字节从未进入上下文，无法凭空
+    # 生成 base64。所以这里开一个显式的额外白名单入口，让部署方把自家客户端的
+    # 媒体目录列进来。仍然是显式白名单，不是放开任意路径读取。
+    #
+    # 两种写法都认，优先级遵循本函数开头的约定（env > config.yaml）：
+    #   config.yaml:  media_allowed_roots: ["/path/a", "/path/b"]
+    #                 media_allowed_roots: "/path/a,/path/b"   # 字符串也行
+    #   环境变量:     OMBRE_MEDIA_ALLOWED_ROOTS=/path/a,/path/b
+    # 逗号分隔时可写多个，逐项 strip，空项丢弃。
+    def _拆白名单(原始: object) -> list[str]:
+        if isinstance(原始, str):
+            片段 = 原始.split(",")
+        elif isinstance(原始, (list, tuple)):
+            片段 = [str(项) for 项 in 原始]
+        else:
+            return []
+        return [项.strip() for 项 in 片段 if 项.strip()]
+
+    白名单 = _拆白名单(config.get("media_allowed_roots"))
+    环境白名单 = _拆白名单(os.environ.get("OMBRE_MEDIA_ALLOWED_ROOTS", ""))
+    if 环境白名单:
+        白名单 = 环境白名单
+    config["media_allowed_roots"] = 白名单
+
     # --- Ensure bucket storage directories exist ---
     # --- 确保记忆桶存储目录存在 ---
     buckets_dir: str = str(config["buckets_dir"])

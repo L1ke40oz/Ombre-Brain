@@ -17,6 +17,7 @@ import os
 import re
 import stat
 import tempfile
+from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
@@ -41,13 +42,37 @@ class MediaStore:
         *,
         max_bytes: int = _DEFAULT_MAX_MEDIA_BYTES,
         max_items: int = _DEFAULT_MAX_MEDIA_ITEMS,
+        extra_allowed_roots: Iterable[str] | None = None,
     ) -> None:
         self.vault_dir = Path(vault_dir).resolve()
         self.media_dir = Path(media_dir).resolve()
         self.max_bytes = max(1, int(max_bytes))
         self.max_items = max(1, int(max_items))
-        self.allowed_roots = self._default_allowed_roots()
+        self.allowed_roots = self._resolve_allowed_roots(extra_allowed_roots)
         self.media_dir.mkdir(parents=True, exist_ok=True)
+
+    @classmethod
+    def _resolve_allowed_roots(
+        cls, extra_allowed_roots: Iterable[str] | None
+    ) -> tuple[Path, ...]:
+        """默认根 + 部署方显式追加的根。
+
+        追加项同样要过 resolve()，并且解析失败就丢掉——白名单里放一个不存在
+        或不可解析的路径没有意义，还会让后面的 `root in resolved.parents`
+        判断带上一个永远不可能命中的项。
+        """
+        roots: list[Path] = list(cls._default_allowed_roots())
+        for candidate in extra_allowed_roots or ():
+            text = str(candidate or "").strip()
+            if not text:
+                continue
+            try:
+                resolved = Path(text).resolve()
+            except OSError:
+                continue
+            if resolved not in roots:
+                roots.append(resolved)
+        return tuple(roots)
 
     @staticmethod
     def _default_allowed_roots() -> tuple[Path, ...]:
@@ -88,9 +113,15 @@ class MediaStore:
         for root in self.allowed_roots:
             if resolved == root or root in resolved.parents:
                 return
+        allowed = ", ".join(str(root) for root in self.allowed_roots) or "<空>"
         raise MediaPersistenceError(
-            f"媒体路径不在允许的临时目录内：{raw_path}。"
-            "请改传 data_base64——服务器上的文件不会因为一次调用就变成记忆附件。"
+            f"媒体路径不在允许的临时目录内：{raw_path}。当前白名单：{allowed}。"
+            "服务器上的文件不会因为一次调用就变成记忆附件。"
+            "两条出路：调用方确实持有文件字节时改传 data_base64；"
+            "客户端把上传文件放在自己的目录（不是系统临时目录）时，"
+            "部署方用 OMBRE_MEDIA_ALLOWED_ROOTS 把那个目录加进白名单，逗号分隔可写多个。"
+            "注意：模型只拿到图片描述、没拿到字节的场景下 data_base64 是不可行的，"
+            "只能走白名单这条路。"
         )
 
     @staticmethod

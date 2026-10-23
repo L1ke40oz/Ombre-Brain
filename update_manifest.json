@@ -6,64 +6,9 @@
       "size": 3264764
     },
     {
-      "path": "frontend/app/apple-touch-icon.png",
-      "sha256": "fde37515e192640a2ffda8e1c4d92a4edda461b9949ab863fb16acc5056ce93f",
-      "size": 57649
-    },
-    {
-      "path": "frontend/app/assets/index-BiRaxMvo.css",
-      "sha256": "35fcb596d770324964a14e48015a07e6494d6e8ac2f47f494361d8dc51203ea3",
-      "size": 23770
-    },
-    {
-      "path": "frontend/app/assets/index-dbWGaxSt.js",
-      "sha256": "d887b829d5659f6a0194a1e2729333ea9ce0ec3f2a01e108dc962d71d6e20ecd",
-      "size": 639720
-    },
-    {
-      "path": "frontend/app/index.html",
-      "sha256": "8c6cfd6f8ce6aa01ca9ea302b2bc27f861e96a8b8911efff4a6dbb6964bda208",
-      "size": 1891
-    },
-    {
-      "path": "frontend/app/manifest.webmanifest",
-      "sha256": "5cb45115af75399faa8b7aaf9f58a1ce8f481568da0713700c4102a40d54b3e4",
-      "size": 518
-    },
-    {
-      "path": "frontend/app/pwa-192.png",
-      "sha256": "4f1b9251e7ea301e01f7351df86531fcc5f96e62ba2f2e034218cef6aeed3f45",
-      "size": 64628
-    },
-    {
-      "path": "frontend/app/pwa-512.png",
-      "sha256": "250f736f14d977f3affc9601bf7a02b66fef801fd9627259078a3c087027bc7a",
-      "size": 398096
-    },
-    {
-      "path": "frontend/app/pwa-maskable-512.png",
-      "sha256": "81e9bfdaca5f8785e572f87263e263fdb9130573c92d8ff9229280b0eac79626",
-      "size": 267184
-    },
-    {
-      "path": "frontend/app/registerSW.js",
-      "sha256": "9742073ef7fc795e7673d98f272992843298426a0ffd8cb3507784df5143608b",
-      "size": 134
-    },
-    {
-      "path": "frontend/app/sw.js",
-      "sha256": "5c66d5da37262570e392dceacd4c02bdec5810eaf83e09930f371b070c26f0c8",
-      "size": 1802
-    },
-    {
-      "path": "frontend/app/workbox-6829fd8d.js",
-      "sha256": "21d94e0fd5dfbf1d99b27f0c0f42fea32a8cfb078fabe626a0a4464e711a39f6",
-      "size": 22339
-    },
-    {
       "path": "frontend/dashboard.html",
-      "sha256": "372237698aaed9901f47c1e9d39d62dd7a6326a72feebfdc26d382c4f520a8c1",
-      "size": 574294
+      "sha256": "af705beaab4418572961fe0623b40120c1e9ebfdb5df1d8fa37e84412d58468f",
+      "size": 581887
     },
     {
       "path": "frontend/favicon.svg",
@@ -97,8 +42,8 @@
     },
     {
       "path": "src/bucket_manager.py",
-      "sha256": "232554acf2345fd8a35f240a45ae36467d57fbe199e6556a9bae3bd8477c6d45",
-      "size": 192172
+      "sha256": "3ad0d2bdd7c27e81bfbab7418710c491f2c8e97c99b1cd8a58ec2a7f845327ea",
+      "size": 192434
     },
     {
       "path": "src/decay_engine.py",
@@ -502,8 +447,8 @@
     },
     {
       "path": "src/ombrebrain/storage/media_store.py",
-      "sha256": "faa7bfa255d203d113ffffb645dc1c31f10fb1ae4ee8b5a7203eaad429a9c141",
-      "size": 12715
+      "sha256": "cf20bf0ff60f87d39e941159ddf14d7d1dbee6821023dd59bb01de822ae9c3fe",
+      "size": 14258
     },
     {
       "path": "src/ombrebrain/storage/metadata_normalize.py",
@@ -832,13 +777,13 @@
     },
     {
       "path": "src/utils.py",
-      "sha256": "79d55ee108fb7f2bf05ab2317d47a00cc09369ac149f6bc90c223839c1087efa",
-      "size": 54643
+      "sha256": "72a39f0bae74340f4423b19e7df6c08d239664fcd20eb5dafa3194baa79f35b6",
+      "size": 56261
     },
     {
       "path": "src/web/__init__.py",
-      "sha256": "7c66ac1241a1228c78df71aa11f9c18dad5262769e7d8dd7e70ebca3a6279288",
-      "size": 2650
+      "sha256": "ae65f7e5500dfc63cb2ac7070114a3d8240e9cda1bd77894047b76e3ef8a9f29",
+      "size": 2342
     },
     {
       "path": "src/web/_shared.py",
@@ -852,18 +797,18 @@
     },
     {
       "path": "src/web/buckets.py",
-      "sha256": "719672ec9fe0bbb9a4085ae0f726c94e507154cfb17aeee9729850d663332ace",
-      "size": 50658
+      "sha256": "57adc6433f01e74f21955c938788c7c3828f56c6f38939d44fa1018b0dc94b27",
+      "size": 56827
     },
     {
       "path": "src/web/config_api.py",
-      "sha256": "f3e25426eb82d301ca57f78b81b891d6719731c9c34c48e4459e0686720937fb",
-      "size": 74106
+      "sha256": "5e99ac9704c1feb3696e761360b731203f14dcb872bc4d78bf87713a3b28cd63",
+      "size": 73932
     },
     {
       "path": "src/web/dashboard.py",
-      "sha256": "184a4b6497cd83ee4be32ef018c1b409c9f90639703010e51c1f7f23870b4329",
-      "size": 4812
+      "sha256": "2999ce7b2983ecfc1ab2d58d4a22b6f499484509293e0cb2bffd643301df3e74",
+      "size": 4703
     },
     {
       "path": "src/web/embedding.py",
@@ -887,8 +832,8 @@
     },
     {
       "path": "src/web/letters.py",
-      "sha256": "93139174be0bd80e30268f791738b9b28392e1b57e4307cc405cd3e4c67b2372",
-      "size": 20343
+      "sha256": "0e032f3e3bde667c7dccc90b07d71dfdd8c1fc56047508e65b481b1ca88531c5",
+      "size": 20449
     },
     {
       "path": "src/web/meta.py",
@@ -924,11 +869,6 @@
       "path": "src/web/search.py",
       "sha256": "3bea5dfa978447909c1db2b4ae748e9e89da423573e50fa524715dc36d35e0a7",
       "size": 21115
-    },
-    {
-      "path": "src/web/spa.py",
-      "sha256": "136177f0d94fb05f1d4a1cf2212ddf96fbd10434afd62871eb980fce15192981",
-      "size": 5828
     },
     {
       "path": "src/web/system.py",

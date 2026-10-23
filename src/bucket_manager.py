@@ -550,6 +550,9 @@ class BucketManager:
             # 同一个上限传下去，让 MediaStore 在动手持久化之前就拒绝超量，
             # 而不是逐项写完再由下面的 _normalize_media 截断。
             max_items=_MEDIA_MAX_ITEMS,
+            # 部署方显式追加的媒体根目录（OMBRE_MEDIA_ALLOWED_ROOTS）。
+            # 客户端不把上传文件放进系统临时目录时，path 这条路全靠它。
+            extra_allowed_roots=config.get("media_allowed_roots") or (),
         )
         self.permanent_dir = os.path.join(self.base_dir, "permanent")
         self.dynamic_dir = os.path.join(self.base_dir, "dynamic")

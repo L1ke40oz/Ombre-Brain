@@ -12,9 +12,13 @@ web/buckets.py — 记忆桶管理 + 设置 + 锚点 + 自我认知读取
 """
 
 import math
+import mimetypes
+import os
+import re
 import threading
 import unicodedata
 from contextlib import AsyncExitStack
+from pathlib import Path
 
 from starlette.requests import Request
 from starlette.responses import Response
@@ -77,6 +81,93 @@ def _datetime_epoch_ms(value) -> int | None:
         return round(parse_iso_datetime(value).timestamp() * 1000)
     except (OSError, OverflowError, TypeError, ValueError):
         return None
+
+
+# ---- 附件（media）对外可见性 ----
+# 记忆桶的 frontmatter 里早就存着 media 列表，Dashboard 也拿得到这份元数据，
+# 但一直没有任何端点把字节递出去，所以面板上「有附件」和「没附件」长得一样。
+# 下面这组helper + /api/bucket/{id}/media/{filename} 补的就是这一段。
+
+# 只有这些类型允许浏览器就地渲染。SVG / HTML 能带脚本，一旦 inline 就等于在
+# 面板同源里执行任意代码，所以显式拉黑，统一走下载。
+_MEDIA_INLINE_BLOCKED_MIME = {"image/svg+xml", "text/html", "application/xhtml+xml"}
+_MEDIA_INLINE_EXACT_MIME = {"text/plain"}
+_MEDIA_INLINE_MIME_PREFIXES = ("image/", "audio/", "video/")
+# 路由参数里的文件名只用来「对上号」，不参与拼路径；仍然限死字符集，
+# 免得 %2e%2e%2f 之类的东西进到日志和比对逻辑里。
+_MEDIA_FILENAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,180}$")
+# 与 MediaStore._stable_path 里同一套桶目录名清洗规则。
+_MEDIA_BUCKET_DIR_RE = re.compile(r"[^a-zA-Z0-9_.-]")
+
+
+def _media_mime(filename: str) -> str:
+    """Guess one MIME type; unknown falls back to a non-rendering binary type."""
+    guessed = mimetypes.guess_type(filename)[0]
+    return (guessed or "application/octet-stream").lower()
+
+
+def _media_is_inline(mime: str) -> bool:
+    """Decide whether the browser may render this attachment in the page."""
+    if mime in _MEDIA_INLINE_BLOCKED_MIME:
+        return False
+    if mime in _MEDIA_INLINE_EXACT_MIME:
+        return True
+    return mime.startswith(_MEDIA_INLINE_MIME_PREFIXES)
+
+
+def _media_entries(metadata: dict) -> list[dict]:
+    """Pull the well-formed media records out of one bucket's metadata."""
+    raw = metadata.get("media")
+    if not isinstance(raw, list):
+        return []
+    return [item for item in raw if isinstance(item, dict)]
+
+
+def _resolve_bucket_media(bucket_id: str, metadata: dict, filename: str) -> Path | None:
+    """把一条 media 记录翻成磁盘上的真实文件，任何一步不对都返回 None。
+
+    顺序是刻意的：先在**这个桶自己登记过**的附件里按文件名对上号，再用登记时
+    写下的相对路径去解析，最后确认真实路径落在媒体目录内、且属于这个桶的子目录。
+    请求里的 filename 从头到尾只用于比对，不参与拼路径，所以 `..`、绝对路径、
+    别的桶的目录都走不到 open() 那一步。
+    """
+    store = getattr(sh.bucket_mgr, "media_store", None)
+    if store is None or not _MEDIA_FILENAME_RE.fullmatch(filename):
+        return None
+    wanted = filename.lower()
+    relative = ""
+    for entry in _media_entries(metadata):
+        recorded = str(entry.get("path") or "").strip()
+        if not recorded:
+            continue
+        # frontmatter 里存的是 posix 风格的相对路径；只比最后一段。
+        if recorded.replace("\\", "/").rsplit("/", 1)[-1].lower() == wanted:
+            relative = recorded
+            break
+    if not relative:
+        return None
+    candidate = Path(relative).expanduser()
+    if candidate.is_absolute():
+        return None
+    vault_dir = Path(getattr(store, "vault_dir", "") or sh.repo_root).resolve()
+    media_root = Path(getattr(store, "media_dir", "") or (vault_dir / "_media")).resolve()
+    try:
+        resolved = (vault_dir / candidate).resolve()
+    except (OSError, ValueError):
+        return None
+    if media_root not in resolved.parents:
+        return None
+    expected_dir = media_root / _MEDIA_BUCKET_DIR_RE.sub("_", str(bucket_id))[:128]
+    if resolved.parent != expected_dir:
+        return None
+    try:
+        if os.path.islink(resolved):
+            return None
+        if not resolved.is_file():
+            return None
+    except OSError:
+        return None
+    return resolved
 
 
 async def rename_human_in_buckets(old: str, new: str) -> dict:
@@ -175,6 +266,8 @@ def register(mcp) -> None:
                     "letter_locked": letter_locked,
                     "lock_type": lock_state["lock_type"],
                     "unlock_date": lock_state["unlock_date"],
+                    # 列表页只给个数：够画一枚回形针，不够（也不该）拉附件字节。
+                    "media_count": 0 if letter_locked else len(_media_entries(meta)),
                     # iter 1.8 新增字段（后台老桶读出默认值）
                     "why_remembered": (
                         "" if letter_locked else meta.get("why_remembered", "")
@@ -276,6 +369,48 @@ def register(mcp) -> None:
                 if sh.deletion_requests is not None else None
             ),
         })
+
+
+    # ---- 附件读取端点 ----
+    # Dashboard 的 <img>/<audio>/<video> 标签没法带自定义请求头，靠的是登录后
+    # 种下的 ombre_session cookie，所以这里沿用同一套 _require_auth 就够了。
+    @mcp.custom_route("/api/bucket/{bucket_id}/media/{filename}", methods=["GET"])
+    async def api_bucket_media(request: Request) -> Response:
+        """Serve one stored attachment of this bucket, inline when it is safe."""
+        from starlette.responses import FileResponse, JSONResponse
+        err = sh._require_auth(request)
+        if err:
+            return err
+        bucket_id = request.path_params["bucket_id"]
+        filename = request.path_params["filename"]
+        bucket = await sh.bucket_mgr.get(bucket_id)
+        if not bucket:
+            return JSONResponse({"error": "not found"}, status_code=404)
+        meta = bucket.get("metadata", {})
+        # 上锁的信连正文都不给看，附件自然也一样。
+        if letter_lock_state(bucket, "human")["locked"]:
+            return JSONResponse({"error": "not found"}, status_code=404)
+        target = _resolve_bucket_media(bucket_id, meta, filename)
+        if target is None:
+            return JSONResponse({"error": "not found"}, status_code=404)
+        mime = _media_mime(target.name)
+        inline = _media_is_inline(mime)
+        # 内容按 sha256 命名，同一文件名永远对应同一份字节，可以放心长缓存。
+        headers = {
+            "Cache-Control": "private, max-age=86400",
+            "X-Content-Type-Options": "nosniff",
+        }
+        try:
+            return FileResponse(
+                str(target),
+                media_type=mime,
+                headers=headers,
+                filename=target.name,
+                content_disposition_type="inline" if inline else "attachment",
+            )
+        except (OSError, RuntimeError) as e:
+            logger.warning(f"media serve failed / 附件读取失败 {bucket_id}/{filename}: {e}")
+            return JSONResponse({"error": "not found"}, status_code=404)
 
 
     # ---- Bucket-level mutation endpoints (iter 1.4) ----
