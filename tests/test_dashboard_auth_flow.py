@@ -25,10 +25,8 @@ def test_all_auth_success_paths_share_the_dashboard_initializer():
 
     expected_tasks = (
         "loadBuckets()",
-        "loadStatusBanner()",
         "syncRestartRequirement()",
         "refreshAnchorCounter()",
-        "checkEmptyMemoryBanner()",
         "loadOwnerBadge()",
         "pollHeartbeat()",
         "pollCriticalErrors()",
@@ -119,12 +117,11 @@ def test_auth_only_initial_loads_do_not_run_before_authentication():
     html = DASHBOARD.read_text(encoding="utf-8")
     dom_ready = _dashboard_section(
         "// Re-render Lucide icons whenever DOM is ready",
-        "async function checkEmptyMemoryBanner()",
+        "window.addEventListener('load'",
     )
     for eager_call in (
         "syncRestartRequirement();",
         "refreshAnchorCounter();",
-        "checkEmptyMemoryBanner();",
         "loadOwnerBadge();",
     ):
         assert eager_call not in dom_ready
@@ -392,10 +389,8 @@ const document = {getElementById: element};
 function invalidateAuthenticatedDashboardSession() {}
 function startAuthenticatedDashboardPolling() {}
 async function loadBuckets() { initialized = true; }
-async function loadStatusBanner() {}
 async function syncRestartRequirement() {}
 async function refreshAnchorCounter() {}
-async function checkEmptyMemoryBanner() {}
 async function loadOwnerBadge() {}
 async function pollHeartbeat() {}
 async function pollCriticalErrors() {}
@@ -516,10 +511,8 @@ async function loadBuckets() {
   initCalls.push('loadBuckets');
   if (bucketGate) await bucketGate;
 }
-async function loadStatusBanner() { initCalls.push('loadStatusBanner'); }
 async function syncRestartRequirement() { initCalls.push('syncRestartRequirement'); }
 async function refreshAnchorCounter() { initCalls.push('refreshAnchorCounter'); }
-async function checkEmptyMemoryBanner() { initCalls.push('checkEmptyMemoryBanner'); }
 async function loadOwnerBadge() { initCalls.push('loadOwnerBadge'); }
 async function pollHeartbeat() { initCalls.push('pollHeartbeat'); }
 async function pollCriticalErrors() { initCalls.push('pollCriticalErrors'); }
@@ -656,10 +649,8 @@ async function refreshAuthenticatedActiveView() {
     result = json.loads(completed.stdout)
     expected = [
         "loadBuckets",
-        "loadStatusBanner",
         "syncRestartRequirement",
         "refreshAnchorCounter",
-        "checkEmptyMemoryBanner",
         "loadOwnerBadge",
         "pollHeartbeat",
         "pollCriticalErrors",

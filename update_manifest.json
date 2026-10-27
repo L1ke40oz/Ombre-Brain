@@ -6,9 +6,29 @@
       "size": 3264764
     },
     {
+      "path": "frontend/brand-icon.png",
+      "sha256": "abb6d5f797835fecb994556e33c985614f12e21ecea431aae2d920d1cd5e5584",
+      "size": 1488752
+    },
+    {
+      "path": "frontend/companion-idle.png",
+      "sha256": "d872ee7ef1c09bd5be140732fafbbdcda2f6b2343cc581c78d3dbdfea8aca2c0",
+      "size": 73702
+    },
+    {
+      "path": "frontend/companion-idle.webp",
+      "sha256": "1107dded925c63bbdcff2045fcd19356aa6de9516099e59dd1f194c348752a5b",
+      "size": 417218
+    },
+    {
+      "path": "frontend/companion-lifted.png",
+      "sha256": "eecf1d3794d62d4d06d9cf59af4d565e92efc4caf5b5ddbeb53e77ee42e0d8ac",
+      "size": 449092
+    },
+    {
       "path": "frontend/dashboard.html",
-      "sha256": "af705beaab4418572961fe0623b40120c1e9ebfdb5df1d8fa37e84412d58468f",
-      "size": 581887
+      "sha256": "cc0d59ceb8ca3c5e070ed65bbf8030810359432ed495af4a1853d6c2b7876f80",
+      "size": 612598
     },
     {
       "path": "frontend/favicon.svg",
@@ -22,8 +42,8 @@
     },
     {
       "path": "frontend/manifest.json",
-      "sha256": "998c9a1548cd68bc4b15523a52c1b37561f394e92d7278c6139099465e42007f",
-      "size": 370
+      "sha256": "1ae2158332e7b132b936820ef2a56220c05870ad453914c87d4ac7d835d58bc4",
+      "size": 402
     },
     {
       "path": "frontend/onboarding.html",
@@ -42,8 +62,8 @@
     },
     {
       "path": "src/bucket_manager.py",
-      "sha256": "3ad0d2bdd7c27e81bfbab7418710c491f2c8e97c99b1cd8a58ec2a7f845327ea",
-      "size": 192434
+      "sha256": "491dad9a5e224dc560bc4329746b05934d48cf65c67e436903c61e08cbb98909",
+      "size": 196539
     },
     {
       "path": "src/decay_engine.py",
@@ -317,8 +337,8 @@
     },
     {
       "path": "src/ombrebrain/projection/projection_mirror.py",
-      "sha256": "9c5ec5bb777a87b30a2f448c206b6488b1c1aded9900bd0d1b430af3a45a183f",
-      "size": 4661
+      "sha256": "004f92f60c6c7dcac2d335fc5be0b2ebb185edc2631be45c3078e54ad05afd93",
+      "size": 4717
     },
     {
       "path": "src/ombrebrain/projection/projection_sqlite.py",
@@ -437,8 +457,8 @@
     },
     {
       "path": "src/ombrebrain/storage/embedding_outbox.py",
-      "sha256": "71a41053d8cffd1f9105ad6972d3c6b3b1926ad1391b6e1ef7d10dea5494a90b",
-      "size": 49079
+      "sha256": "4873244d10b5a3d72caf7a4d421d8d5d122031dab106508cd9b4dfbe1bd218e5",
+      "size": 51625
     },
     {
       "path": "src/ombrebrain/storage/letter_lock.py",
@@ -797,8 +817,8 @@
     },
     {
       "path": "src/web/buckets.py",
-      "sha256": "57adc6433f01e74f21955c938788c7c3828f56c6f38939d44fa1018b0dc94b27",
-      "size": 56827
+      "sha256": "3066c8bb6bced923c5e1d325ed7268a0e9cfb83b1a93fc8e2fc7b6ea16288a2b",
+      "size": 58826
     },
     {
       "path": "src/web/config_api.py",
@@ -807,8 +827,8 @@
     },
     {
       "path": "src/web/dashboard.py",
-      "sha256": "2999ce7b2983ecfc1ab2d58d4a22b6f499484509293e0cb2bffd643301df3e74",
-      "size": 4703
+      "sha256": "dfedf8f3a1b081a84b8618e450ce461ee54ad8e08b65986e0780c7b8e5284d50",
+      "size": 5256
     },
     {
       "path": "src/web/embedding.py",

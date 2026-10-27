@@ -5,7 +5,7 @@ web/buckets.py — 记忆桶管理 + 设置 + 锚点 + 自我认知读取
 
 仪表板「记忆」页的后端：列表/详情、pin/resolve/archive/forget、批量遗忘、
 采样与 human 名设置（持久化 config.yaml）、锚点、/api/self。
-应用层只允许归档/淡忘，不提供物理删除记忆桶的能力。
+已登录的所有者可在 Dashboard 显式确认永久删除；AI 工具保留独立边界。
 
 对外暴露：register(mcp)。
 ========================================
@@ -767,6 +767,41 @@ def register(mcp) -> None:
                 errors.append({"id": bucket_id, "error": str(exc)})
         return JSONResponse({"ok": not errors, "action": action,
                              "updated": updated, "missing": missing, "errors": errors})
+
+    @mcp.custom_route("/api/buckets/permanent-delete", methods=["POST"])
+    async def api_owner_permanent_delete(request: Request) -> Response:
+        """Erase selected local memories after explicit authenticated consent."""
+        from starlette.responses import JSONResponse
+        err = sh._require_auth(request)
+        if err:
+            return err
+        try:
+            body = await sh._read_json_object(request)
+        except Exception:
+            return JSONResponse({"error": "invalid JSON body"}, status_code=400)
+        if body.get("confirm") is not True:
+            return JSONResponse({"error": "请明确确认永久删除。"}, status_code=400)
+        ids = body.get("ids")
+        if not isinstance(ids, list) or not 1 <= len(ids) <= 100:
+            return JSONResponse({"error": "每次请选择 1–100 条记忆。"}, status_code=400)
+        if any(not isinstance(item, str) or not re.fullmatch(r"[A-Za-z0-9_.-]{1,128}", item) for item in ids):
+            return JSONResponse({"error": "invalid bucket id"}, status_code=400)
+        deleted, missing, errors, warnings = [], [], [], []
+        for bucket_id in dict.fromkeys(ids):
+            try:
+                result = await sh.bucket_mgr.permanently_delete_bucket(bucket_id)
+                if result.get("ok"):
+                    deleted.append(bucket_id)
+                    warnings.extend(result.get("warnings") or [])
+                elif result.get("error") == "not_found":
+                    missing.append(bucket_id)
+                else:
+                    errors.append({"id": bucket_id, "error": result.get("error")})
+            except Exception as exc:
+                logger.exception("Owner erasure failed for %s", bucket_id)
+                errors.append({"id": bucket_id, "error": str(exc)})
+        return JSONResponse({"ok": not errors, "deleted": deleted, "missing": missing,
+                             "errors": errors, "warnings": list(dict.fromkeys(warnings))})
 
     @mcp.custom_route("/api/developer/buckets/hard-delete", methods=["POST"])
     async def api_developer_hard_delete(request: Request) -> Response:

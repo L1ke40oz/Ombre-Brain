@@ -33,10 +33,16 @@ def register(mcp) -> None:
         try:
             with open(dashboard_path, "r", encoding="utf-8") as f:
                 html = f.read()
-            # U-09 fix: cache-bust static SVG assets so logo updates are visible
-            # without manual hard-refresh after upgrade. 只动字面量 /static/*.svg URL。
-            for asset in ("/static/icon.svg", "/static/favicon.svg"):
-                html = html.replace(asset, f"{asset}?v={sh.version}")
+            # Include the asset revision: custom icons can change without VERSION.
+            for asset in ("/static/icon.svg", "/static/favicon.svg", "/static/brand-icon.png",
+                          "/static/companion-idle.png", "/static/companion-idle.webp",
+                          "/static/companion-lifted.png"):
+                try:
+                    revision = os.stat(os.path.join(sh.repo_root, "frontend", asset.rsplit("/", 1)[-1])).st_mtime_ns
+                    asset_version = f"{sh.version}-{revision}"
+                except OSError:
+                    asset_version = sh.version
+                html = html.replace(asset, f"{asset}?v={asset_version}")
             # 别让浏览器缓存仪表板 HTML：否则改了 dashboard.html 重新下发后，
             # 用户看到的还是旧版面（U-09 只 cache-bust 了 SVG，HTML 本身没设）。
             # HTML 很小、又是每次从磁盘读，禁缓存代价可忽略，省掉「为什么改了没生效」。
@@ -67,6 +73,10 @@ def register(mcp) -> None:
         allowed = {
             "icon.svg": "image/svg+xml",
             "favicon.svg": "image/svg+xml",
+            "brand-icon.png": "image/png",
+            "companion-idle.png": "image/png",
+            "companion-idle.webp": "image/webp",
+            "companion-lifted.png": "image/png",
             "manifest.json": "application/manifest+json",
             "RRPL.ttf": "font/truetype",
         }
@@ -83,7 +93,7 @@ def register(mcp) -> None:
     @mcp.custom_route("/favicon.ico", methods=["GET"])
     async def favicon_redirect(request: Request) -> Response:
         from starlette.responses import RedirectResponse
-        return RedirectResponse(url="/static/favicon.svg", status_code=301)
+        return RedirectResponse(url="/static/brand-icon.png", status_code=301)
 
     @mcp.custom_route("/health", methods=["GET"])
     async def health_check(request: Request) -> Response:

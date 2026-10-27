@@ -659,7 +659,10 @@ class EmbeddingOutbox:
         self._event = asyncio.Event()
         if reconcile:
             try:
-                await self.reconcile(include_archive=True)
+                buckets = await self.bucket_mgr.list_all(include_archive=True)
+                await self.cleanup_orphaned_embeddings(buckets=buckets)
+                await self.reconcile(buckets=buckets, include_archive=True)
+                self.retry_now()
             except Exception as exc:
                 logger.warning("Embedding outbox startup reconciliation failed: %s", exc)
         self._task = asyncio.create_task(
@@ -684,6 +687,60 @@ class EmbeddingOutbox:
         self._task = None
         self._event = None
         self._worker_loop = None
+
+    async def cleanup_orphaned_embeddings(self, *, buckets: list[dict]) -> int:
+        """Remove derived rows/tasks for Markdown deleted while OB was stopped.
+
+        The full scan includes archives, but is only a candidate list. Recheck
+        each candidate under the same derived-index lease as the writer so a
+        concurrent create/restore cannot lose its new vector to a stale scan.
+        A still-present but unreadable file is retained for manual repair.
+        """
+        engine = self.embedding_engine
+        known_ids = {str(bucket.get("id") or "") for bucket in buckets}
+        indexed_ids: set[str] = set()
+        reader = getattr(engine, "list_all_ids", None)
+        if callable(reader):
+            try:
+                indexed_ids = set(reader())
+            except Exception as exc:
+                logger.warning("Startup orphan scan could not read index IDs: %s", exc)
+        with self._lock:
+            pending_ids = set(self._items)
+        candidates = (indexed_ids | pending_ids) - known_ids
+        turn_factory = getattr(self.bucket_mgr, "_derived_index_turn", None)
+        cleaned = 0
+
+        async def cleanup_one(bucket_id: str) -> bool:
+            if await self.bucket_mgr.get(bucket_id) is not None:
+                return False
+            find_path = getattr(self.bucket_mgr, "_find_bucket_file", None)
+            if callable(find_path) and find_path(bucket_id):
+                return False
+            if bucket_id in indexed_ids:
+                engine.delete_embedding(bucket_id)
+            self.discard(bucket_id)
+            return True
+
+        for bucket_id in sorted(candidates):
+            try:
+                if callable(turn_factory):
+                    async with turn_factory(bucket_id):
+                        removed = await cleanup_one(bucket_id)
+                else:
+                    removed = await cleanup_one(bucket_id)
+                cleaned += int(removed)
+            except Exception as exc:
+                logger.warning(
+                    "Startup orphan cleanup deferred: bucket=%s error=%s",
+                    bucket_id, exc,
+                )
+        if cleaned:
+            logger.info(
+                "Startup embedding reconciliation / 启动时清理已删除记忆的索引: %s",
+                cleaned,
+            )
+        return cleaned
 
     async def reconcile(
         self,

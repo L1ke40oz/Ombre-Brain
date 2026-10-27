@@ -196,20 +196,12 @@ def test_github_restore_surfaces_legacy_source_evidence_warning():
     assert "d.sources_imported" in source
 
 
-def test_status_banner_tracks_responsive_sticky_header_height():
+def test_home_keeps_diagnostics_in_settings_and_omits_redundant_panels():
     html = DASHBOARD.read_text(encoding="utf-8")
-    source = _dashboard_function(
-        "syncStatusBannerOffset", "watchStatusBannerOffset"
-    )
-    watcher = _dashboard_function(
-        "watchStatusBannerOffset", "renderStatusBannerCard"
-    )
-
-    assert "top: var(--ob-header-height, 96px)" in html
-    assert "getBoundingClientRect().height" in source
-    assert "--ob-header-height" in source
-    assert "new ResizeObserver(syncStatusBannerOffset)" in watcher
-    assert "window.addEventListener('resize', syncStatusBannerOffset)" in watcher
+    assert 'id="status-banner"' not in html
+    assert 'class="dream-welcome"' not in html
+    assert "loadStatusBanner" not in html
+    assert 'onclick="loadSystemDiagnostics()"' in html
 
 
 def test_dashboard_has_an_intermediate_pc_responsive_layout():

@@ -34,7 +34,7 @@ class TraceCatalogProjection:
         if event_type == "TraceCreated":
             self.traces[trace_id] = _base_trace(event)
             return
-        if event_type in {"TraceUpdated", "TraceTouched", "TraceArchived", "TraceDeletedToArchive"}:
+        if event_type in {"TraceUpdated", "TraceTouched", "TraceArchived", "TraceDeletedToArchive", "TracePermanentlyDeleted"}:
             trace = self.traces.setdefault(trace_id, _base_trace(event))
             _apply_known_event(trace, event)
             return
@@ -91,7 +91,7 @@ def _apply_known_event(trace: dict[str, Any], event: dict[str, Any]) -> None:
         trace["resolved"] = bool(payload.get("resolved"))
     if event_type == "TraceTouched":
         trace["touch_count"] = int(trace.get("touch_count", 0) or 0) + 1
-    if event_type == "TraceDeletedToArchive":
+    if event_type in {"TraceDeletedToArchive", "TracePermanentlyDeleted"}:
         trace["deleted"] = True
     if _is_tombstone_event(event):
         trace["tombstone"] = True

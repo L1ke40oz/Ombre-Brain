@@ -90,6 +90,101 @@ class DisabledEngine(RecordingEngine):
     enabled = False
 
 
+@pytest.mark.asyncio
+async def test_restart_reconciles_offline_deletes_and_only_indexes_missing_or_changed(tmp_path):
+    from pathlib import Path
+
+    config = _config(tmp_path)
+    engine = RecordingEngine()
+    manager = BucketManager(config, embedding_engine=engine)
+    kept = await manager.create(content="keep this current vector")
+    archived = await manager.create(content="keep this archive vector")
+    await manager.archive(archived)
+    removed = await manager.create(content="manually removed while stopped")
+    missing = await manager.create(content="this live vector is missing")
+    changed = await manager.create(content="changed Markdown content")
+    records = await manager.list_all(include_archive=True)
+    engine.hashes = {record["id"]: content_hash(record["content"]) for record in records}
+    engine.hashes.pop(missing)
+    engine.hashes[changed] = content_hash("old indexed content")
+    Path((await manager.get(removed))["path"]).unlink()
+    engine.calls.clear()
+
+    restarted = BucketManager(config, embedding_engine=engine)
+    outbox = EmbeddingOutbox(config, restarted, engine)
+    restarted.attach_embedding_outbox(outbox)
+    outbox.enqueue(removed, "stale task for a deleted Markdown")
+    outbox.enqueue("deleted-before-indexing", "stale queue with no vector")
+    await outbox.start()
+    try:
+        assert await outbox.wait_until_idle(timeout=2)
+        assert set(engine.hashes) == {kept, archived, missing, changed}
+        assert {bucket_id for bucket_id, _ in engine.calls} == {missing, changed}
+        assert len(engine.calls) == 2
+        assert not outbox.is_pending(removed)
+        assert not outbox.is_pending("deleted-before-indexing")
+    finally:
+        await outbox.stop()
+
+
+@pytest.mark.asyncio
+async def test_startup_cleanup_preserves_concurrent_and_unreadable_markdown(tmp_path, monkeypatch):
+    from pathlib import Path
+
+    config = _config(tmp_path)
+    engine = RecordingEngine()
+    manager = BucketManager(config, embedding_engine=engine)
+    restored = await manager.create(content="created after a stale scan")
+    malformed = await manager.create(content="a file that cannot currently be parsed")
+    records = await manager.list_all(include_archive=True)
+    engine.hashes = {record["id"]: content_hash(record["content"]) for record in records}
+    Path((await manager.get(malformed))["path"]).write_text("---\ninvalid: [\n---\n", encoding="utf-8")
+    original_turn = manager._derived_index_turn
+    original_get = manager.get
+    leased = set()
+
+    @asynccontextmanager
+    async def turn(bucket_id):
+        async with original_turn(bucket_id):
+            leased.add(bucket_id)
+            try:
+                yield
+            finally:
+                leased.remove(bucket_id)
+
+    async def checked_get(bucket_id):
+        assert bucket_id in leased
+        return await original_get(bucket_id)
+
+    monkeypatch.setattr(manager, "_derived_index_turn", turn)
+    monkeypatch.setattr(manager, "get", checked_get)
+    outbox = EmbeddingOutbox(config, manager, engine)
+    assert await outbox.cleanup_orphaned_embeddings(buckets=[]) == 0
+    assert set(engine.hashes) == {restored, malformed}
+
+
+@pytest.mark.asyncio
+async def test_failed_orphan_cleanup_does_not_block_missing_vector_backfill(tmp_path):
+    class BusyEngine(RecordingEngine):
+        def delete_embedding(self, bucket_id):
+            raise OSError("temporary index cleanup failure")
+
+    config = _config(tmp_path)
+    engine = BusyEngine()
+    manager = BucketManager(config, embedding_engine=engine)
+    bucket_id = await manager.create(content="still needs indexing")
+    engine.hashes = {"offline-deleted": content_hash("old")}
+    outbox = EmbeddingOutbox(config, manager, engine)
+    manager.attach_embedding_outbox(outbox)
+    await outbox.start()
+    try:
+        assert await outbox.wait_until_idle(timeout=2)
+        assert bucket_id in engine.hashes
+        assert "offline-deleted" in engine.hashes
+    finally:
+        await outbox.stop()
+
+
 class ObservableEngine(RecordingEngine):
     def __init__(self):
         super().__init__()

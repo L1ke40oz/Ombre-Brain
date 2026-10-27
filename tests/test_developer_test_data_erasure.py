@@ -186,7 +186,7 @@ def test_dashboard_chick_is_draggable_and_remembers_a_safe_position():
     assert "touch-action: none" in text
     assert "dropRemark" in text
     assert "这位置以前是我的。" in text
-    assert "你找什么？我帮你啄。" in text
+    assert "你找什么？我帮你找。" in text
     assert "你怎么还没睡？" in text
     assert "天旋地转……你礼貌吗？" in text
     assert "play-dead" in text
@@ -202,7 +202,7 @@ def test_dashboard_chick_can_be_tickled_and_reacts_to_real_system_states():
     text = Path("frontend/dashboard.html").read_text(encoding="utf-8")
 
     assert "TICKLE_LINES" in text
-    assert "canvasX - spriteX" in text
+    assert "relativeX<.3 || relativeX>.7" in text
     assert "lastPetAction==='tickle'" in text
     assert "别碰我。" in text
     assert "下次再碰我就把你的桶全归档。" in text

@@ -679,8 +679,9 @@ class BucketManager:
             queue_meaning=bool(state.get("queue_meaning")),
         )
 
-    async def _discard_derived_index_if_terminal(self, bucket_id: str) -> None:
+    async def _discard_derived_index_if_terminal(self, bucket_id: str) -> list[str]:
         """Drop queued/vector state outside the bucket lease, with restore CAS."""
+        warnings = []
         async with self._derived_index_turn(bucket_id):
             bucket = await self.get(bucket_id)
             metadata = (bucket or {}).get("metadata") or {}
@@ -688,11 +689,12 @@ class BucketManager:
                 metadata.get("tombstone"), default=False
             ):
                 # A concurrent explicit restore won after the delete commit.
-                return
+                return warnings
             if self.embedding_outbox is not None:
                 try:
                     self.embedding_outbox.discard(bucket_id)
                 except Exception as exc:
+                    warnings.append("记忆正文已删除，但后台索引队列暂未清理完成。")
                     logger.warning(
                         "discard embedding outbox failed for %s: %s",
                         bucket_id,
@@ -702,9 +704,11 @@ class BucketManager:
                 try:
                     self.embedding_engine.delete_embedding(bucket_id)
                 except Exception as exc:
+                    warnings.append("记忆正文已删除，但检索索引暂未清理完成。")
                     logger.warning(
                         "delete embedding failed for %s: %s", bucket_id, exc
                     )
+        return warnings
 
     def _record_v3_bucket_event(
         self,
@@ -2695,6 +2699,79 @@ class BucketManager:
             },
         )
         return True
+
+    async def permanently_delete_bucket(self, bucket_id: str) -> dict:
+        """Owner-confirmed Dashboard erasure; separate from AI/archive actions."""
+        async with self._bucket_turn(bucket_id):
+            file_path = self._find_bucket_file(bucket_id)
+            if not file_path:
+                return {"ok": False, "error": "not_found"}
+            path = Path(file_path)
+            root = Path(self.base_dir).resolve()
+            if path.is_symlink() or not path.resolve().is_relative_to(root):
+                return {"ok": False, "error": "unsafe_bucket_path"}
+            try:
+                post = frontmatter.load(path)
+                path.unlink()
+            except (OSError, ValueError) as exc:
+                return {"ok": False, "error": f"delete_failed: {exc}"}
+            self._invalidate_bm25()
+            warnings = self._erase_owned_media(bucket_id, post.metadata)
+            self._record_ledger_event(
+                "TracePermanentlyDeleted", bucket_id,
+                str(post.get("type") or "dynamic"), "", {},
+                {"event_actor": "human", "content_erased": True,
+                 "tombstone": True},
+            )
+        # Serialize against an in-flight embedding worker before returning.
+        warnings.extend(await self._discard_derived_index_if_terminal(bucket_id))
+        return {"ok": True, "deleted": bucket_id, "warnings": warnings}
+
+    def _erase_owned_media(self, bucket_id: str, metadata: dict) -> list[str]:
+        """Only unlink registered files in this bucket's validated media folder."""
+        warnings = []
+        media_root = self.media_store.media_dir.resolve()
+        safe_id = re.sub(r"[^a-zA-Z0-9_.-]", "_", bucket_id)[:128]
+        owned = media_root / safe_id
+        if owned.is_symlink() or not owned.resolve().is_relative_to(media_root):
+            return ["附件目录不安全，已保留附件。"]
+        candidates = set()
+        for item in metadata.get("media") or []:
+            if not isinstance(item, dict) or not item.get("stored"):
+                continue
+            raw = str(item.get("path") or "")
+            target = Path(raw) if Path(raw).is_absolute() else Path(self.base_dir) / raw
+            if not target.is_symlink() and target.resolve().parent == owned.resolve():
+                candidates.add(target.resolve())
+        if not candidates:
+            return warnings
+        # Imported/hand-edited buckets may share attachments. Keep shared bytes.
+        shared = set()
+        try:
+            dirs = list(self._active_dirs) + [self.archive_dir]
+            for _root, _name, file_path in self._iter_md_files(dirs):
+                other = frontmatter.load(file_path)
+                for item in other.get("media") or []:
+                    if not isinstance(item, dict):
+                        continue
+                    raw = str(item.get("path") or "")
+                    target = Path(raw) if Path(raw).is_absolute() else Path(self.base_dir) / raw
+                    shared.add(target.resolve())
+        except Exception:
+            return ["无法核对共享附件，已保留附件。"]
+        for target in candidates - shared:
+            try:
+                # Recheck after scanning: never follow a replaced directory/link.
+                if (not owned.is_symlink() and not target.is_symlink() and target.resolve().parent == owned.resolve()
+                        and target.resolve().is_relative_to(media_root)):
+                    target.unlink(missing_ok=True)
+            except OSError:
+                warnings.append("部分附件未能清理。")
+        try:
+            owned.rmdir()  # Only remove an empty, already-validated directory.
+        except OSError:
+            pass
+        return warnings
 
     async def hard_delete_test_bucket(self, bucket_id: str, *, reason: str = "") -> dict:
         """Erase only a bucket born as test data, with an explicit audit reason."""
