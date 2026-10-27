@@ -93,8 +93,9 @@ _AUTHOR_NOTE = {
 
 # --- 热更新来源与依赖安装的安全闸门（安全加固 #2）---
 # do-update 会把远端 zip 覆盖到 src/ 并 pip install，等于把「谁能改 config.update」
-# 直接放大成 RCE。默认只信官方仓；fork/自建源需显式 env 放行。自动 pip 默认关闭。
-_TRUSTED_UPDATE_REPOS = ("p0luz/ombre-brain",)
+# 直接放大成 RCE。此定制版只信本 fork 与原项目；其他源需显式放行。自动 pip 默认关闭。
+_DEFAULT_UPDATE_REPO = "L1ke40oz/Ombre-Brain"
+_TRUSTED_UPDATE_REPOS = ("l1ke40oz/ombre-brain", "p0luz/ombre-brain")
 _MAX_UPDATE_ARCHIVE_BYTES = 64 * 1024 * 1024
 _MAX_UPDATE_MEMBERS = 5_000
 _MAX_UPDATE_MEMBER_BYTES = 16 * 1024 * 1024
@@ -230,6 +231,86 @@ def _update_repo_allowed(repo: str) -> bool:
     if repo.strip().strip("/").lower() in _TRUSTED_UPDATE_REPOS:
         return True
     return os.environ.get("OMBRE_ALLOW_CUSTOM_UPDATE_REPO", "").strip().lower() in ("1", "true", "yes", "on")
+
+
+def _update_source() -> dict:
+    """One source for both checking and applying updates; keep explicit overrides."""
+    config = sh.config.get("update") or {}
+    if not isinstance(config, dict):
+        config = {}
+    repo = str(config.get("repo") or _DEFAULT_UPDATE_REPO).strip().strip("/")
+    ref = str(config.get("ref") or "main").strip()
+    channel = str(config.get("channel") or "branch").strip().lower()
+    allowed = bool(re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", repo)) and _update_repo_allowed(repo)
+    return {"repo": repo, "ref": ref, "channel": channel, "allowed": allowed}
+
+
+async def _read_update_file(client, repo: str, ref: str, path: str) -> str:
+    """Prefer fresh Contents API bytes, with a raw CDN fallback on API failure."""
+    from urllib.parse import quote
+    import time
+
+    try:
+        response = await client.get(
+            f"https://api.github.com/repos/{repo}/contents/{path}",
+            params={"ref": ref},
+            headers={"Accept": "application/vnd.github.raw"},
+        )
+        if response.status_code == 200:
+            if len(response.content) > _MAX_UPDATE_MANIFEST_BYTES:
+                raise ValueError("更新信息超过大小上限")
+            return response.text
+    except httpx.HTTPError:
+        pass
+    response = await client.get(
+        f"https://raw.githubusercontent.com/{repo}/{quote(ref, safe='')}/{path}",
+        params={"t": str(time.time_ns())},
+    )
+    response.raise_for_status()
+    if len(response.content) > _MAX_UPDATE_MANIFEST_BYTES:
+        raise ValueError("更新信息超过大小上限")
+    return response.text
+
+
+def _count_update_changes(manifest: dict, repo_root: str) -> int:
+    """Compare installed bytes, including after hot updates that do not move Git HEAD."""
+    import hashlib
+    from pathlib import Path
+    from ombrebrain.policy.update_policy import _is_protected_path, _is_unsafe_path
+
+    files = manifest.get("files") if isinstance(manifest, dict) else None
+    if not isinstance(files, list) or not files or len(files) > _MAX_UPDATE_MEMBERS:
+        raise ValueError("更新清单格式无效")
+    root = Path(repo_root).resolve()
+    changed = 0
+    seen = set()
+    for entry in files:
+        if not isinstance(entry, dict):
+            raise ValueError("更新清单条目无效")
+        path, digest = entry.get("path"), entry.get("sha256")
+        if (not isinstance(path, str) or not isinstance(digest, str)
+                or not re.fullmatch(r"[a-fA-F0-9]{64}", digest)
+                or not path.startswith(("src/", "frontend/"))
+                or _is_unsafe_path(path) or _is_protected_path(path) or path in seen):
+            raise ValueError("更新清单包含无效路径或校验值")
+        seen.add(path)
+        local = root / path
+        if not local.resolve().is_relative_to(root):
+            raise ValueError("本地源码路径不在项目目录内")
+        if not local.is_file():
+            changed += 1
+            continue
+        with local.open("rb") as handle:
+            content = handle.read(_MAX_UPDATE_MEMBER_BYTES + 1)
+        if len(content) > _MAX_UPDATE_MEMBER_BYTES:
+            changed += 1
+            continue
+        # Git may check text files out as CRLF on Windows. Binary bytes stay exact.
+        matches = hashlib.sha256(content).hexdigest() == digest.lower()
+        if not matches and local.suffix in {".py", ".html", ".css", ".js", ".json", ".txt", ".svg"}:
+            matches = hashlib.sha256(content.replace(b"\r\n", b"\n")).hexdigest() == digest.lower()
+        changed += int(not matches)
+    return changed
 
 
 def _pip_install_allowed() -> bool:
@@ -1005,7 +1086,55 @@ def register(mcp) -> None:
             "hot_update_mode": persistence["mode"],
             "hot_update_note": persistence["note"],
             "update_allow_pip_install": _pip_install_allowed(),
+            "update_source": _update_source(),
         })
+
+    @mcp.custom_route("/api/update-check", methods=["GET"])
+    async def api_update_check(request: Request) -> Response:
+        """Check exactly the source used by the updater, including same-version edits."""
+        import json
+        from starlette.responses import JSONResponse
+
+        err = sh._require_auth(request)
+        if err:
+            return err
+        source = _update_source()
+        if not source["allowed"]:
+            return JSONResponse({"error": "当前更新来源未获允许", "source": source}, status_code=400)
+        repo, ref = source["repo"], source["ref"]
+        try:
+            async with httpx.AsyncClient(timeout=20.0, follow_redirects=True) as client:
+                if source["channel"] != "branch":
+                    try:
+                        release = await client.get(f"https://api.github.com/repos/{repo}/releases/latest")
+                        if release.status_code == 200:
+                            ref = str(release.json().get("tag_name") or ref)
+                    except (httpx.HTTPError, ValueError):
+                        pass  # Match the installer's branch fallback.
+                latest = (await _read_update_file(client, repo, ref, "VERSION")).strip().removeprefix("v")
+                if _version_key(latest) is None:
+                    raise ValueError("远端 VERSION 内容无效")
+                changed = None
+                try:
+                    manifest_text = await _read_update_file(client, repo, ref, "update_manifest.json")
+                    manifest = json.loads(manifest_text)
+                    changed = await _asyncio.to_thread(_count_update_changes, manifest, sh.repo_root)
+                except httpx.HTTPStatusError as exc:
+                    if exc.response.status_code != 404:
+                        raise
+            downgrade = _is_version_downgrade(sh.version, latest)
+            newer = _is_version_downgrade(latest, sh.version)
+            has_update = not downgrade and (newer or bool(changed))
+            return JSONResponse({
+                "ok": True, "source": source, "resolved_ref": ref,
+                "version": sh.version, "latest_version": latest,
+                "changed_files": changed, "has_update": has_update,
+                "is_downgrade": downgrade,
+                "body": f"更新来源：{repo}@{ref}。"
+                        + (f"检测到 {changed} 个文件变化。" if changed is not None else "远端未提供资源清单，仅比较版本号。"),
+            })
+        except (httpx.HTTPError, ValueError, OSError) as exc:
+            return JSONResponse({"error": f"检查更新失败：{exc}", "source": source}, status_code=502)
 
     @mcp.custom_route("/api/update-settings", methods=["POST"])
     async def api_update_settings(request: Request) -> Response:
@@ -1101,25 +1230,19 @@ def register(mcp) -> None:
                 yield "data: 正在连接 GitHub…\n\n"
                 await _asyncio.sleep(0.1)
 
-                # #4a ③：更新源可配（update.repo / update.ref），默认官方 main。
-                _ucfg = getattr(sh, "config", {}) or {}
-                _ucfg = _ucfg.get("update") or {}
-                _repo = str(_ucfg.get("repo") or "P0luz/Ombre-Brain").strip().strip("/")
-                _ref  = str(_ucfg.get("ref")  or "main").strip()
+                # The check endpoint and installer resolve one shared source.
+                _source = _update_source()
+                _repo, _ref = _source["repo"], _source["ref"]
                 # 安全闸门 #2：非官方更新源必须显式放行，否则拒绝——防止「改 config.update.repo
                 # 指向恶意仓 → 覆盖 src → 重启执行」这条 RCE 链在默认配置下成立。
-                if not _update_repo_allowed(_repo):
-                    yield (f"data: ERROR:更新源 {_repo} 不在可信白名单（默认只允许官方 "
-                           f"{_TRUSTED_UPDATE_REPOS[0]}）。如确需从 fork/自建源更新，请设置 "
+                if not _source["allowed"]:
+                    yield (f"data: ERROR:更新源 {_repo} 不在可信白名单（默认允许本 fork 与原项目）。"
+                           "如确需从其他自建源更新，请设置 "
                            f"OMBRE_ALLOW_CUSTOM_UPDATE_REPO=1 后重试。\n\n")
                     return
-                # B3：默认从「最新 Release/Tag」拉包，而不是分支 HEAD——避免作者正推到
-                # 一半时拉到半成品。channel="branch" 可切回分支模式；没有 Release 时自动回退分支。
-                # Dashboard checks main/VERSION, so the default update payload
-                # must come from that same branch.  A stale GitHub Latest Release
-                # previously made the first click downgrade to v2.4.6; the old
-                # updater then fetched main on the second click.
-                _channel = str(_ucfg.get("channel") or "branch").strip().lower()
+                # Default to the same branch as the checker. Explicit release
+                # channels fall back to that branch if no release is available.
+                _channel = _source["channel"]
                 _branch_url = f"https://github.com/{_repo}/archive/refs/heads/{_ref}.zip"
                 async with httpx.AsyncClient(timeout=120.0, follow_redirects=True) as client:
                     _zip_url, _label = _branch_url, f"{_repo}@{_ref}（分支）"

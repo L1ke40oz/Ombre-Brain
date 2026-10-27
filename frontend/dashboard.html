@@ -3229,6 +3229,7 @@ html[data-palette="snowfall"] .dreamcloud #auth-overlay h2 { color: var(--text) 
     <!-- ⓪ 版本 & 更新 -->
     <div class="config-section" id="sec-version" data-sgroup="basics">
       <h3>版本 & 更新 <span class="sec-en">Version &amp; Update</span></h3>
+      <p style="font-size:12px;color:var(--text-dim);line-height:1.8;margin-bottom:12px;"><a id="update-source-link" target="_blank" rel="noopener noreferrer" style="color:var(--accent);">更新来源读取中…</a><br>从你的 fork 获取更新；原项目的新改动需要先合并到 fork。</p>
       <div class="ver-status-row">
         <span style="font-size:13px;">当前版本：<b id="ver-local-disp">…</b></span>
         <button class="btn-secondary" onclick="checkGitHubVersion()" id="btn-check-ver" style="height:30px;padding:0 14px;font-size:12px;display:inline-flex;align-items:center;gap:5px;">
@@ -3236,14 +3237,14 @@ html[data-palette="snowfall"] .dreamcloud #auth-overlay h2 { color: var(--text) 
         </button>
         <span id="ver-checking" style="display:none;font-size:12px;color:var(--text-dim);">检查中…</span>
         <span class="ver-badge ver-badge-ok"  id="ver-badge-ok"  style="display:none;">✓ 已是最新</span>
-        <span class="ver-badge ver-badge-new" id="ver-badge-new" style="display:none;">⬆ 有新版本</span>
+        <span class="ver-badge ver-badge-new" id="ver-badge-new" style="display:none;">⬆ 有可用更新</span>
         <span id="ver-error" style="display:none;font-size:12px;color:var(--negative);"></span>
       </div>
 
       <!-- 有新版本时显示的完整更新引导面板 -->
       <div id="ver-update-panel" style="display:none">
         <div style="font-weight:600;font-size:13px;margin-bottom:6px;">
-          最新版本：<span id="ver-remote-disp" style="color:var(--accent)">—</span>
+          目标版本：<span id="ver-remote-disp" style="color:var(--accent)">—</span>
           <span id="ver-remote-date" style="font-size:11px;color:var(--text-dim);font-weight:400;margin-left:8px;"></span>
         </div>
 
@@ -6032,6 +6033,7 @@ function activateDashboardTab(tab) {
     if (target === 'settings') {
       // 任务D：合并 config + settings 后，切换到「设置」时一次性加载所有面板数据
       pending.push(
+        loadUpdateSourceInfo(),
         loadSettingsStatus(),
         loadSystemDiagnostics(),
         loadHumanName(),
@@ -9088,17 +9090,6 @@ loadVersionBadge();
 (function() {
   var _deployInfo = null;
 
-  function semverGt(a, b) {
-    var pa = String(a).replace(/^v/, '').split('.').map(Number);
-    var pb = String(b).replace(/^v/, '').split('.').map(Number);
-    for (var i = 0; i < 3; i++) {
-      var na = pa[i] || 0, nb = pb[i] || 0;
-      if (na > nb) return true;
-      if (na < nb) return false;
-    }
-    return false;
-  }
-
   async function loadDeployInfo() {
     if (_deployInfo) return _deployInfo;
     try {
@@ -9107,6 +9098,20 @@ loadVersionBadge();
     } catch(_) { _deployInfo = {}; }
     return _deployInfo;
   }
+
+  window.loadUpdateSourceInfo = async function() {
+    var link = document.getElementById('update-source-link');
+    var info = await loadDeployInfo();
+    var source = info.update_source;
+    if (!link) return;
+    if (!source || !source.repo || !source.ref) {
+      link.textContent = '更新来源读取失败，请刷新后重试。';
+      link.removeAttribute('href');
+      return;
+    }
+    link.textContent = '更新来源：' + source.repo + ' / ' + source.ref;
+    link.href = 'https://github.com/' + source.repo + '/tree/' + encodeURIComponent(source.ref);
+  };
 
   async function showUpdatePanel(gh, latestTag) {
     var panel = document.getElementById('ver-update-panel');
@@ -9145,7 +9150,7 @@ loadVersionBadge();
         cmdEl.textContent = '请在 Render Dashboard 中触发正式部署\n或更新所连接 Git 仓库的 main 分支';
       } else if (info.is_docker) {
         var cname = info.container_name || 'ombre-brain';
-        cmdEl.textContent = 'docker pull p0luz/ombre-brain:latest\ndocker restart ' + cname;
+        cmdEl.textContent = '从你的 fork 源码重新构建镜像，并复用原来的数据挂载；然后重建容器 ' + cname;
       } else {
         cmdEl.textContent = 'cd /path/to/ombre-brain\ngit pull origin main\n# 然后重启服务（systemctl / pm2 / screen 等）';
       }
@@ -9307,70 +9312,36 @@ loadVersionBadge();
   };
 
   window.checkGitHubVersion = async function() {
-    var btnCheck  = document.getElementById('btn-check-ver');
-    var checking  = document.getElementById('ver-checking');
-    var badgeOk   = document.getElementById('ver-badge-ok');
-    var badgeNew  = document.getElementById('ver-badge-new');
-    var errEl     = document.getElementById('ver-error');
-    var panel     = document.getElementById('ver-update-panel');
-
-    [badgeOk, badgeNew, errEl, panel].forEach(function(e) { if (e) e.style.display = 'none'; });
+    var btnCheck = document.getElementById('btn-check-ver');
+    var checking = document.getElementById('ver-checking');
+    var badgeOk = document.getElementById('ver-badge-ok');
+    var badgeNew = document.getElementById('ver-badge-new');
+    var errEl = document.getElementById('ver-error');
+    var panel = document.getElementById('ver-update-panel');
+    [badgeOk, badgeNew, errEl, panel].forEach(function(el) { if (el) el.style.display = 'none'; });
     if (btnCheck) btnCheck.disabled = true;
     if (checking) checking.style.display = '';
-
     try {
-      if (!_obLocalVersion) {
-        const rv = await fetch(BASE + '/api/version');
-        const dv = await rv.json();
-        _obLocalVersion = dv.version || '0.0.0';
-        const vl = document.getElementById('ver-local-disp');
-        if (vl) vl.textContent = 'v' + _obLocalVersion;
-      }
-
-      // raw.githubusercontent.com 的 main 分支会走 Fastly CDN，push 后可能继续命中旧 VERSION。
-      // 先走 GitHub Contents API 取真实 HEAD 内容；API 不可用时再回退 raw。
-      let latestText = '';
-      try {
-        const rApi = await fetch(
-          'https://api.github.com/repos/P0luz/Ombre-Brain/contents/VERSION?ref=main',
-          { cache: 'no-store', headers: { 'Accept': 'application/vnd.github.raw' } }
-        );
-        if (rApi.ok) latestText = await rApi.text();
-      } catch (_) {}
-
-      if (!latestText.trim()) {
-        const rRaw = await fetch(
-          'https://raw.githubusercontent.com/P0luz/Ombre-Brain/main/VERSION?t=' + Date.now(),
-          { cache: 'no-store' }
-        );
-        if (!rRaw.ok) throw new Error('无法读取 GitHub VERSION 文件（' + rRaw.status + '）');
-        latestText = await rRaw.text();
-      }
-
-      const latestTag = latestText.trim().replace(/^v/, '');
-      if (!latestTag) throw new Error('GitHub VERSION 文件为空');
-
-      // 尝试读 Release 说明（无 Release 时静默忽略）
-      var ghRelease = {};
-      try {
-        const rRel = await fetch('https://api.github.com/repos/P0luz/Ombre-Brain/releases/latest',
-          { headers: { 'Accept': 'application/vnd.github.v3+json' } });
-        if (rRel.ok) ghRelease = await rRel.json();
-      } catch(_) {}
-
-      if (checking) checking.style.display = 'none';
-      if (btnCheck) btnCheck.disabled = false;
-
-      if (semverGt(latestTag, _obLocalVersion)) {
+      await loadUpdateSourceInfo();
+      var response = await authFetch('/api/update-check');
+      if (!response) throw new Error('请重新登录后检查更新');
+      var result = await readJsonSafe(response);
+      if (!response.ok || !result.ok) throw new Error(result.error || '无法读取更新信息');
+      _obLocalVersion = result.version || _obLocalVersion;
+      if (result.has_update) {
         if (badgeNew) badgeNew.style.display = '';
-        await showUpdatePanel(ghRelease, latestTag);
+        await showUpdatePanel({body: result.body}, result.latest_version);
       } else {
-        if (badgeOk) badgeOk.style.display = '';
+        if (badgeOk) {
+          badgeOk.textContent = result.is_downgrade ? '远端版本较旧，保留当前版本' : '✓ 已是最新';
+          badgeOk.style.display = '';
+        }
       }
-    } catch (e) {
+    } catch (error) {
+      if (errEl) { errEl.textContent = '检查失败：' + error.message; errEl.style.display = ''; }
+    } finally {
       if (checking) checking.style.display = 'none';
       if (btnCheck) btnCheck.disabled = false;
-      if (errEl) { errEl.textContent = '检查失败：' + e.message; errEl.style.display = ''; }
     }
   };
 })();

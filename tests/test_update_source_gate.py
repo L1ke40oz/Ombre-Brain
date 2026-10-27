@@ -27,6 +27,7 @@ def test_official_repo_allowed(monkeypatch):
     assert meta._update_repo_allowed("P0luz/Ombre-Brain")
     assert meta._update_repo_allowed("p0luz/ombre-brain")   # 大小写不敏感
     assert meta._update_repo_allowed("/P0luz/Ombre-Brain/")  # 容忍多余斜杠
+    assert meta._update_repo_allowed("L1ke40oz/Ombre-Brain")
 
 
 def test_foreign_repo_rejected_by_default(monkeypatch):
@@ -73,8 +74,10 @@ def test_hot_update_downgrade_guard(current, target, expected):
 
 
 def test_hot_update_defaults_to_same_main_branch_as_version_check():
-    source = open(meta.__file__, encoding="utf-8").read()
-    assert '_ucfg.get("channel") or "branch"' in source
+    source = meta._update_source()
+    assert source["repo"] == "L1ke40oz/Ombre-Brain"
+    assert source["ref"] == "main"
+    assert source["channel"] == "branch"
 
 
 def test_ci_lock_verification_freezes_package_index_snapshot():

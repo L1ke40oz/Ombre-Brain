@@ -262,3 +262,9 @@ bucket_type_defaults:
 # --- Deprecated: Obsidian wikilinks auto injection / 已废弃 ---
 # wikilink 自动注入已禁用；OB 只读取正文里的 [[wikilink]] 做网络图。
 # 旧版 config.yaml 中残留的 wikilink.* 配置会被忽略。
+
+# 此定制版的检查更新与热更新使用同一来源。
+update:
+  repo: L1ke40oz/Ombre-Brain
+  ref: main
+  channel: branch

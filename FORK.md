@@ -39,4 +39,33 @@ git fetch upstream
 git merge upstream/main
 ```
 
-先提交或备份本地修改，再合并与测试，确认后推送到自己的 `origin/main`。面板中的原作者热更新流程可能覆盖定制文件；需要保留这套页面时，应先把上游改动合并进本 fork，再部署本 fork。
+先提交或备份本地修改，再合并与测试，确认后推送到自己的 `origin/main`。
+
+本定制版的「检查更新」和「立即热更新」默认都指向 `L1ke40oz/Ombre-Brain` 的 `main`，设置里会显示实际更新来源。即使版本号相同，也会通过源码与资源清单发现代码变化。上游的新改动仍需先合并到本 fork，再从面板更新。
+
+若旧配置已显式指定其他更新来源，可将下面内容合并进现有 `config.yaml` 的 `update` 段，保留同一段里的其他配置，保存后重启：
+
+```yaml
+update:
+  repo: L1ke40oz/Ombre-Brain
+  ref: main
+  channel: branch
+```
+
+本 fork 已明确允许自身作为更新来源，不需要开启允许任意自建源的环境变量。依赖自动安装开关保持原有默认行为。
+
+## 从原项目切换一次
+
+Git + Python 部署可以继续使用当前目录、虚拟环境和数据，不需要删除项目。先停止服务并备份整个记忆目录（包括隐藏文件）、`.env`、`config.yaml`，以及记忆目录外另行配置的附件目录。
+
+工作区代码没有未提交改动时，在原项目目录执行：
+
+```sh
+git remote set-url origin https://github.com/L1ke40oz/Ombre-Brain.git
+git fetch origin
+git merge --ff-only origin/main
+```
+
+无法快进时先保留目录并核对本地差异。合并成功后使用原有方式启动服务，在「设置 → 版本 & 更新」确认更新来源为自己的 fork，并检查记忆、附件和 AI 连接。
+
+Docker 部署需要从本 fork 源码构建并替换镜像，继续使用原来的数据卷与配置挂载。无需删除记忆卷；容器内临时改源码不能代替更新镜像。1Panel / OpenResty 仍然反向代理原有应用端口。
