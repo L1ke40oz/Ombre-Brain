@@ -85,7 +85,7 @@
 .ob-cover.ob-cover-opening{pointer-events:none;will-change:mask-image}
 .ob-cover-press-ripple,.ob-cover-waterlight{position:fixed;z-index:10001;pointer-events:none}
 .ob-cover-press-ripple{border:1px solid #ffffffd9;border-radius:50%;box-shadow:0 0 22px 9px #ffffff70,inset 0 0 18px 5px #ffffff52;transform:translate(-50%,-50%)}
-.ob-cover-waterlight{inset:0;opacity:0;filter:blur(9px)}
+.ob-cover-waterlight{inset:0;opacity:0;will-change:opacity,background-image}
 @media(max-width:680px){
   .ob-cover-frame{inset:8px;border-width:30px;opacity:.65}
   .ob-cover .ob-cover-edge{padding:44px 9% 18px;font-size:9px;letter-spacing:1px}

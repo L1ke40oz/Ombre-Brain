@@ -11,6 +11,7 @@ web/dashboard.py — 仪表板页面 + 静态资源 + 健康检查
 """
 
 import os
+import re
 
 from starlette.requests import Request
 from starlette.responses import Response
@@ -37,7 +38,10 @@ def register(mcp) -> None:
             for asset in ("/static/icon.svg", "/static/favicon.svg", "/static/brand-icon.png",
                           "/static/companion-idle.png", "/static/companion-idle.webp",
                           "/static/companion-lifted.png", "/static/login-cover.css",
-                          "/static/login-cover.js", "/static/login-sky.webp",
+                          "/static/login-cover.js", "/static/dashboard-journal.css",
+                          "/static/dashboard-chime.js", "/static/dashboard-galaxy.js",
+                          "/static/dashboard-journal.js",
+                          "/static/login-sky.webp",
                           "/static/login-flower-photo.jpg", "/static/login-crystal-pendant.webp",
                           "/static/login-plastic-clip.webp", "/static/login-sticker-winter.webp",
                           "/static/login-sticker-sleep.webp",
@@ -88,6 +92,21 @@ def register(mcp) -> None:
             "RRPL.ttf": "font/truetype",
             "login-cover.css": "text/css",
             "login-cover.js": "application/javascript",
+            "dashboard-journal.css": "text/css",
+            "dashboard-chime.js": "application/javascript",
+            "dashboard-galaxy.js": "application/javascript",
+            "dashboard-journal.js": "application/javascript",
+            "chime-hook.webp": "image/webp",
+            "chime-self.webp": "image/webp",
+            "chime-list.webp": "image/webp",
+            "chime-breath.webp": "image/webp",
+            "chime-network.webp": "image/webp",
+            "chime-plan.webp": "image/webp",
+            "chime-letters.webp": "image/webp",
+            "chime-anchors.webp": "image/webp",
+            "chime-import.webp": "image/webp",
+            "chime-logs.webp": "image/webp",
+            "chime-settings.webp": "image/webp",
             "login-sky.webp": "image/webp",
             "login-flower-photo.jpg": "image/jpeg",
             "login-crystal-pendant.webp": "image/webp",
@@ -99,12 +118,16 @@ def register(mcp) -> None:
             "login-serif.woff2": "font/woff2",
             "login-serif-italic.woff2": "font/woff2",
         }
-        if name not in allowed:
+        media_type = allowed.get(name)
+        # 手账贴纸 / 吉祥物 / 风铃吊牌图：文件名限定为小写字母和连字符，不含路径分隔符
+        if media_type is None and re.fullmatch(r"(?:sticker|mascot|chime)-[a-z-]+\.webp", name):
+            media_type = "image/webp"
+        if media_type is None:
             return JSONResponse({"error": "not found"}, status_code=404)
         path = os.path.join(sh.repo_root, "frontend", name)
         try:
             with open(path, "rb") as f:
-                return _Resp(f.read(), media_type=allowed[name])
+                return _Resp(f.read(), media_type=media_type)
         except FileNotFoundError:
             return JSONResponse({"error": "not found"}, status_code=404)
 

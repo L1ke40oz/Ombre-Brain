@@ -11,6 +11,56 @@
       "size": 1488752
     },
     {
+      "path": "frontend/chime-anchors.webp",
+      "sha256": "33f46bf5eb63c96bebf05793c6430bbebe20ff9b8d2584079e1f9aa161524f20",
+      "size": 12826
+    },
+    {
+      "path": "frontend/chime-breath.webp",
+      "sha256": "a74e6cd1305b835daa88b95cf63bde9dce55b957ce4a8e7bbdce125721f7a74f",
+      "size": 12266
+    },
+    {
+      "path": "frontend/chime-hook.webp",
+      "sha256": "2e3f6e82a0f0074e48980bb103a435aa4c4780ef20aa3e8cbebecdd3dd4f8ea5",
+      "size": 8804
+    },
+    {
+      "path": "frontend/chime-import.webp",
+      "sha256": "adde8c53903e119c11edcf4b719bcac2a4643e9ada80840fe932e4e82d2445ed",
+      "size": 10154
+    },
+    {
+      "path": "frontend/chime-letters.webp",
+      "sha256": "d9b33a2ebdea82ef0972dd6b557a4344c84f7f11cf353a0f236f0eef9f31065e",
+      "size": 9866
+    },
+    {
+      "path": "frontend/chime-list.webp",
+      "sha256": "a90c6ff199b7e9a2616b6355f2cd5038916d9447ac7a902f268e6aabdb1035e9",
+      "size": 9898
+    },
+    {
+      "path": "frontend/chime-logs.webp",
+      "sha256": "dc9a7e48cdd75e309335ce4ee1b3c236f473132af9cdfdd3c411bb44aa57006d",
+      "size": 11542
+    },
+    {
+      "path": "frontend/chime-network.webp",
+      "sha256": "1859643d4ee3b27a26385518587bfe3a1428cbfc7f9077479dcccfbd5ad221f6",
+      "size": 10776
+    },
+    {
+      "path": "frontend/chime-plan.webp",
+      "sha256": "7497fc1abff30de6049e0a58174185dbd7fde7ec5fa1f7f25840ba7a84438439",
+      "size": 10348
+    },
+    {
+      "path": "frontend/chime-settings.webp",
+      "sha256": "748c858222b2f74ee090fd8ddfa9cd532da956454d3382c36570e7c6ee5abd0c",
+      "size": 11632
+    },
+    {
       "path": "frontend/companion-idle.png",
       "sha256": "d872ee7ef1c09bd5be140732fafbbdcda2f6b2343cc581c78d3dbdfea8aca2c0",
       "size": 73702
@@ -26,9 +76,29 @@
       "size": 449092
     },
     {
+      "path": "frontend/dashboard-chime.js",
+      "sha256": "0c14398540b25347c5fc33e504a2713f8a2ea11aa43f798054fad5d059f20332",
+      "size": 15092
+    },
+    {
+      "path": "frontend/dashboard-galaxy.js",
+      "sha256": "04412e0e821550004b11fbf52e1827b5bc2c56f1b6d6549e3e6aadcba3cae475",
+      "size": 23268
+    },
+    {
+      "path": "frontend/dashboard-journal.css",
+      "sha256": "0910780a1387ff3989430149cc4f01921c41b38b87fb3eeecea1f6ea2dfa3beb",
+      "size": 47772
+    },
+    {
+      "path": "frontend/dashboard-journal.js",
+      "sha256": "fb3697cab54ccd729cee80c909fe5b91b9059d3cd5773f7c3eacd008c0ea6ef5",
+      "size": 12475
+    },
+    {
       "path": "frontend/dashboard.html",
-      "sha256": "7c5237932ab8eec36bb64d0581a7f0bac87d8d6aaacb81fd9bfed20f66e25251",
-      "size": 615472
+      "sha256": "37f43fdbc765b04480532af42396711e9f7614e3cb0f1e393977cdea7298d2de",
+      "size": 615720
     },
     {
       "path": "frontend/favicon.svg",
@@ -42,13 +112,13 @@
     },
     {
       "path": "frontend/login-cover.css",
-      "sha256": "0726358f68b523628702a87dddc15276d873e2497bfc2d7750c0eb0944c689e4",
-      "size": 12209
+      "sha256": "b49ffa8c7698bb5033771bc70d0cc66c6a4fec3d9e0a911a4c3517a8e1a6814a",
+      "size": 12229
     },
     {
       "path": "frontend/login-cover.js",
-      "sha256": "ccae2aca29c85495ab6a0b465cc66abcce598b1bdfb6b56454222722406f0340",
-      "size": 14081
+      "sha256": "326c45fdc8c14d1ffc5a46206e9c2e54cf54a6450a09c6e3ed44a9dd11bd7ad4",
+      "size": 14961
     },
     {
       "path": "frontend/login-crystal-pendant.webp",
@@ -111,14 +181,134 @@
       "size": 402
     },
     {
+      "path": "frontend/mascot-bowl.webp",
+      "sha256": "58039d72c5a1cc35c6faceb87919bee2a07908941ee40954e7b837f572f49122",
+      "size": 20256
+    },
+    {
+      "path": "frontend/mascot-cook.webp",
+      "sha256": "593d5232b3afc6572efaf0a6bb9f857198911929f0f381910aaf382b7a3d2e6d",
+      "size": 23038
+    },
+    {
+      "path": "frontend/mascot-lie.webp",
+      "sha256": "54fe298702fa9c2fbbc54908d1f64e23711b3d19ff08b50e6804b6b655ccc777",
+      "size": 17986
+    },
+    {
+      "path": "frontend/mascot-lounge.webp",
+      "sha256": "c93005aea42bc56afa87aca874a183080e077edf81ad24f8ae3e698935c8f32f",
+      "size": 16134
+    },
+    {
+      "path": "frontend/mascot-mug.webp",
+      "sha256": "a79786214523b49a90edbe60fc3def077deb5fd93c6477d773a1e9672ec99c1f",
+      "size": 12230
+    },
+    {
+      "path": "frontend/mascot-peek.webp",
+      "sha256": "85639b5463e080f85ee64218ec3ac1fb96e2cfaa8cd123970134a0a94f79e177",
+      "size": 18344
+    },
+    {
+      "path": "frontend/mascot-sleep.webp",
+      "sha256": "a6568a98ba4fad69735bca66f64e91ba6db81357ba0f226a1591ed8476f8694f",
+      "size": 20046
+    },
+    {
+      "path": "frontend/mascot-stand.webp",
+      "sha256": "2b74d351311dc166a3e328708180d4c04b5f1cb51e4c4695a685ca54050507e4",
+      "size": 18140
+    },
+    {
       "path": "frontend/onboarding.html",
       "sha256": "421dac5d9c4a7fd5093296891b092115a8f4e172deabf3212ad3a9700f5c32e9",
       "size": 10589
     },
     {
+      "path": "frontend/sticker-birdcage.webp",
+      "sha256": "e8c5bdf7b78ffc2c4d81cf1739d193bb03e82a0efa0cc1745c2e5d21ff925aa1",
+      "size": 38886
+    },
+    {
+      "path": "frontend/sticker-bouquet.webp",
+      "sha256": "0361a72f0d8e6e371f9d30d622e1d01b648cbd5642278b92e162b1f5e38db32d",
+      "size": 24114
+    },
+    {
+      "path": "frontend/sticker-bow-heart.webp",
+      "sha256": "4dae1cb93fcdba2a11a1ad122b5fb17fd9712c4d9e2b114b9e688eb2df98c6ac",
+      "size": 11226
+    },
+    {
+      "path": "frontend/sticker-bow-white.webp",
+      "sha256": "27ec74eea008ca75d8bad15e994056337660e32efb1684e4a60556fa7c9e5084",
+      "size": 11970
+    },
+    {
+      "path": "frontend/sticker-bow.webp",
+      "sha256": "526349f7de98595994c64d59ec88435ddd6bbd9f4890070b5d2a4f93a4becb47",
+      "size": 27694
+    },
+    {
+      "path": "frontend/sticker-butterfly-white.webp",
+      "sha256": "c364650a33252ed28da0afbe908f00bdf9e8d9ba5cfc8396dbce70962c2c11f1",
+      "size": 22786
+    },
+    {
+      "path": "frontend/sticker-butterfly.webp",
+      "sha256": "4292a33493a42659e540c794b67ba1a4732a209e0acd0d935c5a4f7a050d1e5c",
+      "size": 24508
+    },
+    {
+      "path": "frontend/sticker-envelope.webp",
+      "sha256": "bf61027ec20d5b86d827eb8fc6134b92fa388f429f5e76784f74b333c1c2bc73",
+      "size": 26834
+    },
+    {
+      "path": "frontend/sticker-lace.webp",
+      "sha256": "a2f49aff78708dc195ccd3cbb36201a5b9fe903bb05bacf45e200ac9f830357a",
+      "size": 27732
+    },
+    {
+      "path": "frontend/sticker-lavender.webp",
+      "sha256": "09c3402f235e4e6f574e1c873f3c1389e6d6850d8ceefe025f2235d8c30c4acd",
+      "size": 26236
+    },
+    {
+      "path": "frontend/sticker-paper.webp",
+      "sha256": "4c8039615aec849d8ab4a7a83850a278ed003192e01cdf9edd8a7490ddf22005",
+      "size": 19242
+    },
+    {
+      "path": "frontend/sticker-stamp.webp",
+      "sha256": "636249c5295613cab650d1ee710dd78e8423e45b1f59320132b66adbfee4a25d",
+      "size": 12480
+    },
+    {
+      "path": "frontend/sticker-strip.webp",
+      "sha256": "14ef23bbc726b9f4de2e00cbdcbf32d72fdf02868eaab74a7400bb2f93fcaa5f",
+      "size": 8338
+    },
+    {
+      "path": "frontend/sticker-tape-gingham.webp",
+      "sha256": "8dc695e045d80022ceafc7e0027c159f4d08ccd055b16d97fbe8f3db7920670b",
+      "size": 10304
+    },
+    {
+      "path": "frontend/sticker-tape-stripe.webp",
+      "sha256": "fced5e2a49f29962331c86631a9970d38cc51e7d44299bf7263fa94f2f208ce8",
+      "size": 11452
+    },
+    {
+      "path": "frontend/sticker-ticket.webp",
+      "sha256": "50938edbd7bb5df05068ca51fea407a52c50b40ae58fa4f81af71e5facb8a094",
+      "size": 11136
+    },
+    {
       "path": "src/VERSION",
-      "sha256": "5c0f9e710d6f59bb59980444f3dc58886fc564a0a2d8a1d534d3296be2c67da8",
-      "size": 6
+      "sha256": "ac67a8a961ce1353733aeef7762757f3f3b28d1f4ef1bf97369f3b5a329b3b4b",
+      "size": 7
     },
     {
       "path": "src/bm25_index.py",
@@ -892,8 +1082,8 @@
     },
     {
       "path": "src/web/dashboard.py",
-      "sha256": "12da5e2b698ee8c01bab3825edfbd1f10d87c101beea34142e55f25605eff8eb",
-      "size": 6451
+      "sha256": "b5a36fc68e0b919d5f250c1b76f24539dbba7faa4f75260ddc406fb2fccde142",
+      "size": 7701
     },
     {
       "path": "src/web/embedding.py",
@@ -982,5 +1172,5 @@
     }
   ],
   "rollout_strategy": "single-node",
-  "version": "3.9.0"
+  "version": "3.10.0"
 }

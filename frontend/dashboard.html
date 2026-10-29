@@ -23,7 +23,7 @@
   function read(key) {
     try { return localStorage.getItem(key); } catch (_) { return null; }
   }
-  function validPalette(value) { return value === 'lilac' || value === 'snowfall' || value === 'violet-mist'; }
+  function validPalette(value) { return value === 'lilac' || value === 'sand' || value === 'mist'; }
   function validMode(value) { return value === 'light' || value === 'dark' || value === 'system'; }
   function restore() {
     var savedPalette = read(paletteKey);
@@ -39,8 +39,8 @@
     document.documentElement.dataset.palette = palette;
     document.documentElement.dataset.theme = theme;
     document.documentElement.style.colorScheme = theme;
-    var colors = palette === 'violet-mist' ? ['#F4F0F8', '#1B1A2E'] :
-      palette === 'snowfall' ? ['#F1F3F7', '#20263B'] : ['#F8F5F9', '#17171B'];
+    var colors = palette === 'sand' ? ['#F0EBE3', '#1C1814'] :
+      palette === 'mist' ? ['#E6EEF2', '#12171B'] : ['#F3F1FB', '#14121D'];
     var meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.content = colors[theme === 'dark' ? 1 : 0];
     var button = document.getElementById('theme-toggle');
@@ -2794,6 +2794,10 @@ html[data-palette="violet-mist"] .dreamcloud #memory-delete-confirm { color: var
 </style>
 <link rel="stylesheet" href="/static/login-cover.css">
 <script src="/static/login-cover.js" defer></script>
+<link rel="stylesheet" href="/static/dashboard-journal.css">
+<script src="/static/dashboard-chime.js" defer></script>
+<script src="/static/dashboard-galaxy.js" defer></script>
+<script src="/static/dashboard-journal.js" defer></script>
 </head>
 <body class="dreamcloud">
 
@@ -2856,7 +2860,7 @@ html[data-palette="violet-mist"] .dreamcloud #memory-delete-confirm { color: var
 <nav class="tabs" aria-label="页面导航">
   <button type="button" class="tab active" data-tab="list"><span>记忆桶</span><span class="tab-en">Buckets</span></button>
   <button type="button" class="tab" data-tab="breath"><span>Breath 模拟</span><span class="tab-en">Breath Trace</span></button>
-  <button type="button" class="tab" data-tab="network"><span>记忆网络</span><span class="tab-en">Network</span></button>
+  <button type="button" class="tab" data-tab="network"><span>记忆星河</span><span class="tab-en">Galaxy</span></button>
   <button type="button" class="tab" data-tab="plan"><span>计划</span><span class="tab-en">Plans</span></button>
   <button type="button" class="tab" data-tab="letters"><span>信</span><span class="tab-en">Letters</span></button>
   <button type="button" class="tab" data-tab="anchors"><span>锚点</span><span class="tab-en">Anchors</span></button>
@@ -3255,7 +3259,7 @@ html[data-palette="violet-mist"] .dreamcloud #memory-delete-confirm { color: var
 
     <section class="config-section appearance-section" id="sec-appearance" data-sgroup="basics" aria-labelledby="appearance-title">
       <h3 id="appearance-title">面板外观 <span class="sec-en">Appearance</span></h3>
-      <p class="appearance-description">选一个喜欢的色系，随时切换。选择会保存在当前浏览器，下次打开继续使用。</p>
+      <p class="appearance-description">选一个喜欢的手账色系，贴纸和吊牌会跟着换色。选择会保存在当前浏览器。</p>
       <fieldset class="appearance-fieldset">
         <legend>面板色系</legend>
         <div class="palette-options">
@@ -3263,24 +3267,24 @@ html[data-palette="violet-mist"] .dreamcloud #memory-delete-confirm { color: var
             <input type="radio" name="dashboard-palette" value="lilac" onchange="setDashboardPalette(this.value)" checked>
             <span class="palette-option-body">
               <span class="palette-preview palette-preview-lilac" aria-hidden="true"><span></span><span></span></span>
-              <strong>淡紫粉色</strong>
-              <span class="palette-description">浅紫与淡粉，夜晚是温柔玫瑰金。</span>
+              <strong>雾紫信纸</strong>
+              <span class="palette-description">和登录页同一套：雾紫纸张、墨紫字迹；夜里是星空手账。</span>
             </span>
           </label>
           <label class="palette-option">
-            <input type="radio" name="dashboard-palette" value="snowfall" onchange="setDashboardPalette(this.value)">
+            <input type="radio" name="dashboard-palette" value="sand" onchange="setDashboardPalette(this.value)">
             <span class="palette-option-body">
-              <span class="palette-preview palette-preview-snowfall" aria-hidden="true"><span></span><span></span></span>
-              <strong>星雪暮色</strong>
-              <span class="palette-description">雪白与灰蓝，夜晚是靛蓝星光。</span>
+              <span class="palette-preview palette-preview-sand" aria-hidden="true"><span></span><span></span></span>
+              <strong>暖沙</strong>
+              <span class="palette-description">奶油、沙色与小麦色，胡桃木做重点色；夜里是暖灯下的旧书页。</span>
             </span>
           </label>
           <label class="palette-option">
-            <input type="radio" name="dashboard-palette" value="violet-mist" onchange="setDashboardPalette(this.value)">
+            <input type="radio" name="dashboard-palette" value="mist" onchange="setDashboardPalette(this.value)">
             <span class="palette-option-body">
-              <span class="palette-preview palette-preview-violet-mist" aria-hidden="true"><span></span><span></span></span>
-              <strong>紫雾</strong>
-              <span class="palette-description">浅色 Lilac Mist，深色 Ultra Violet。雾紫与藤萝，夜晚是深紫星空。</span>
+              <span class="palette-preview palette-preview-mist" aria-hidden="true"><span></span><span></span></span>
+              <strong>雾蓝</strong>
+              <span class="palette-description">清晨的海雾和灰蓝信纸；夜里是安静的深海蓝。</span>
             </span>
           </label>
         </div>
@@ -6222,7 +6226,7 @@ function updateStats() {
   const resolved = allBuckets.filter(b => b.resolved).length;
   const digested = allBuckets.filter(b => b.digested).length;
   document.getElementById('stats').textContent =
-    total + ' 桶 · ' + pinned + ' 钉选 · ' + feels + ' feel · ' + resolved + ' 已解决 · ' + digested + ' 已消化';
+    total + ' 条记忆 · ' + pinned + ' 钉选 · ' + feels + ' feel · ' + resolved + ' 已解决 · ' + digested + ' 已消化';
   updateChick(total);   // 小黄鸡蛋随记忆总数孵化长大
 }
 

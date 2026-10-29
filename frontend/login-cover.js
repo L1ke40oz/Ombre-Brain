@@ -36,7 +36,7 @@
         {opacity:0,transform:'translate(-50%,-50%) scale(.35)'},
         {opacity:.8,transform:'translate(-50%,-50%) scale(.62)',offset:.22},
         {opacity:0,transform:'translate(-50%,-50%) scale(1.5)'}
-      ], {duration:760,easing:'cubic-bezier(.16,.65,.3,1)'});
+      ], {duration:520,easing:'cubic-bezier(.16,.65,.3,1)'});
       animation.finished.catch(function () {}).then(function () { ripple.remove(); });
     }
 
@@ -64,7 +64,7 @@
           // 面板先在封面后初始化，网络较慢时仍允许进入原有加载状态。
           await Promise.race([
             Promise.resolve(dashboardReady).catch(function () {}),
-            new Promise(function (resolve) { timeout = setTimeout(resolve,900); })
+            new Promise(function (resolve) { timeout = setTimeout(resolve,400); })
           ]);
           clearTimeout(timeout);
           if (!current()) return false;
@@ -77,25 +77,42 @@
           light.setAttribute('aria-hidden','true');
           document.body.appendChild(light);
           cover.classList.add('ob-cover-opening');
+          // 光晕扩散：极快起步的超宽羽化光圈，前沿带几团错位光斑像云雾翻涌，
+          // 已扫过的区域先过曝成白再迅速褪开，露出面板。整段约 0.68 秒。
+          var lobes = [0,1,2].map(function (i) {
+            var angle = Math.random() * Math.PI * 2 + i * 2.1;
+            return {dx:Math.cos(angle),dy:Math.sin(angle),scale:.82 + Math.random() * .12};
+          });
           var completed = await new Promise(function (resolve) {
             var started = null;
             function tick(now) {
               if (!current()) { resolve(false); return; }
               if (started === null) started = now;
-              var progress = reduced.matches ? 1 : Math.min(1,(now - started) / 1650);
-              var eased = progress * progress * (3 - 2 * progress);
+              var progress = Math.min(1,(now - started) / 680);
+              var grow = 1 - Math.pow(1 - progress,3.4);
               var width = window.innerWidth, height = window.innerHeight;
               var x = Math.max(0,Math.min(width,origin.x));
               var y = Math.max(0,Math.min(height,origin.y));
-              var feather = width < 681 ? 32 : 54;
               var reach = Math.hypot(Math.max(x,width - x),Math.max(y,height - y));
-              var radius = -feather + (reach + feather * 3) * eased;
+              var feather = reach * .34;
+              var radius = (reach + feather) * 1.06 * grow;
               var center = x + 'px ' + y + 'px';
-              var mask = 'radial-gradient(circle at ' + center + ',transparent ' + (radius - feather) + 'px,#000 ' + (radius + feather) + 'px)';
+              var mask = 'radial-gradient(circle at ' + center + ',transparent ' + (radius - feather) + 'px,#000 ' + radius + 'px)';
               cover.style.maskImage = mask;
               cover.style.webkitMaskImage = mask;
-              light.style.backgroundImage = 'radial-gradient(circle at ' + center + ',transparent ' + (radius - feather - 22) + 'px,#ffffff55 ' + (radius - 14) + 'px,#fffffff0 ' + radius + 'px,#ffffff66 ' + (radius + 24) + 'px,transparent ' + (radius + feather + 42) + 'px)';
-              light.style.opacity = String(Math.min(1,progress * 12) * (1 - Math.max(0,(progress - .72) / .28)));
+              var wash = .8 * Math.pow(1 - progress,2.6);
+              function band(cx, cy, r, peak) {
+                return 'radial-gradient(circle at ' + cx + 'px ' + cy + 'px,'
+                  + 'rgba(255,255,255,' + wash + ') ' + Math.max(0,r - feather * 1.1) + 'px,'
+                  + 'rgba(255,255,255,' + peak + ') ' + (r - feather * .38) + 'px,'
+                  + 'rgba(236,239,255,' + peak * .5 + ') ' + r + 'px,'
+                  + 'rgba(236,239,255,0) ' + (r + feather * .45) + 'px)';
+              }
+              var drift = feather * .38 * grow;
+              light.style.backgroundImage = lobes.map(function (lobe) {
+                return band(x + lobe.dx * drift,y + lobe.dy * drift,radius * lobe.scale,.55);
+              }).concat(band(x,y,radius,.97)).join(',');
+              light.style.opacity = String(Math.min(1,progress / .06) * (1 - Math.max(0,(progress - .4) / .6)));
               if (progress < 1) frame = requestAnimationFrame(tick);
               else resolve(true);
             }
