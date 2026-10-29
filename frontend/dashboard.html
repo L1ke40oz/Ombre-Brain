@@ -6765,13 +6765,13 @@ async function bucketAnchor(id) {
 // iter 1.8: 主动遗忘切换 / voluntary forget toggle
 //   POST /api/bucket/{id}/forget 反转 dont_surface。桁仍在磁盘上，
 //   只不再在无参 breath() 中被主动推出。搜索仍能找到。
-async function bucketForget(id) {
+async function bucketForget(id, options) {
   try {
     var res = await fetch(BASE + '/api/bucket/' + encodeURIComponent(id) + '/forget', { method: 'POST' });
     if (!res.ok) throw new Error(await res.text());
     if (window.ObPet) ObPet.react('forget');
-    await showDetail(id);
-    loadBuckets();
+    if (!options || !options.inline) await showDetail(id);
+    await loadBuckets();
   } catch (e) { alert('遗忘切换失败 / Forget toggle failed: ' + e.message); }
 }
 
@@ -6788,7 +6788,7 @@ function renderForgottenGroup(forgotten) {
   box.style.display = '';
   countEl.textContent = forgotten.length;
   listEl.innerHTML = forgotten.map(function(b) {
-    return '<div class="bucket-row" style="opacity:0.6;">' +
+    return '<div class="bucket-row" data-id="' + escAttr(b.id) + '" style="opacity:0.6;">' +
       '<span class="icon"><i data-lucide="eye-off"></i></span>' +
       '<span class="name" data-bucket-id="' + escAttr(b.id) + '" onclick="showDetail(this.dataset.bucketId)" style="cursor:pointer;">' + esc(b.name) + '</span>' +
       '<span class="domain">' + esc((b.domain || []).join(', ')) + '</span>' +
@@ -6826,14 +6826,14 @@ async function bucketsForgetAllow() {
   } catch (e) { alert('批量恢复失败 / Bulk restore failed: ' + e.message); }
 }
 
-async function bucketResolve(id) {
+async function bucketResolve(id, options) {
   try {
     var res = await fetch(BASE + '/api/bucket/' + encodeURIComponent(id) + '/resolve', { method: 'POST' });
     if (!res.ok) throw new Error(await res.text());
     var d = await res.json();
     if (d.message) alert(d.message);
-    await showDetail(id);
-    loadBuckets();
+    if (!options || !options.inline) await showDetail(id);
+    await loadBuckets();
   } catch (e) { alert('resolve 切换失败: ' + e.message); }
 }
 
@@ -10663,7 +10663,7 @@ async function loadDuplicates() {
 // iter 1.6 §6 — trace 编辑表单（注入到 detail 面板）
 // 在 showDetail 渲染完后调用，给「编辑」按钮挂事件
 // ========================================
-function renderEditForm(bid, meta) {
+function renderEditForm(bid, meta, options) {
   const curContent = esc(meta._content_for_edit || '');
   const fallbackTitle = String(meta.name || '').replace(/^\d{4}-\d{2}-\d{2} \d{2}-\d{2}-\d{2}\s*/, '');
   const editTitle = String(meta.title || fallbackTitle || '');
@@ -10677,7 +10677,7 @@ function renderEditForm(bid, meta) {
   const typeOptions = meta.pinned && typeIsEditable
     ? ['permanent', 'dynamic']
     : (typeIsEditable ? editableTypes : [currentType].concat(editableTypes));
-  return `
+  const markup = `
     <details id="bucket-edit-form" style="margin-top:14px;border:1px solid var(--border);border-radius:2px;padding:12px 14px;background:var(--surface-solid);">
       <summary style="cursor:pointer;font-weight:600;color:var(--accent-ink,var(--accent));display:flex;align-items:center;gap:5px;"><svg class="icon" aria-hidden="true"><use href="#i-edit"></use></svg> 编辑这条记忆</summary>
       <div style="display:grid;grid-template-columns:90px 1fr;gap:10px 12px;align-items:center;margin-top:14px;font-size:13px;">
@@ -10686,7 +10686,7 @@ function renderEditForm(bid, meta) {
         <label>显示名称</label>
         <input id="edit-name" type="text" value="${escAttr(meta.name || '')}" />
         <label>类型</label>
-        <select id="edit-type" style="width:160px;" onchange="syncEditPinConstraints('type')" ${typeIsEditable ? '' : 'disabled title="特殊类型由对应工具维护，编辑其他字段时会保持原类型"'}>
+        <select id="edit-type" style="width:160px;" onchange="syncEditPinConstraints('type',this.closest('details'))" ${typeIsEditable ? '' : 'disabled title="特殊类型由对应工具维护，编辑其他字段时会保持原类型"'}>
           ${typeOptions.map(t =>
             `<option value="${escAttr(t)}" ${currentType === t ? 'selected' : ''}>${esc(t)}</option>`
           ).join('')}
@@ -10697,11 +10697,11 @@ function renderEditForm(bid, meta) {
         <label>标签</label>
         <input id="edit-tags" type="text" value="${escAttr((meta.tags||[]).join(', '))}" placeholder="逗号分隔" />
         <label>重要度</label>
-        <span><input id="edit-importance" type="range" min="1" max="10" value="${safeImportance}" oninput="document.getElementById('edit-imp-val').textContent=this.value;syncEditPinConstraints('importance')" style="vertical-align:middle;" /> <span id="edit-imp-val">${safeImportance}</span>/10</span>
+        <span><input id="edit-importance" type="range" min="1" max="10" value="${safeImportance}" oninput="this.closest('details').querySelector('[data-edit-field=edit-imp-val]').textContent=this.value;syncEditPinConstraints('importance',this.closest('details'))" style="vertical-align:middle;" /> <span id="edit-imp-val">${safeImportance}</span>/10</span>
         <label>已解决</label>
         <span><input id="edit-resolved" type="checkbox" ${meta.resolved ? 'checked' : ''} /> <small style="color:var(--text-dim);">勾上后仅在关键词命中时重现（适合已闭环的 plan / 事件）</small></span>
         <label>钉选</label>
-        <span><input id="edit-pinned" type="checkbox" onchange="syncEditPinConstraints('pinned')" ${meta.pinned ? 'checked' : ''} /> <small id="edit-pin-hint" style="color:var(--text-dim);">钉选会同步为 permanent / importance=10</small></span>
+        <span><input id="edit-pinned" type="checkbox" onchange="syncEditPinConstraints('pinned',this.closest('details'))" ${meta.pinned ? 'checked' : ''} /> <small id="edit-pin-hint" style="color:var(--text-dim);">钉选会同步为 permanent / importance=10</small></span>
         <label>已消化</label>
         <span><input id="edit-digested" type="checkbox" ${meta.digested ? 'checked' : ''} /></span>
         <label>主动遗忘</label>
@@ -10710,7 +10710,7 @@ function renderEditForm(bid, meta) {
         <textarea id="edit-why" placeholder="可选：这条为什么值得保留（仅展示，不计分）" style="min-height:50px;font-family:inherit;line-height:1.7;resize:vertical;">${esc(meta.why_remembered || '')}</textarea>
         ${meta.type === 'plan' ? `<label>承诺重量</label>
         <span>
-          <input id="edit-weight" type="range" min="0" max="100" value="${Math.round((meta.weight||0)*100)}" oninput="window._updateWeightLabel && window._updateWeightLabel(this.value)" list="weight-anchors" style="vertical-align:middle;width:200px;" />
+          <input id="edit-weight" type="range" min="0" max="100" value="${Math.round((meta.weight||0)*100)}" oninput="this.closest('details').querySelector('[data-edit-field=edit-weight-val]').textContent=this.value+'% · '+weightAnchorLabel(Number(this.value)/100)" list="weight-anchors" style="vertical-align:middle;width:200px;" />
           <datalist id="weight-anchors"><option value="25"></option><option value="50"></option><option value="75"></option><option value="100"></option></datalist>
           <span id="edit-weight-val" style="margin-left:8px;">${Math.round((meta.weight||0)*100)}% · ${weightAnchorLabel((meta.weight||0))}</span>
           <small style="color:var(--text-dim);display:block;margin-top:4px;">轻 25% · 中 50% · 重 75% · 必须 100%（0–100%，仅用于排序展示）</small>
@@ -10719,18 +10719,24 @@ function renderEditForm(bid, meta) {
         <textarea id="edit-content" aria-label="正文 / Content" placeholder="留空不改" style="min-height:120px;font-family:inherit;line-height:1.7;resize:vertical;">${curContent}</textarea>
       </div>
       <div style="margin-top:12px;display:flex;gap:10px;align-items:center;">
-        <button class="btn-primary" data-bucket-id="${escAttr(bid)}" onclick="bucketSaveEdit(this.dataset.bucketId)" title="保存修改" style="padding:0 14px;height:36px;display:inline-flex;align-items:center;gap:5px;"><i data-lucide="check"></i> 保存修改</button>
+        <button class="btn-primary" data-bucket-id="${escAttr(bid)}" onclick="bucketSaveEdit(this.dataset.bucketId,this.closest('details'))" title="保存修改" style="padding:0 14px;height:36px;display:inline-flex;align-items:center;gap:5px;"><i data-lucide="check"></i> 保存修改</button>
         <span id="edit-msg" style="font-size:12px;"></span>
       </div>
     </details>`;
+  const prefix = options && options.idPrefix || '';
+  return markup.replace(/\bid="((?:edit-[a-z-]+|bucket-edit-form|weight-anchors))"/g, function (_, id) {
+    return 'id="' + prefix + id + '" data-edit-field="' + id + '"';
+  }).replace('for="edit-content"','for="' + prefix + 'edit-content"')
+    .replace('list="weight-anchors"','list="' + prefix + 'weight-anchors"');
 }
 
-function syncEditPinConstraints(source) {
-  const pinnedEl = document.getElementById('edit-pinned');
-  const typeEl = document.getElementById('edit-type');
-  const importanceEl = document.getElementById('edit-importance');
-  const importanceValueEl = document.getElementById('edit-imp-val');
-  const hintEl = document.getElementById('edit-pin-hint');
+function syncEditPinConstraints(source, editorRoot) {
+  const field = function (id) { return editorRoot ? editorRoot.querySelector('[data-edit-field="' + id + '"]') : document.getElementById(id); };
+  const pinnedEl = field('edit-pinned');
+  const typeEl = field('edit-type');
+  const importanceEl = field('edit-importance');
+  const importanceValueEl = field('edit-imp-val');
+  const hintEl = field('edit-pin-hint');
   // i/self、archived 等受保护类型不通过普通编辑器改变生命周期约束。
   if (!pinnedEl || !typeEl || typeEl.disabled) return;
 
@@ -10756,24 +10762,27 @@ function syncEditPinConstraints(source) {
   }
 }
 
-async function bucketSaveEdit(bid) {
+async function bucketSaveEdit(bid, editorRoot) {
+  if (editorRoot && editorRoot.dataset.saving === '1') return false;
+  const field = function (id) { return editorRoot ? editorRoot.querySelector('[data-edit-field="' + id + '"]') : document.getElementById(id); };
+  const inline = !!(editorRoot && editorRoot.dataset.inlineEditor === 'true');
   // 事件联动之外再做一次保存前校验，避免脚本赋值或浏览器差异留下矛盾字段。
-  syncEditPinConstraints('save');
-  const newContent = document.getElementById('edit-content').value;
+  syncEditPinConstraints('save',editorRoot);
+  const newContent = field('edit-content').value;
   // iter 1.8: 新增 why_remembered / dont_surface / weight，plan 才会有 weight
-  const weightEl = document.getElementById('edit-weight');
-  const typeEl = document.getElementById('edit-type');
-  const titleEl = document.getElementById('edit-title');
+  const weightEl = field('edit-weight');
+  const typeEl = field('edit-type');
+  const titleEl = field('edit-title');
   const body = {
-    name: document.getElementById('edit-name').value,
-    tags: document.getElementById('edit-tags').value,
-    domain: document.getElementById('edit-domain').value,
-    importance: parseInt(document.getElementById('edit-importance').value, 10),
-    resolved: document.getElementById('edit-resolved').checked,
-    pinned: document.getElementById('edit-pinned').checked,
-    digested: document.getElementById('edit-digested').checked,
-    dont_surface: document.getElementById('edit-dont-surface').checked,
-    why_remembered: document.getElementById('edit-why').value,
+    name: field('edit-name').value,
+    tags: field('edit-tags').value,
+    domain: field('edit-domain').value,
+    importance: parseInt(field('edit-importance').value, 10),
+    resolved: field('edit-resolved').checked,
+    pinned: field('edit-pinned').checked,
+    digested: field('edit-digested').checked,
+    dont_surface: field('edit-dont-surface').checked,
+    why_remembered: field('edit-why').value,
   };
   // 历史桶可能没有显式 title；表单展示的是 name fallback。只有用户
   // 真正动过标题输入框才提交，避免保存其他字段时意外固化或因空标题 400。
@@ -10784,12 +10793,16 @@ async function bucketSaveEdit(bid) {
   if (weightEl) body.weight = parseFloat(weightEl.value) / 100;
   // 内容只在非空时带上，避免误清空
   if (newContent && newContent.trim()) body.content = newContent;
-  const msg = document.getElementById('edit-msg');
+  const msg = field('edit-msg');
   const importView = document.getElementById('import-view');
   const refreshImportResults = importView && importView.style.display !== 'none';
   const importList = document.getElementById('import-results-list');
   const importScrollTop = importList ? importList.scrollTop : 0;
   const detailGenerationAtSave = detailLoadGeneration;
+  const controls = editorRoot ? Array.from(editorRoot.querySelectorAll('input,textarea,select,button')).map(function (node) {
+    const saved = {node:node,disabled:node.disabled}; node.disabled = true; return saved;
+  }) : [];
+  if (editorRoot) editorRoot.dataset.saving = '1';
   msg.textContent = '保存中… / Saving…';
   msg.style.color = 'var(--text-dim)';
   try {
@@ -10803,6 +10816,11 @@ async function bucketSaveEdit(bid) {
     msg.style.color = 'var(--accent)';
     // If the user opened/closed another detail while PATCH was in flight, do
     // not pull the panel back to the bucket that just finished saving.
+    if (inline) {
+      editorRoot.dispatchEvent(new CustomEvent('ob-memory-saved',{bubbles:true,detail:{id:bid}}));
+      await loadBuckets();
+      return true;
+    }
     if (detailLoadGeneration === detailGenerationAtSave) {
       await showDetail(bid);
     }
@@ -10813,6 +10831,10 @@ async function bucketSaveEdit(bid) {
   } catch (e) {
     msg.innerHTML = _SV.err + ' ' + esc(e.message);
     msg.style.color = 'var(--negative)';
+    return false;
+  } finally {
+    controls.forEach(function (item) { item.node.disabled = item.disabled; });
+    if (editorRoot) editorRoot.dataset.saving = '0';
   }
 }
 

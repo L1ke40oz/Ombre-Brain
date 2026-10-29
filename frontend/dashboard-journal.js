@@ -1,5 +1,5 @@
 /* 记忆桶页的手账排版：搜索框从全局头部挪进记忆桶页；状态/标签筛选和排序收进「筛选与排序」面板。
-   只搬动原有节点、复用原有处理函数（筛选按钮的委托点击、setBucketSort、搜索监听），不改数据逻辑。 */
+   搬动原有节点、复用原有筛选和操作处理函数；列表内编辑共享侧栏表单与保存校验，不改变后端接口。 */
 (function () {
   'use strict';
   var SORTS = [
@@ -227,7 +227,122 @@
     }
   }
 
-  function boot() { mount(); smoothTheme(); heroes(); }
+  // 列表操作与行内编辑共享旧的表单和接口；刷新列表时移动现有节点保留草稿。
+  function inlineMemories() {
+    var view = document.getElementById('list-view');
+    if (!view || view.dataset.inlineMemories) return;
+    view.dataset.inlineMemories = '1';
+    var editors = new Map(), messages = new Map(), busy = new Set(), sequence = 0;
+    function memories() { return typeof allBuckets !== 'undefined' && Array.isArray(allBuckets) ? allBuckets : []; }
+    function setText(node, text) { if (node.textContent !== text) node.textContent = text; }
+    function decorate() {
+      var data = memories();
+      var live = new Set(data.map(function (b) { return String(b.id); }));
+      editors.forEach(function (state, id) { if (!live.has(id)) { state.host.remove(); editors.delete(id); } });
+      view.querySelectorAll('#bucket-list .bucket-row[data-id],#forgotten-list .bucket-row[data-id]').forEach(function (row) {
+        var id = row.dataset.id;
+        var memory = data.find(function (b) { return String(b.id) === id; });
+        if (!memory) return;
+        var actions = row.querySelector(':scope > .ob-row-actions');
+        if (memory.letter_locked) {
+          if (actions) actions.remove();
+          if (editors.has(id)) { editors.get(id).host.remove(); editors.delete(id); }
+          return;
+        }
+        if (!actions) {
+          actions = document.createElement('div'); actions.className = 'ob-row-actions';
+          ['forget','resolve','archive','delete','edit'].forEach(function (action) {
+            var button = document.createElement('button'); button.type = 'button'; button.dataset.action = action;
+            actions.appendChild(button);
+          });
+          actions.addEventListener('click', function (event) {
+            event.stopPropagation();
+            var button = event.target.closest('button[data-action]');
+            if (button && !button.disabled) act(id, button.dataset.action);
+          });
+          row.appendChild(actions);
+        }
+        var labels = {forget:memory.dont_surface ? '允许浮现' : '遗忘',resolve:memory.resolved ? '取消沉底' : '沉底',archive:'归档',delete:'删除',edit:'编辑'};
+        actions.querySelectorAll('button').forEach(function (button) {
+          setText(button, labels[button.dataset.action]); button.disabled = busy.has(id);
+          if (button.dataset.action === 'delete') button.title = '永久删除，需再次确认';
+          if (button.dataset.action === 'edit') {
+            var state = editors.get(id);
+            button.setAttribute('aria-expanded', String(!!(state && state.open)));
+            if (state) button.setAttribute('aria-controls', state.host.id);
+          }
+        });
+        var message = row.querySelector(':scope > .ob-row-message');
+        if (messages.has(id)) {
+          if (!message) { message = document.createElement('span'); message.className = 'ob-row-message'; message.setAttribute('role','status'); row.appendChild(message); }
+          setText(message, messages.get(id));
+        }
+        var state = editors.get(id);
+        if (state && state.host.parentNode !== row) {
+          row.appendChild(state.host);
+          var focused = state.focused;
+          if (focused && document.activeElement === document.body) requestAnimationFrame(function () {
+            if (focused.isConnected && document.activeElement === document.body) focused.focus({preventScroll:true});
+          });
+        }
+      });
+    }
+    async function edit(id) {
+      var state = editors.get(id);
+      if (state && state.error && !state.open) { state.host.remove(); editors.delete(id); state = null; }
+      if (state) { state.open = !state.open; state.host.hidden = !state.open; decorate(); return; }
+      var host = document.createElement('div'); host.className = 'ob-inline-editor'; host.id = 'ob-inline-editor-' + (++sequence);
+      host.textContent = '正在读取这条记忆…';
+      host.addEventListener('click', function (event) { event.stopPropagation(); });
+      host.addEventListener('focusin', function (event) { state.focused = event.target; });
+      host.addEventListener('focusout', function () { if (host.isConnected) state.focused = null; });
+      state = {host:host,open:true,focused:null,error:false}; editors.set(id,state); decorate();
+      try {
+        var response = await authFetch('/api/bucket/' + encodeURIComponent(id));
+        if (!response) throw new Error('登录状态已失效，请重新登录。');
+        var memory = await readJsonSafe(response);
+        if (!response.ok) throw new Error(memory.error || ('HTTP ' + response.status));
+        if (memory.letter_locked) throw new Error('这封信尚未开放，不能编辑。');
+        if (editors.get(id) !== state) return;
+        host.innerHTML = renderEditForm(id,Object.assign({},memory.metadata || {},{_content_for_edit:memory.content}),{idPrefix:host.id + '-'});
+        var form = host.querySelector('details'); form.open = true; form.dataset.inlineEditor = 'true';
+        var bar = form.lastElementChild; bar.classList.add('ob-inline-savebar');
+        var cancel = document.createElement('button'); cancel.type = 'button'; cancel.className = 'ob-inline-cancel'; cancel.textContent = '收起';
+        cancel.addEventListener('click', function () { state.open = false; host.hidden = true; decorate(); });
+        bar.insertBefore(cancel,bar.lastElementChild);
+        form.addEventListener('ob-memory-saved', function () {
+          editors.delete(id); messages.set(id,'已保存'); host.remove(); decorate();
+        });
+        if (state.open) form.querySelector('[data-edit-field=edit-title]').focus({preventScroll:true});
+      } catch (error) {
+        if (editors.get(id) !== state) return;
+        state.error = true; host.textContent = '读取失败：' + error.message + '。请收起后重试。';
+      }
+    }
+    async function act(id, action) {
+      if (action === 'edit') return edit(id);
+      if (action === 'delete') { openPermanentDelete([id]); return; }
+      if (busy.has(id)) return;
+      busy.add(id); decorate();
+      try {
+        var handler = {forget:window.bucketForget,resolve:window.bucketResolve,archive:window.bucketArchive}[action];
+        if (handler) await handler(id,{inline:true});
+      } finally { busy.delete(id); decorate(); }
+    }
+    var observer = new MutationObserver(decorate);
+    ['bucket-list','forgotten-list'].forEach(function (id) {
+      var list = document.getElementById(id); if (list) observer.observe(list,{childList:true,subtree:true});
+    });
+    var cover = document.getElementById('auth-overlay');
+    if (cover) new MutationObserver(function () {
+      if (cover.style.display !== 'none') {
+        editors.forEach(function (state) { state.host.remove(); }); editors.clear(); messages.clear(); busy.clear();
+      }
+    }).observe(cover,{attributes:true,attributeFilter:['style']});
+    decorate();
+  }
+
+  function boot() { mount(); smoothTheme(); heroes(); inlineMemories(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, {once:true});
   else boot();
 })();

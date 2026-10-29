@@ -12,6 +12,67 @@ ROOT = Path(__file__).resolve().parents[1]
 DASHBOARD = ROOT / "frontend" / "dashboard.html"
 
 
+@pytest.mark.skipif(shutil.which("node") is None, reason="Node.js is unavailable")
+@pytest.mark.parametrize("save_ok", [True, False])
+def test_inline_editor_saves_own_raw_fields_without_opening_sidebar(save_ok):
+    html = DASHBOARD.read_text(encoding="utf-8")
+    start = html.index("function syncEditPinConstraints(")
+    end = html.index("// ========================================", start)
+    shared = html[start:end]
+    script = r"""
+const fields = {};
+function field(id,value,extra={}) { fields[id]={value,checked:false,disabled:false,dataset:{},style:{},...extra}; }
+field('edit-content','raw [[Target|Alias]] <b>original</b>');
+field('edit-title','fallback title',{dataset:{dirty:'0'}});
+field('edit-name','inline name');field('edit-domain','work');field('edit-tags','one, two');
+field('edit-importance','5');field('edit-type','i/self',{disabled:true});
+field('edit-resolved','');field('edit-pinned','');field('edit-digested','');
+field('edit-dont-surface','');field('edit-why','inline reason');field('edit-msg','');
+const events=[];
+const root={dataset:{inlineEditor:'true'},querySelector(selector){
+  const match=selector.match(/data-edit-field="([^"]+)"/);return match?fields[match[1]]||null:null;
+},querySelectorAll(){return Object.values(fields);},dispatchEvent(event){events.push(event.type);}};
+const document={getElementById(id){if(id.startsWith('edit-'))throw Error('读取了侧栏字段');return null;}};
+class CustomEvent{constructor(type,options){this.type=type;this.detail=options.detail;}}
+const BASE='',_SV={ok:'ok',err:'err'};let detailLoadGeneration=1,loads=0,posts=0,body;
+function esc(value){return String(value);}
+function showDetail(){throw Error('不应打开侧边栏');}
+async function loadBuckets(){loads++;}
+let release;const gate=new Promise(resolve=>release=resolve);
+async function fetch(url,options){
+  posts++;body=JSON.parse(options.body);await gate;
+  return {ok:SAVE_OK,status:SAVE_OK?200:500,async json(){return SAVE_OK?{updated:['name','content']}:{error:'保存暂时失败'};}};
+}
+""".replace("SAVE_OK", json.dumps(save_ok)) + shared + r"""
+(async()=>{
+  const request=bucketSaveEdit('inline-memory',root);
+  const duplicate=await bucketSaveEdit('inline-memory',root);
+  release();const result=await request;
+  process.stdout.write(JSON.stringify({body,posts,loads,events,result,duplicate,saving:root.dataset.saving,
+    raw:fields['edit-content'].value,disabled:fields['edit-content'].disabled,specialDisabled:fields['edit-type'].disabled}));
+})().catch(error=>{console.error(error);process.exit(1);});
+"""
+    completed = subprocess.run(
+        [shutil.which("node"), "-e", script], capture_output=True,
+        text=True, encoding="utf-8",
+    )
+    assert completed.returncode == 0, completed.stderr
+    result = json.loads(completed.stdout)
+    assert result["body"]["content"] == "raw [[Target|Alias]] <b>original</b>"
+    assert result["body"]["name"] == "inline name"
+    assert "title" not in result["body"]
+    assert "type" not in result["body"]
+    assert result["posts"] == 1
+    assert result["duplicate"] is False
+    assert result["result"] is save_ok
+    assert result["loads"] == (1 if save_ok else 0)
+    assert result["events"] == (["ob-memory-saved"] if save_ok else [])
+    assert result["saving"] == "0"
+    assert result["disabled"] is False
+    assert result["specialDisabled"] is True
+    assert result["raw"] == "raw [[Target|Alias]] <b>original</b>"
+
+
 class FakeMCP:
     def __init__(self):
         self.routes = {}
@@ -264,8 +325,8 @@ def test_editor_submits_metadata_using_storage_field_names():
     assert "oninput=\"this.dataset.dirty='1'\"" in render_source
     assert "title: document.getElementById('edit-title').value" not in source
     assert "if (titleEl && titleEl.dataset.dirty === '1') body.title" in source
-    assert "dont_surface: document.getElementById('edit-dont-surface').checked" in source
-    assert "why_remembered: document.getElementById('edit-why').value" in source
+    assert "dont_surface: field('edit-dont-surface').checked" in source
+    assert "why_remembered: field('edit-why').value" in source
     assert "if (weightEl) body.weight = parseFloat(weightEl.value) / 100" in source
 
 
@@ -274,14 +335,14 @@ def test_editor_keeps_pin_type_and_importance_constraints_in_sync():
     sync_source = _dashboard_function("syncEditPinConstraints", "bucketSaveEdit")
     save_source = _dashboard_function("bucketSaveEdit", "maybeShowOnboarding")
 
-    assert "onchange=\"syncEditPinConstraints('type')\"" in render_source
-    assert "syncEditPinConstraints('importance')" in render_source
-    assert "onchange=\"syncEditPinConstraints('pinned')\"" in render_source
+    assert "onchange=\"syncEditPinConstraints('type',this.closest('details'))\"" in render_source
+    assert "syncEditPinConstraints('importance',this.closest('details'))" in render_source
+    assert "onchange=\"syncEditPinConstraints('pinned',this.closest('details'))\"" in render_source
     assert "typeEl.value = 'permanent';" in sync_source
     assert "importanceEl.value = '10';" in sync_source
     assert "pinnedEl.checked = false;" in sync_source
-    assert "syncEditPinConstraints('save');" in save_source
-    assert save_source.index("syncEditPinConstraints('save');") < save_source.index(
+    assert "syncEditPinConstraints('save',editorRoot);" in save_source
+    assert save_source.index("syncEditPinConstraints('save',editorRoot);") < save_source.index(
         "const body = {"
     )
 

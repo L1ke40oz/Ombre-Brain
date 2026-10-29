@@ -87,18 +87,18 @@
     },
     {
       "path": "frontend/dashboard-journal.css",
-      "sha256": "0910780a1387ff3989430149cc4f01921c41b38b87fb3eeecea1f6ea2dfa3beb",
-      "size": 47772
+      "sha256": "7c9176b8ec81f8e39f928d2b03bc9d8a5d1a9caa2dc83706959f62ca7cafd200",
+      "size": 50567
     },
     {
       "path": "frontend/dashboard-journal.js",
-      "sha256": "fb3697cab54ccd729cee80c909fe5b91b9059d3cd5773f7c3eacd008c0ea6ef5",
-      "size": 12475
+      "sha256": "c7fe004effbc653c497b23b617cf49441f8553067ded05ab31a13a7684967627",
+      "size": 19441
     },
     {
       "path": "frontend/dashboard.html",
-      "sha256": "37f43fdbc765b04480532af42396711e9f7614e3cb0f1e393977cdea7298d2de",
-      "size": 615720
+      "sha256": "daa02365594c5b074c5da003e0ff69dff467a501b6d3f1f326ae48c720bd40de",
+      "size": 617192
     },
     {
       "path": "frontend/favicon.svg",
@@ -307,7 +307,7 @@
     },
     {
       "path": "src/VERSION",
-      "sha256": "ac67a8a961ce1353733aeef7762757f3f3b28d1f4ef1bf97369f3b5a329b3b4b",
+      "sha256": "d30f1520c6b70aa635e37a22df030c16723c65eb74814c5e751fe40eeed95b7a",
       "size": 7
     },
     {
@@ -1172,5 +1172,5 @@
     }
   ],
   "rollout_strategy": "single-node",
-  "version": "3.10.0"
+  "version": "3.11.0"
 }

@@ -79,9 +79,10 @@ body.ob-journal .header h1 button.ob-chime-hook:focus-visible{outline:2px solid 
   .ob-chime-item:has(.ob-chime-svg){margin-top:-7px}
   .ob-chime-img{height:68px}
 }
-/* 展开时给内容让出左侧位置，避免风铃压住正文 */
+/* 桌面始终预留风铃位置，开合导航时正文不横移。 */
 @media (min-width:1101px){
-  .ob-journal.ob-chime-open .content{padding-left:88px}
+  html:has(body.ob-journal){scrollbar-gutter:stable}
+  .ob-journal .content{padding-left:88px}
 }
 .ob-chime-scrim{display:none}
 @media (max-width:1100px){
@@ -367,7 +368,7 @@ html.ob-theme-fading body,html.ob-theme-fading body *,html.ob-theme-fading body:
   --ob-sticker-butterfly:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 56'%3E%3Cg fill='%23d3cbf4' stroke='%237c80ad' stroke-width='1.5' stroke-linejoin='round'%3E%3Cpath d='M31 26C26 10 10 2 5 8s2 20 26 20z'/%3E%3Cpath d='M33 26c5-16 21-24 26-18s-2 20-26 20z'/%3E%3Cpath d='M31 29C18 30 9 38 12 45s14 2 19-14z' fill='%23e4def9'/%3E%3Cpath d='M33 29c13 1 22 9 19 16s-14 2-19-14z' fill='%23e4def9'/%3E%3C/g%3E%3Cpath d='M12 11c5 2 11 7 15 13M52 11c-5 2-11 7-15 13' fill='none' stroke='%23ffffff' stroke-width='1.1' opacity='.75'/%3E%3Cpath d='M32 22v24M32 22c-2-6-5-9-8-10M32 22c2-6 5-9 8-10' fill='none' stroke='%235a5886' stroke-width='1.4' stroke-linecap='round'/%3E%3C/svg%3E");
   --ob-sticker-stamp:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cg fill='none' stroke='%238a7ea8'%3E%3Ccircle cx='40' cy='40' r='35' stroke-width='2' stroke-dasharray='3 2'/%3E%3Ccircle cx='40' cy='40' r='27' stroke-width='1'/%3E%3C/g%3E%3Ctext x='40' y='38' text-anchor='middle' font-family='Georgia,serif' font-style='italic' font-size='12' fill='%238a7ea8'%3Esouvenir%3C/text%3E%3Ctext x='40' y='52' text-anchor='middle' font-family='Courier New,monospace' font-size='7' letter-spacing='1' fill='%238a7ea8'%3EOMBRE BRAIN%3C/text%3E%3C/svg%3E");
 }
-@media (min-width:1000px){.ob-journal .bucket-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:30px 24px}}
+.ob-journal .bucket-list{grid-template-columns:minmax(0,1fr)!important;gap:30px}
 .ob-journal .bucket-list{padding-top:12px;counter-reset:ob-memo}
 .ob-journal .bucket-row{
   --tilt:0deg;position:relative;overflow:visible;counter-increment:ob-memo;
@@ -551,4 +552,37 @@ html[data-theme="dark"] .ob-chime-bow{filter:var(--journal-sticker-filter,none) 
   .ob-journal .header{padding:8px 14px!important;gap:6px}
   .ob-journal .header h1{font-size:22px!important}
   .ob-journal .ob-chime-bow{width:36px;height:36px}
+}
+
+/* 桌面顶栏单独排版；手机继续沿用原有布局。 */
+@media (min-width:769px){
+  .ob-journal .header{display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"title meta actions";flex-wrap:nowrap;padding-left:28px!important;padding-right:28px!important}
+  .ob-journal .header h1{grid-area:title}
+  .ob-journal .header-meta{grid-area:meta;min-width:0;max-width:none;justify-content:flex-end}
+  .ob-journal .header-actions{grid-area:actions;margin-left:auto;justify-self:end;justify-content:flex-end;flex-wrap:nowrap}
+  .ob-journal .header .header-actions button{width:auto;min-width:0;white-space:nowrap;font-size:11px!important;padding:0 9px!important}
+  .ob-journal .header-actions .theme-toggle-label{display:inline}
+}
+/* 每条记忆的操作与就地编辑，仍使用原来的记忆接口。 */
+.ob-row-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:16px;padding-top:12px;border-top:1px dashed var(--journal-line)}
+.ob-journal .ob-row-actions button,.ob-journal .ob-inline-cancel{font:inherit;font-size:11px;line-height:1.5;min-height:34px;padding:6px 12px;background:var(--journal-paper);color:var(--text-dim);border:1px solid var(--journal-line);border-radius:3px;box-shadow:none}
+.ob-row-actions button[data-action=delete]{color:var(--negative)}
+.ob-row-actions button:disabled{opacity:.55;cursor:wait}
+.ob-row-message{display:block;font-size:12px;line-height:1.7;margin-top:8px;color:var(--text-dim);overflow-wrap:anywhere}
+.ob-inline-editor[hidden]{display:none}
+.ob-inline-editor{margin-top:12px;cursor:auto}
+.ob-inline-editor details{margin:0!important;padding:14px!important;min-width:0}
+.ob-inline-editor details>summary{display:none}
+.ob-inline-editor details>div:first-of-type{grid-template-columns:110px minmax(0,1fr)!important}
+.ob-inline-editor input:not([type=checkbox]):not([type=range]),.ob-inline-editor textarea,.ob-inline-editor select{width:100%!important;min-width:0;max-width:100%;box-sizing:border-box}
+.ob-inline-editor input[type=range]{max-width:100%}
+.ob-inline-editor [data-edit-field=edit-content]{min-height:190px!important}
+.ob-inline-editor .ob-inline-savebar{position:sticky;bottom:max(10px,env(safe-area-inset-bottom));z-index:3;flex-wrap:wrap;padding:10px 0;background:var(--journal-paper)}
+.ob-inline-editor .ob-inline-savebar [data-edit-field=edit-msg]{flex:1 1 180px;overflow-wrap:anywhere}
+.ob-journal .bucket-row:has(.ob-inline-editor:not([hidden])){transform:none!important}
+@media(max-width:700px){
+  .ob-inline-editor details>div:first-of-type{grid-template-columns:minmax(0,1fr)!important;gap:7px!important}
+  .ob-inline-editor details>div:first-of-type>label{padding-top:8px!important}
+  .ob-row-actions{gap:6px}
+  .ob-journal .ob-row-actions button{padding:6px 10px}
 }
