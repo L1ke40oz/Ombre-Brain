@@ -36,7 +36,14 @@ def register(mcp) -> None:
             # Include the asset revision: custom icons can change without VERSION.
             for asset in ("/static/icon.svg", "/static/favicon.svg", "/static/brand-icon.png",
                           "/static/companion-idle.png", "/static/companion-idle.webp",
-                          "/static/companion-lifted.png"):
+                          "/static/companion-lifted.png", "/static/login-cover.css",
+                          "/static/login-cover.js", "/static/login-sky.webp",
+                          "/static/login-flower-photo.jpg", "/static/login-crystal-pendant.webp",
+                          "/static/login-plastic-clip.webp", "/static/login-sticker-winter.webp",
+                          "/static/login-sticker-sleep.webp",
+                          "/static/login-rose-frame.webp",
+                          "/static/login-paper-texture.svg",
+                          "/static/login-serif.woff2", "/static/login-serif-italic.woff2"):
                 try:
                     revision = os.stat(os.path.join(sh.repo_root, "frontend", asset.rsplit("/", 1)[-1])).st_mtime_ns
                     asset_version = f"{sh.version}-{revision}"
@@ -79,6 +86,18 @@ def register(mcp) -> None:
             "companion-lifted.png": "image/png",
             "manifest.json": "application/manifest+json",
             "RRPL.ttf": "font/truetype",
+            "login-cover.css": "text/css",
+            "login-cover.js": "application/javascript",
+            "login-sky.webp": "image/webp",
+            "login-flower-photo.jpg": "image/jpeg",
+            "login-crystal-pendant.webp": "image/webp",
+            "login-plastic-clip.webp": "image/webp",
+            "login-sticker-winter.webp": "image/webp",
+            "login-sticker-sleep.webp": "image/webp",
+            "login-rose-frame.webp": "image/webp",
+            "login-paper-texture.svg": "image/svg+xml",
+            "login-serif.woff2": "font/woff2",
+            "login-serif-italic.woff2": "font/woff2",
         }
         if name not in allowed:
             return JSONResponse({"error": "not found"}, status_code=404)

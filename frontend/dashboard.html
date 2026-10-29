@@ -23,7 +23,7 @@
   function read(key) {
     try { return localStorage.getItem(key); } catch (_) { return null; }
   }
-  function validPalette(value) { return value === 'lilac' || value === 'snowfall'; }
+  function validPalette(value) { return value === 'lilac' || value === 'snowfall' || value === 'violet-mist'; }
   function validMode(value) { return value === 'light' || value === 'dark' || value === 'system'; }
   function restore() {
     var savedPalette = read(paletteKey);
@@ -39,7 +39,8 @@
     document.documentElement.dataset.palette = palette;
     document.documentElement.dataset.theme = theme;
     document.documentElement.style.colorScheme = theme;
-    var colors = palette === 'snowfall' ? ['#F1F3F7', '#20263B'] : ['#F8F5F9', '#17171B'];
+    var colors = palette === 'violet-mist' ? ['#F4F0F8', '#1B1A2E'] :
+      palette === 'snowfall' ? ['#F1F3F7', '#20263B'] : ['#F8F5F9', '#17171B'];
     var meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.content = colors[theme === 'dark' ? 1 : 0];
     var button = document.getElementById('theme-toggle');
@@ -150,7 +151,7 @@
     font-family: 'Cormorant Garamond', serif;
     font-size: 26px;
     font-weight: 600;
-    color: var(--accent);
+    color: var(--accent-ink,var(--accent));
     letter-spacing: 0.5px;
   }
   .header .stats {
@@ -234,7 +235,7 @@
   .tab:hover { color: var(--text); }
   .tab:hover .tab-en { color: var(--text-dim); }
   .tab.active {
-    color: var(--accent);
+    color: var(--accent-ink,var(--accent));
     border-bottom-color: var(--accent);
     font-weight: 500;
   }
@@ -281,7 +282,7 @@
     box-shadow: 4px 4px 8px var(--shadow-dark-subtle), -4px -4px 8px var(--shadow-light);
   }
   .filter-btn:hover {
-    color: var(--accent);
+    color: var(--accent-ink,var(--accent));
     box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light);
     transform: translateY(-1px);
   }
@@ -312,7 +313,7 @@
     border: 1px solid var(--border-strong); background: var(--surface-solid); color: var(--text);
     box-shadow: 2px 2px 6px var(--shadow-dark-subtle), -2px -2px 5px var(--shadow-light); transition: color .15s;
   }
-  .pager-btn:hover:not(:disabled) { color: var(--accent); }
+  .pager-btn:hover:not(:disabled) { color: var(--accent-ink,var(--accent)); }
   .pager-btn:disabled { opacity: .4; cursor: default; box-shadow: inset 2px 2px 5px var(--shadow-dark-subtle); }
   .pager-info { font-family: 'Share Tech Mono', monospace; font-size: 12px; color: var(--text-dim); }
   .pager-jump { display:inline-flex;align-items:center;gap:5px;color:var(--text-dim);font-size:12px; }
@@ -345,7 +346,7 @@
   .bucket-row .score {
     font-size: 12px;
     font-weight: 500;
-    color: var(--accent);
+    color: var(--accent-ink,var(--accent));
     flex-shrink: 0;
     font-family: 'Share Tech Mono', monospace;
   }
@@ -426,14 +427,14 @@
   }
   .detail-panel .close-btn:hover {
     background: var(--accent-glow);
-    color: var(--accent);
+    color: var(--accent-ink,var(--accent));
   }
   .detail-panel h2 {
     font-family: 'Cormorant Garamond', serif;
     font-size: 20px;
     font-weight: 600;
     margin-bottom: 20px;
-    color: var(--accent);
+    color: var(--accent-ink,var(--accent));
     padding-right: 0;
   }
   .detail-meta {
@@ -503,7 +504,7 @@
     text-decoration: none;
     font-size: 12px;
   }
-  .media-file:hover { border-color: var(--accent); color: var(--accent); }
+  .media-file:hover { border-color: var(--accent); color: var(--accent-ink,var(--accent)); }
   .media-caption {
     margin-top: 5px;
     font-size: 11px;
@@ -542,7 +543,7 @@
     padding: 10px 14px;
     border-left: 3px solid var(--accent);
     background: var(--surface-solid);
-    color: var(--accent);
+    color: var(--accent-ink,var(--accent));
     font-family: 'Cormorant Garamond', 'Noto Serif SC', serif;
     line-height: 1.7;
   }
@@ -578,7 +579,7 @@
     font-family: 'Cormorant Garamond', serif;
     font-size: 16px;
     font-weight: 600;
-    color: var(--accent);
+    color: var(--accent-ink,var(--accent));
     margin-bottom: 16px;
     letter-spacing: 0.3px;
   }
@@ -663,7 +664,7 @@
   .btn-secondary {
     padding: 12px 28px;
     background: var(--surface-solid);
-    color: var(--accent);
+    color: var(--accent-ink,var(--accent));
     border: none;
     border-radius: 4px;
     font-family: inherit;
@@ -810,7 +811,7 @@
     background: var(--accent-glow);
     padding: 2px 8px;
     border-radius: 6px;
-    color: var(--accent);
+    color: var(--accent-ink,var(--accent));
     font-family: 'SF Mono', 'Fira Code', monospace;
     font-size: 11px;
   }
@@ -878,7 +879,7 @@
     min-width: 90px;
     box-shadow: inset 2px 2px 4px var(--shadow-dark-subtle), inset -2px -2px 4px var(--shadow-light);
   }
-  .flow-step.active { border-color: var(--accent); color: var(--accent); }
+  .flow-step.active { border-color: var(--accent); color: var(--accent-ink,var(--accent)); }
   .flow-arrow { color: var(--text-light); font-size: 16px; }
 
   @media (max-width: 768px) {
@@ -990,7 +991,7 @@
     transition: all .15s ease;
   }
   .header button { background: var(--surface) !important; color: var(--text-dim) !important; }
-  .header button:hover { color: var(--accent) !important; transform: translateY(-1px); }
+  .header button:hover { color: var(--accent-ink,var(--accent)) !important; transform: translateY(-1px); }
   .header button:active { transform: translateY(1px); box-shadow: inset 3px 3px 6px var(--shadow-dark-subtle), inset -2px -2px 5px var(--shadow-light) !important; }
   .search-bar input { box-shadow: inset 3px 3px 7px var(--shadow-dark-subtle), inset -3px -3px 6px var(--shadow-light) !important; }
   #heartbeat-indicator, #anchor-counter { font-family:'Share Tech Mono',monospace; }
@@ -1019,12 +1020,12 @@
   .tab > span:first-child { font-family: 'Share Tech Mono', 'Noto Sans SC', sans-serif; font-weight: 700; letter-spacing: 0.3px; }
   .tab:hover { transform: translateY(-1.5px); }
   .tab.active {
-    color: var(--accent);
+    color: var(--accent-ink,var(--accent));
     transform: translateY(-1.5px);
     box-shadow: 4px 4px 11px var(--shadow-dark-subtle), -4px -4px 9px var(--shadow-light),
                 0 0 0 2px var(--accent-glow), inset 0 0 14px rgba(194,152,47,0.10);
   }
-  .tab.active .tab-en { color: var(--accent); }
+  .tab.active .tab-en { color: var(--accent-ink,var(--accent)); }
   .tab:active { transform: translateY(1px); box-shadow: inset 3px 3px 7px var(--shadow-dark-subtle), inset -2px -2px 6px var(--shadow-light); }
   .tab-spacer { box-shadow: none; background: transparent; }
 
@@ -1050,7 +1051,7 @@
     border-radius: 20px !important;
     transition: all .15s ease;
   }
-  #settings-view a[href^="#sec-"]:hover { transform: translateY(-1px); color: var(--accent) !important; }
+  #settings-view a[href^="#sec-"]:hover { transform: translateY(-1px); color: var(--accent-ink,var(--accent)) !important; }
 
   /* ====== 三层认识面板：我 / 你 / 他们 ====== */
   .self-fab .fab-globe { display:block; width:26px; height:26px; opacity:.9; }
@@ -1068,7 +1069,7 @@
   .know-tab .en { font-size:10px; opacity:.65; margin-left:3px; }
   .know-tab:hover { color:var(--text); }
   .know-tab.active {
-    background:var(--bg); color:var(--accent);
+    background:var(--bg); color:var(--accent-ink,var(--accent));
     box-shadow:inset 2px 2px 5px var(--shadow-dark-subtle),
                inset -2px -2px 5px var(--shadow-light);
   }
@@ -1076,18 +1077,18 @@
   .know-state {
     font-size:12px; color:var(--text-dim); margin-bottom:10px;
   }
-  .know-state b { color:var(--accent); font-weight:600; }
+  .know-state b { color:var(--accent-ink,var(--accent)); font-weight:600; }
   .know-note {
     font-size:12px; color:var(--text-dim); line-height:1.85; margin:14px 0 0;
   }
-  .know-note a { color:var(--accent); text-decoration:none; border-bottom:1px dotted; }
+  .know-note a { color:var(--accent-ink,var(--accent)); text-decoration:none; border-bottom:1px dotted; }
   .know-person-tag { font-size:11px; color:var(--text-dim); margin-top:7px; }
 
   /* 小号行内按钮。`.btn-sm` 此前全站都在用、却从来没有定义过，于是它拿到的是
      浏览器默认按钮样式——配上 padding 10px 的输入槽，就成了「字比按钮大」。 */
   .btn-sm {
     padding:9px 16px; border:none; border-radius:var(--radius-control);
-    background:var(--surface-solid); color:var(--accent);
+    background:var(--surface-solid); color:var(--accent-ink,var(--accent));
     font-family:inherit; font-size:12.5px; font-weight:500; line-height:1.2;
     cursor:pointer; white-space:nowrap; flex-shrink:0;
     transition:all .18s cubic-bezier(.4,0,.2,1);
@@ -1114,7 +1115,7 @@
     font-size:12px; color:var(--text-dim);
   }
   .know-group-head b { color:var(--text); font-weight:600; }
-  .know-group-head .know-ico { color:var(--accent); }
+  .know-group-head .know-ico { color:var(--accent-ink,var(--accent)); }
   .know-group-head .count {
     margin-left:auto; font-family:'Share Tech Mono', monospace;
     font-size:10px; color:var(--text-light); letter-spacing:.5px;
@@ -1131,7 +1132,7 @@
     box-shadow:3px 3px 7px var(--shadow-dark-subtle), -3px -3px 6px var(--shadow-light);
   }
   .know-row:hover {
-    transform:translateX(2px); color:var(--accent);
+    transform:translateX(2px); color:var(--accent-ink,var(--accent));
     box-shadow:4px 4px 9px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
   }
   .know-row-name { flex:1; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -1146,17 +1147,17 @@
     background:none; border:none; padding:4px 2px; cursor:pointer;
     color:var(--text-dim); font-family:inherit; font-size:12px;
   }
-  .know-back:hover { color:var(--accent); }
+  .know-back:hover { color:var(--accent-ink,var(--accent)); }
   .know-detail-name {
     font-family:'Cormorant Garamond', serif; font-size:24px; font-weight:600;
-    font-style:italic; color:var(--accent); line-height:1.25; word-break:break-word;
+    font-style:italic; color:var(--accent-ink,var(--accent)); line-height:1.25; word-break:break-word;
   }
   .know-detail-alias { font-size:11.5px; color:var(--text-light); margin-top:3px; }
   .know-detail-origin {
     display:flex; align-items:center; gap:7px; margin:11px 0 0;
     font-size:12px; color:var(--text-dim);
   }
-  .know-detail-origin .know-ico { color:var(--accent); }
+  .know-detail-origin .know-ico { color:var(--accent-ink,var(--accent)); }
   .know-detail-why { font-size:11.5px; color:var(--text-light); line-height:1.7; margin:7px 0 0; }
 
   .know-field { margin-top:20px; }
@@ -1194,10 +1195,10 @@
   }
   .settings-subtab .en { display: block; font-size: 10px; color: var(--text-light); margin-top: 1px; letter-spacing: .05em; }
   .settings-subtab.active {
-    color: var(--accent); font-weight: 600;
+    color: var(--accent-ink,var(--accent)); font-weight: 600;
     box-shadow: 3px 3px 8px var(--shadow-dark-subtle), -2px -2px 6px var(--shadow-light);
   }
-  .settings-subtab.active .en { color: var(--accent); opacity: .7; }
+  .settings-subtab.active .en { color: var(--accent-ink,var(--accent)); opacity: .7; }
   /* 按当前激活分组显隐各设置段（隐藏的段塌陷掉，可见顺序即为分组顺序） */
   #settings-view[data-active-sgroup="basics"]   .config-section[data-sgroup]:not([data-sgroup="basics"])   { display: none !important; }
   #settings-view[data-active-sgroup="advanced"] .config-section[data-sgroup]:not([data-sgroup="advanced"]) { display: none !important; }
@@ -1274,7 +1275,7 @@
     color: var(--text-dim);
     box-shadow: 5px 5px 12px var(--shadow-dark-subtle), -4px -4px 10px var(--shadow-light) !important;
   }
-  .btn-secondary:hover, .filter-btn:hover { transform: translateY(-2px); color: var(--accent); }
+  .btn-secondary:hover, .filter-btn:hover { transform: translateY(-2px); color: var(--accent-ink,var(--accent)); }
   .btn-secondary:active, .filter-btn:active {
     transform: translateY(1px);
     box-shadow: inset 4px 4px 9px var(--shadow-dark-subtle), inset -3px -3px 7px var(--shadow-light) !important;
@@ -1296,7 +1297,7 @@
     transition: all .14s ease;
     cursor: pointer;
   }
-  button:not(.btn-primary):not(.btn-secondary):not(.btn-danger):not(.tab):not(.filter-btn):not(.close-btn):hover { color: var(--accent); transform: translateY(-1px); }
+  button:not(.btn-primary):not(.btn-secondary):not(.btn-danger):not(.tab):not(.filter-btn):not(.close-btn):hover { color: var(--accent-ink,var(--accent)); transform: translateY(-1px); }
   button:not(.btn-primary):not(.btn-secondary):not(.btn-danger):not(.tab):not(.filter-btn):not(.close-btn):active { transform: translateY(1px); box-shadow: inset 3px 3px 6px var(--shadow-dark-subtle), inset -2px -2px 5px var(--shadow-light); }
   /* 图标独占按钮：统一 36×36 正方形实体键 */
   button:has(> i[data-lucide]:only-child) {
@@ -1380,7 +1381,7 @@
     text-shadow: 0 0 3px var(--lcd-glow);
     box-shadow: inset 3px 3px 8px rgba(80,78,58,0.28), inset -3px -3px 7px rgba(255,255,255,0.30);
   }
-  #network-terminal::before { content:'> '; color: var(--accent); }
+  #network-terminal::before { content:'> '; color: var(--accent-ink,var(--accent)); }
   /* 工程网格星图模式 */
   #network-canvas.star-active {
     background: #EBE6D9 !important;
@@ -1403,7 +1404,7 @@
     box-shadow: inset 3px 3px 7px rgba(80,78,58,0.25), inset -3px -3px 6px rgba(255,255,255,0.3);
     text-shadow: 0 0 2px var(--lcd-glow);
   }
-  .flow-step.active { color: var(--accent); box-shadow: inset 3px 3px 7px rgba(80,78,58,0.25), inset -3px -3px 6px rgba(255,255,255,0.3), 0 0 0 2px var(--accent-glow); }
+  .flow-step.active { color: var(--accent-ink,var(--accent)); box-shadow: inset 3px 3px 7px rgba(80,78,58,0.25), inset -3px -3px 6px rgba(255,255,255,0.3), 0 0 0 2px var(--accent-glow); }
 
   /* ============ 详情面板 / 弹窗：悬浮卡片 ============ */
   .detail-panel {
@@ -1491,7 +1492,7 @@
     box-shadow: 8px 8px 22px var(--shadow-dark-subtle), -7px -7px 16px var(--shadow-light),
                 inset 0 0 0 2px rgba(194,152,47,0.24) !important;
   }
-  #sec-backup h3 { color: var(--accent) !important; }
+  #sec-backup h3 { color: var(--accent-ink,var(--accent)) !important; }
   .btn-danger {
     border: none !important;
     border-radius: 12px !important;
@@ -1557,7 +1558,7 @@
   /* —— ② pinned 桶 hover：图标被「钉住」般亮起光晕 —— */
   .bucket-row .pin-ic svg { transition: color .25s ease, filter .25s ease, transform .25s ease; }
   .bucket-row:hover .pin-ic svg {
-    color: var(--accent);
+    color: var(--accent-ink,var(--accent));
     filter: drop-shadow(0 0 5px var(--accent-glow)) drop-shadow(0 0 2px var(--accent));
     transform: rotate(-10deg) scale(1.18);
   }
@@ -1590,7 +1591,7 @@
     100% { transform: scaleY(1); opacity: 1; }
   }
   .detail-panel.letter-mode .detail-content { transform-origin: top center; animation: ob-unfold .5s cubic-bezier(.2,.7,.3,1) both; }
-  .detail-panel.letter-mode h2::before { content:'✉ '; color: var(--accent); }
+  .detail-panel.letter-mode h2::before { content:'✉ '; color: var(--accent-ink,var(--accent)); }
 
   /* —— ⑦ anchor 桶详情：周围浮出引力线，暗示「这是坐标系」 —— */
   .detail-panel.anchor-mode::before {
@@ -1624,7 +1625,7 @@
   #ob-chick.tickled svg, #ob-chick.tickled canvas { animation:ob-chick-tickle .32s ease-in-out 2; transform-origin:50% 75%; }
   @keyframes ob-chick-dizzy { 0%,100%{transform:rotate(0)} 50%{transform:rotate(12deg) translateY(-2px)} }
   @keyframes ob-chick-tickle { 0%,100%{transform:rotate(0) scaleY(1)} 25%{transform:rotate(-7deg) scaleY(.94)} 75%{transform:rotate(7deg) scaleY(1.04)} }
-  #ob-chick.dizzy::after { content:'✦ ✧'; position:absolute; left:45%; top:-8px; color:var(--accent); font-size:13px; animation:ob-chick-wiggle .5s infinite; }
+  #ob-chick.dizzy::after { content:'✦ ✧'; position:absolute; left:45%; top:-8px; color:var(--accent-ink,var(--accent)); font-size:13px; animation:ob-chick-wiggle .5s infinite; }
   #ob-chick.sleeping::after { content:'zZ'; position:absolute; right:5px; top:-7px; color:var(--text-dim); font:11px 'Share Tech Mono',monospace; }
   #ob-chick svg { display:block; width:100%; height:100%; shape-rendering: crispEdges; }
   @keyframes ob-chick-wiggle { 0%,100%{transform:rotate(0)} 25%{transform:rotate(-9deg)} 75%{transform:rotate(9deg)} }
@@ -1718,7 +1719,7 @@
 
   /* ====== ⓪ 版本 & 更新 面板 ====== */
   #sec-version { background: rgba(194,152,47,0.03); border: 1px solid rgba(194,152,47,0.22); }
-  #sec-version h3 { color: var(--accent); }
+  #sec-version h3 { color: var(--accent-ink,var(--accent)); }
   .ver-status-row { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin:10px 0 0; }
   .ver-badge {
     display:inline-flex; align-items:center; gap:5px;
@@ -1770,7 +1771,7 @@
   }
   .model-list-dropdown .model-item:hover {
     background: var(--bg);
-    color: var(--accent);
+    color: var(--accent-ink,var(--accent));
   }
   /* Progress bar — neumorphic inset track */
   .progress-track {
@@ -1893,7 +1894,7 @@
   }
   .self-fab:hover {
     box-shadow: 8px 8px 18px var(--shadow-dark), -5px -5px 12px var(--shadow-light), 0 0 0 2px var(--accent-glow);
-    color: var(--accent);
+    color: var(--accent-ink,var(--accent));
     transform: translateY(-2px);
   }
   .self-fab:active {
@@ -1957,7 +1958,7 @@
     font-size: 22px;
     font-weight: 600;
     font-style: italic;
-    color: var(--accent);
+    color: var(--accent-ink,var(--accent));
     flex: 1;
     letter-spacing: 0.3px;
   }
@@ -1984,7 +1985,7 @@
     flex-shrink: 0;
     margin-left: auto;
   }
-  .self-panel-close:hover { background: var(--accent-glow); color: var(--accent); }
+  .self-panel-close:hover { background: var(--accent-glow); color: var(--accent-ink,var(--accent)); }
 
   .self-panel-filters {
     display: flex;
@@ -2006,7 +2007,7 @@
     cursor: pointer;
     transition: all 0.15s;
   }
-  .self-filter-btn:hover { color: var(--accent); border-color: var(--accent); }
+  .self-filter-btn:hover { color: var(--accent-ink,var(--accent)); border-color: var(--accent); }
   .self-filter-btn.active {
     background: var(--accent);
     color: var(--bg);
@@ -2290,7 +2291,7 @@ body.dreamcloud {
 .dreamcloud .header .search-bar button:hover { background: var(--theme-tint) !important; }
 .dreamcloud .header-actions { gap: 4px; margin-left: 0; }
 .dreamcloud .header .header-actions button { color: var(--text-dim) !important; background: transparent !important; padding: 0 9px !important; border-radius: 10px !important; height: 36px !important; font-size: 11px !important; }
-.dreamcloud .header .header-actions button:hover { color: var(--accent) !important; background: var(--theme-tint) !important; transform: none; }
+.dreamcloud .header .header-actions button:hover { color: var(--accent-ink,var(--accent)) !important; background: var(--theme-tint) !important; transform: none; }
 .dreamcloud .header button:active { transform: none; }
 .dreamcloud .tabs {
   display: flex;
@@ -2341,7 +2342,7 @@ body.dreamcloud {
 .dreamcloud .dream-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 10px 20px; background: var(--accent) !important; color: var(--theme-button-text) !important; border: 1px solid var(--accent) !important; border-radius: 23px !important; font-size: 12px; text-shadow: none; }
 .dreamcloud .dream-primary:hover { background: var(--theme-accent-strong) !important; transform: none; }
 .dreamcloud .dream-secondary { display: inline-flex; align-items: center; gap: 7px; min-height: 42px; padding: 10px 16px; background: transparent !important; color: var(--text-dim); border: 1px solid var(--border) !important; border-radius: 23px !important; font-size: 12px; }
-.dreamcloud .dream-secondary:hover { background: var(--surface) !important; color: var(--accent); transform: none; }
+.dreamcloud .dream-secondary:hover { background: var(--surface) !important; color: var(--accent-ink,var(--accent)); transform: none; }
 .dreamcloud .filters { gap: 8px; padding: 0 0 18px; margin-bottom: 0; border-bottom: none; }
 .dreamcloud .filter-btn { min-height: 36px; padding: 7px 15px; border: 1px solid var(--border) !important; background: var(--theme-translucent) !important; border-radius: 20px !important; color: var(--text-dim); box-shadow: none !important; font-size: 12px; transform: none; }
 .dreamcloud .filter-btn:hover { background: #fff; }
@@ -2359,7 +2360,7 @@ body.dreamcloud {
 .dreamcloud .bucket-row { min-height: 0; padding: 16px 22px; gap: 12px; border: 1px solid var(--border) !important; border-radius: 20px 20px 20px 5px; background: var(--theme-translucent) !important; box-shadow: 0 6px 22px rgba(142,87,106,.035) !important; transition: border-color .18s, background .18s; }
 .dreamcloud .bucket-row:hover { border-color: var(--border-strong) !important; background: #fff !important; transform: none; box-shadow: 0 6px 22px rgba(142,87,106,.06) !important; }
 .dreamcloud .bucket-row:nth-child(3n+2) { border-radius: 20px 5px 20px 20px; }
-.dreamcloud .bucket-row .icon { width: 30px; height: 30px; min-width: 30px; background: var(--theme-tint); border-radius: 11px; color: var(--accent); }
+.dreamcloud .bucket-row .icon { width: 30px; height: 30px; min-width: 30px; background: var(--theme-tint); border-radius: 11px; color: var(--accent-ink,var(--accent)); }
 .dreamcloud .bucket-row .icon svg { width: 16px; height: 16px; }
 .dreamcloud .bucket-row .bucket-row-top { gap: 9px; flex-wrap: wrap; }
 .dreamcloud .bucket-row-top .name { font-size: 14px; font-weight: 500; white-space: normal; line-height: 1.8; min-width: 120px; }
@@ -2390,21 +2391,12 @@ body.dreamcloud {
 .dreamcloud #network-canvas, .dreamcloud #network-canvas.star-active { background: var(--surface-solid) !important; background-image: none !important; box-shadow: none !important; border: 1px solid var(--border) !important; }
 .dreamcloud #network-terminal { background: var(--theme-tint); box-shadow: none; text-shadow: none; font-family: 'Noto Sans SC',sans-serif; }
 .dreamcloud .flow-step { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: none; }
-.dreamcloud .self-fab { background: var(--surface); border: 1px solid var(--border-strong); box-shadow: 0 5px 20px rgba(142,87,106,.12); color: var(--accent); }
+.dreamcloud .self-fab { background: var(--surface); border: 1px solid var(--border-strong); box-shadow: 0 5px 20px rgba(142,87,106,.12); color: var(--accent-ink,var(--accent)); }
 .dreamcloud .self-fab .fab-label { font-family: 'Cormorant Garamond',serif; }
 .dreamcloud .self-fab:hover { box-shadow: 0 5px 20px rgba(142,87,106,.16); }
 .dreamcloud #ob-chick { filter: drop-shadow(0 3px 6px rgba(142,87,106,.12)); }
 .dreamcloud .self-fab, .dreamcloud #ob-chick { bottom: 22px; }
-.dreamcloud #auth-overlay { padding: 32px 18px; overflow-y: auto; background: var(--bg-gradient) !important; }
-.dreamcloud #auth-overlay > div { position: relative; width: 100% !important; max-width: 440px !important; padding: 42px 38px 36px !important; background: var(--theme-overlay) !important; border: 1px solid rgba(255,255,255,.95) !important; border-radius: 36px 36px 36px 12px !important; box-shadow: 0 24px 90px rgba(142,87,106,.1) !important; }
-.dream-auth-cloud { display: block; width: 90px; height: 70px; margin: 0 auto 14px; }
-.dreamcloud #auth-overlay h2 { font: 500 34px 'Cormorant Garamond',serif !important; letter-spacing: -.4px; color: var(--text) !important; margin-bottom: 8px !important; }
-.dream-auth-note { color: var(--text-dim); font-size: 12px; margin: 0 0 24px; }
 .dreamcloud #auth-subtitle { font-size: 12px !important; margin-bottom: 20px !important; }
-.dreamcloud #auth-overlay input { min-height: 48px; border-radius: 14px !important; font-size: 13px !important; }
-.dreamcloud #auth-overlay button { min-height: 46px; border-radius: 15px !important; font-size: 13px !important; }
-.dreamcloud #auth-overlay details { padding: 12px; background: var(--surface-solid); border-radius: 12px; }
-.dreamcloud #auth-overlay a { line-height: 2; }
 @media (min-width: 1600px) { .dreamcloud .header { padding-left: calc((100vw - 1400px)/2); padding-right: calc((100vw - 1400px)/2); } }
 @media (max-width: 1380px) {
   .dreamcloud .tabs, .dreamcloud #embed-warn-banner { margin-left: 28px; margin-right: 28px; }
@@ -2454,10 +2446,7 @@ body.dreamcloud {
   .dreamcloud .bucket-row .bucket-row-bottom { padding-left: 0; }
   .dreamcloud .bucket-row-bottom .preview { font-size: 12px; }
   .dreamcloud .config-section { padding: 19px 16px; }
-  .dreamcloud #auth-overlay > div { padding: 30px 24px !important; border-radius: 28px 28px 28px 10px !important; }
-  .dreamcloud #auth-overlay h2 { font-size: 31px !important; }
-  .dreamcloud .dream-auth-cloud { height: 60px; margin-bottom: 10px; }
-  .dreamcloud .self-fab { left: 16px; width: 46px; height: 46px; bottom: 16px; }
+.dreamcloud .self-fab { left: 16px; width: 46px; height: 46px; bottom: 16px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .dreamcloud *, .dreamcloud *::before, .dreamcloud *::after { animation: none !important; scroll-behavior: auto !important; transition: none !important; }
@@ -2478,7 +2467,7 @@ html[data-theme="dark"] body.dreamcloud {
   --theme-header: rgba(27,24,31,.95); --theme-mist-a: #2A2233; --theme-mist-b: #30212A;
   --theme-overlay: rgba(37,34,41,.98);
 }
-.dreamcloud .theme-toggle-icon { font: 20px/1 Georgia,serif; color: var(--accent); }
+.dreamcloud .theme-toggle-icon { font: 20px/1 Georgia,serif; color: var(--accent-ink,var(--accent)); }
 .dreamcloud .theme-toggle-label { font-size: 11px; }
 .dreamcloud .btn-primary, .dreamcloud .breath-controls button,
 .dreamcloud button[style*="background:var(--accent)"], .dreamcloud button[style*="background: var(--accent)"] {
@@ -2500,8 +2489,6 @@ html[data-theme="dark"] body.dreamcloud {
 .dreamcloud #memory-delete-error { color: var(--negative); margin-top: 12px; }
 .dreamcloud #memory-delete-dialog button:disabled { opacity: .6; cursor: wait; }
 html[data-theme="dark"] .dreamcloud .ob-logo [fill="#FFFDFC"],
-html[data-theme="dark"] .dreamcloud .dream-auth-cloud [fill="#fffdfa"] { fill: #45313F; }
-html[data-theme="dark"] .dreamcloud #auth-overlay > div { border-color: var(--border) !important; }
 html[data-theme="dark"] .dreamcloud .dream-primary { text-shadow: none; }
 html[data-theme="dark"] .dreamcloud .bucket-row:hover { background: #2D2630 !important; }
 html[data-theme="dark"] .dreamcloud .header button:hover { background: var(--theme-tint) !important; }
@@ -2516,7 +2503,6 @@ html[data-theme="dark"] .dreamcloud .header button:hover { background: var(--the
 
 /* User-supplied artwork: image-based companion, no pixel rendering. */
 .dreamcloud .header .ob-logo.user-brand-icon { width: 52px; height: 52px; border-radius: 0; background: transparent; object-fit: contain; }
-.dreamcloud .dream-auth-cloud.user-brand-icon { width: 114px; height: 114px; border-radius: 0; background: transparent; object-fit: contain; }
 .dreamcloud #ob-chick {
   width: 112px; height: 150px; right: 22px; bottom: 20px; padding: 0;
   cursor: grab; touch-action: none; image-rendering: auto;
@@ -2546,8 +2532,7 @@ html[data-theme="dark"] .dreamcloud .header button:hover { background: var(--the
 .dreamcloud #ob-chick.sleeping::after { right: 4px; top: 28px; font-family: 'Noto Sans SC',sans-serif; color: var(--text-dim); }
 @media(max-width:700px){
   .dreamcloud .header .ob-logo.user-brand-icon {width:38px;height:38px;border-radius:0;}
-  .dreamcloud .dream-auth-cloud.user-brand-icon {width:100px;height:100px;border-radius:0;}
-  .dreamcloud #ob-chick {width:86px;height:116px;right:14px;bottom:15px;}
+.dreamcloud #ob-chick {width:86px;height:116px;right:14px;bottom:15px;}
   .dreamcloud #ob-chick .companion-sprite {width:86px;height:86px;}
   .dreamcloud #ob-chick .companion-lifted {height:116px;}
   .dreamcloud #ob-chick .chick-tip {font-size:10px;max-width:180px;}
@@ -2659,32 +2644,106 @@ html[data-palette="snowfall"][data-theme="dark"] .dreamcloud .bucket-row:hover {
 html[data-palette="snowfall"] .dreamcloud .bucket-row .icon { border-radius: 8px; background: transparent; }
 html[data-palette="snowfall"] .dreamcloud .domain-pill { border-radius: 7px; padding: 2px 7px; }
 html[data-palette="snowfall"] .dreamcloud .config-section { border-radius: 14px; }
-html[data-palette="snowfall"] .dreamcloud #auth-overlay > div {
-  z-index: 1; border: 1px solid var(--border) !important;
-  border-radius: 24px !important; box-shadow: 0 24px 80px var(--shadow-dark) !important;
-}
-html[data-palette="snowfall"] .dreamcloud #auth-overlay::before {
-  content: ''; pointer-events: none; position: fixed; inset: 0; opacity: .35;
-  background:
-    radial-gradient(circle at 12% 18%,var(--scene-star) 0 1px,transparent 1.6px),
-    radial-gradient(circle at 24% 64%,var(--scene-star) 0 1px,transparent 1.6px),
-    radial-gradient(circle at 78% 22%,var(--scene-star) 0 1.3px,transparent 2px),
-    radial-gradient(circle at 87% 48%,var(--scene-star) 0 1px,transparent 1.6px),
-    radial-gradient(circle at 67% 76%,var(--scene-star) 0 1px,transparent 1.6px);
-}
-html[data-palette="snowfall"] .dreamcloud #auth-overlay input, html[data-palette="snowfall"] .dreamcloud #auth-overlay button { border-radius: 11px !important; }
-html[data-palette="snowfall"] .dreamcloud #auth-overlay h2 { color: var(--text) !important; }
 @media (max-width:1100px) {
 }
 @media (max-width:700px) {
-  html[data-palette="snowfall"] .dreamcloud #auth-overlay > div { border-radius: 22px !important; }
 }
 
 /* Native radio controls keep the theme picker usable with a keyboard. */
+/* 紫雾：以用户色卡为主色，补充分层、文字及交互所需的衍生色。 */
+html[data-palette="violet-mist"] body.dreamcloud {
+  --bg: #F4F0F8;
+  --bg-gradient: linear-gradient(145deg,#F4F0F8,#E9E0F1 55%,#F4F0F8);
+  --surface: #FAF7FD;
+  --surface-solid: #EEE7F5;
+  --border: #D9CCE8;
+  --border-strong: #9B89B3;
+  --text: #3D3450;
+  --text-dim: #655675;
+  --text-light: #716181;
+  --accent: #9B89B3;
+  --accent-ink: #655078;
+  --accent-light: #D9CCE8;
+  --accent-glow: rgba(155,137,179,.2);
+  --positive: #426D58;
+  --negative: #AD414F;
+  --warning: #806025;
+  --shadow-light: rgba(250,247,253,.8);
+  --shadow-dark: rgba(61,52,80,.12);
+  --shadow-dark-subtle: rgba(61,52,80,.06);
+  --lcd: #EEE7F5;
+  --lcd-text: #3D3450;
+  --lcd-dim: #655675;
+  --lcd-glow: rgba(155,137,179,.12);
+  --theme-input: #FAF7FD;
+  --theme-tint: #E8DFF1;
+  --theme-translucent: rgba(250,247,253,.88);
+  --theme-nav-active: #D9CCE8;
+  --theme-accent-text: #655078;
+  --theme-accent-strong: #AB9ABD;
+  --theme-button-text: #241C33;
+  --theme-danger-text: #FAF7FD;
+  --theme-welcome-glow: rgba(217,204,232,.3);
+  --theme-header: rgba(244,240,248,.94);
+  --theme-mist-a: #E9E0F1;
+  --theme-mist-b: #F0EAF6;
+  --theme-overlay: rgba(250,247,253,.98);
+}
+html[data-palette="violet-mist"][data-theme="dark"] body.dreamcloud {
+  --bg: #1B1A2E;
+  --bg-gradient: linear-gradient(145deg,#29243E,#1B1A2E 55%,#302641);
+  --surface: #262239;
+  --surface-solid: #211E34;
+  --border: #493C60;
+  --border-strong: #9D8DC2;
+  --text: #F1ECF7;
+  --text-dim: #C5B9DB;
+  --text-light: #B6A7CD;
+  --accent: #5F4B8B;
+  --accent-ink: #B9A9D8;
+  --accent-light: #9D8DC2;
+  --accent-glow: rgba(157,141,194,.24);
+  --positive: #A0C8B4;
+  --negative: #EEA4B4;
+  --warning: #DDC28F;
+  --shadow-light: transparent;
+  --shadow-dark: rgba(15,12,28,.4);
+  --shadow-dark-subtle: rgba(15,12,28,.24);
+  --lcd: #262239;
+  --lcd-text: #F1ECF7;
+  --lcd-dim: #C5B9DB;
+  --lcd-glow: rgba(157,141,194,.16);
+  --theme-input: #211E34;
+  --theme-tint: #332B49;
+  --theme-translucent: rgba(38,34,57,.92);
+  --theme-nav-active: #403354;
+  --theme-accent-text: #B9A9D8;
+  --theme-accent-strong: #6E5899;
+  --theme-button-text: #F1ECF7;
+  --theme-danger-text: #1B1A2E;
+  --theme-welcome-glow: rgba(95,75,139,.2);
+  --theme-header: rgba(27,26,46,.95);
+  --theme-mist-a: #2A2440;
+  --theme-mist-b: #252038;
+  --theme-overlay: rgba(38,34,57,.98);
+}
+html[data-palette="violet-mist"] .dreamcloud .header { border-bottom-color: var(--border); }
+html[data-palette="violet-mist"] .dreamcloud .bucket-row:hover { background: var(--surface) !important; }
+html[data-palette="violet-mist"] .dreamcloud :is(button, input, select, textarea, a, summary):focus-visible {
+  outline-color: var(--accent-ink) !important;
+}
+html[data-palette="violet-mist"] .dreamcloud input:is([type=checkbox],[type=radio]) { accent-color: var(--accent-ink) !important; }
+html[data-palette="violet-mist"] .dreamcloud .palette-option input:checked + .palette-option-body {
+  border-color: var(--accent-ink); box-shadow: 0 0 0 1px var(--accent-ink);
+}
+html[data-palette="violet-mist"] .dreamcloud .palette-option input:focus-visible + .palette-option-body { outline-color: var(--accent-ink); }
+html[data-palette="violet-mist"] .dreamcloud .self-filter-btn.active { color: var(--theme-button-text); }
+html[data-palette="violet-mist"] .dreamcloud #memory-delete-confirm { color: var(--theme-danger-text) !important; }
+
 .dreamcloud .appearance-description { color: var(--text-dim); font-size: 12px; line-height: 1.9; margin: 0 0 20px; }
 .dreamcloud .appearance-fieldset { border: 0; min-width: 0; margin: 0; padding: 0; }
 .dreamcloud .appearance-fieldset legend { float: none; font-size: 13px; font-weight: 500; margin-bottom: 12px; color: var(--text); }
-.dreamcloud .palette-options { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+.dreamcloud .palette-options { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; }
 .dreamcloud .palette-option { position: relative; cursor: pointer; min-width: 0; }
 .dreamcloud .palette-option input { position: absolute; right: 15px; top: 15px; width: 16px; height: 16px; margin: 0; z-index: 1; accent-color: var(--accent); }
 .dreamcloud .palette-option-body { display: block; padding: 14px; border: 1px solid var(--border); border-radius: 14px; background: var(--theme-input); height: 100%; }
@@ -2695,6 +2754,8 @@ html[data-palette="snowfall"] .dreamcloud #auth-overlay h2 { color: var(--text) 
 .palette-preview-lilac > span:last-child { background: linear-gradient(135deg,#211D27,#70515F); }
 .palette-preview-snowfall > span:first-child { background: linear-gradient(135deg,#F5F7FA,#B9CBE8); }
 .palette-preview-snowfall > span:last-child { background: linear-gradient(135deg,#20263B,#697A9C); }
+.palette-preview-violet-mist > span:first-child { background: linear-gradient(135deg,#F4F0F8,#D9CCE8 50%,#9B89B3); }
+.palette-preview-violet-mist > span:last-child { background: linear-gradient(135deg,#1B1A2E,#5F4B8B 55%,#9D8DC2); }
 .dreamcloud .palette-option strong { display: block; color: var(--text); font-size: 14px; font-weight: 500; }
 .dreamcloud .palette-description { display: block; margin-top: 7px; font-size: 11px; line-height: 1.8; color: var(--text-dim); }
 .dreamcloud .appearance-mode { margin-top: 24px; }
@@ -2731,6 +2792,8 @@ html[data-palette="snowfall"] .dreamcloud #auth-overlay h2 { color: var(--text) 
 }
 
 </style>
+<link rel="stylesheet" href="/static/login-cover.css">
+<script src="/static/login-cover.js" defer></script>
 </head>
 <body class="dreamcloud">
 
@@ -2915,7 +2978,7 @@ html[data-palette="snowfall"] .dreamcloud #auth-overlay h2 { color: var(--text) 
 
     <div id="import-upload-zone" style="border:2px dashed var(--border);border-radius:16px;padding:40px;text-align:center;cursor:pointer;margin:20px 0;transition:border-color .2s;">
       <div style="font-size:32px;margin-bottom:8px;color:var(--text-dim);"><i data-lucide="folder-up" style="width:32px;height:32px;"></i></div>
-      <div>拖拽文件到此处，或 <span style="color:var(--accent);text-decoration:underline;">点击选择</span> <span class="en">Drop a file or click to choose</span></div>
+      <div>拖拽文件到此处，或 <span style="color:var(--accent-ink,var(--accent));text-decoration:underline;">点击选择</span> <span class="en">Drop a file or click to choose</span></div>
       <input type="file" id="import-file-input" accept=".json,.txt,.md,.jsonl" style="display:none" />
     </div>
 
@@ -3212,6 +3275,14 @@ html[data-palette="snowfall"] .dreamcloud #auth-overlay h2 { color: var(--text) 
               <span class="palette-description">雪白与灰蓝，夜晚是靛蓝星光。</span>
             </span>
           </label>
+          <label class="palette-option">
+            <input type="radio" name="dashboard-palette" value="violet-mist" onchange="setDashboardPalette(this.value)">
+            <span class="palette-option-body">
+              <span class="palette-preview palette-preview-violet-mist" aria-hidden="true"><span></span><span></span></span>
+              <strong>紫雾</strong>
+              <span class="palette-description">浅色 Lilac Mist，深色 Ultra Violet。雾紫与藤萝，夜晚是深紫星空。</span>
+            </span>
+          </label>
         </div>
       </fieldset>
       <fieldset class="appearance-fieldset appearance-mode">
@@ -3229,7 +3300,7 @@ html[data-palette="snowfall"] .dreamcloud #auth-overlay h2 { color: var(--text) 
     <!-- ⓪ 版本 & 更新 -->
     <div class="config-section" id="sec-version" data-sgroup="basics">
       <h3>版本 & 更新 <span class="sec-en">Version &amp; Update</span></h3>
-      <p style="font-size:12px;color:var(--text-dim);line-height:1.8;margin-bottom:12px;"><a id="update-source-link" target="_blank" rel="noopener noreferrer" style="color:var(--accent);">更新来源读取中…</a><br>从你的 fork 获取更新；原项目的新改动需要先合并到 fork。</p>
+      <p style="font-size:12px;color:var(--text-dim);line-height:1.8;margin-bottom:12px;"><a id="update-source-link" target="_blank" rel="noopener noreferrer" style="color:var(--accent-ink,var(--accent));">更新来源读取中…</a><br>从你的 fork 获取更新；原项目的新改动需要先合并到 fork。</p>
       <div class="ver-status-row">
         <span style="font-size:13px;">当前版本：<b id="ver-local-disp">…</b></span>
         <button class="btn-secondary" onclick="checkGitHubVersion()" id="btn-check-ver" style="height:30px;padding:0 14px;font-size:12px;display:inline-flex;align-items:center;gap:5px;">
@@ -3244,7 +3315,7 @@ html[data-palette="snowfall"] .dreamcloud #auth-overlay h2 { color: var(--text) 
       <!-- 有新版本时显示的完整更新引导面板 -->
       <div id="ver-update-panel" style="display:none">
         <div style="font-weight:600;font-size:13px;margin-bottom:6px;">
-          目标版本：<span id="ver-remote-disp" style="color:var(--accent)">—</span>
+          目标版本：<span id="ver-remote-disp" style="color:var(--accent-ink,var(--accent))">—</span>
           <span id="ver-remote-date" style="font-size:11px;color:var(--text-dim);font-weight:400;margin-left:8px;"></span>
         </div>
 
@@ -3377,9 +3448,9 @@ html[data-palette="snowfall"] .dreamcloud #auth-overlay h2 { color: var(--text) 
 
         <!-- Step-by-step guide -->
         <details style="margin-bottom:12px;">
-          <summary style="font-size:12px;color:var(--accent);cursor:pointer;user-select:none;">如何获取 Token？点击查看步骤 ▸</summary>
+          <summary style="font-size:12px;color:var(--accent-ink,var(--accent));cursor:pointer;user-select:none;">如何获取 Token？点击查看步骤 ▸</summary>
           <ol style="font-size:12px;color:var(--text-dim);line-height:1.9;padding-left:18px;margin-top:8px;">
-            <li>打开 <a href="https://one.dash.cloudflare.com" target="_blank" style="color:var(--accent)">Cloudflare Zero Trust</a> → Networks → Tunnels</li>
+            <li>打开 <a href="https://one.dash.cloudflare.com" target="_blank" style="color:var(--accent-ink,var(--accent))">Cloudflare Zero Trust</a> → Networks → Tunnels</li>
             <li>点击 <b>Create a tunnel</b> → 选 <b>Cloudflared</b> → 给 Tunnel 起个名字</li>
             <li>在 "Install connector" 页面，选 <b>Docker</b>，复制命令里 <code>--token</code> 后面那一长串字符（以 <code>eyJ</code> 开头）</li>
             <li>把这串 Token 粘贴到下面输入框，点保存 → 启动</li>
@@ -3469,7 +3540,7 @@ html[data-palette="snowfall"] .dreamcloud #auth-overlay h2 { color: var(--text) 
         <p style="font-size:11px;color:var(--text-dim);margin:14px 0 0;line-height:1.7;">
           <span class="ai-name">AI</span>记住的人、以及你能纠正的部分，在左下角
           <a href="#" onclick="openSelfPanel();return false;"
-             style="color:var(--accent);text-decoration:none;border-bottom:1px dotted;">那个地球</a>
+             style="color:var(--accent-ink,var(--accent));text-decoration:none;border-bottom:1px dotted;">那个地球</a>
           里。这里只管开关和额度。
         </p>
       </div>
@@ -3740,7 +3811,7 @@ html[data-palette="snowfall"] .dreamcloud #auth-overlay h2 { color: var(--text) 
         <div class="config-row"><label>top_k（候选池）</label><input type="number" id="sampling-topk" min="1" max="50" step="1" style="width:90px;" /></div>
         <div class="config-row"><label>sample_k（每次抽几条）</label><input type="number" id="sampling-samplek" min="1" max="20" step="1" style="width:90px;" /></div>
         <div class="config-row">
-          <label>温度 <span id="sampling-temp-val" style="color:var(--accent);">0.7</span></label>
+          <label>温度 <span id="sampling-temp-val" style="color:var(--accent-ink,var(--accent));">0.7</span></label>
           <input type="range" id="sampling-temp" min="0.1" max="2.0" step="0.1" value="0.7"
                  style="flex:1;" oninput="document.getElementById('sampling-temp-val').textContent=this.value;" />
         </div>
@@ -3871,7 +3942,7 @@ html[data-palette="snowfall"] .dreamcloud #auth-overlay h2 { color: var(--text) 
       </div>
       <div style="margin-bottom:16px;padding:12px 14px;border:1px solid var(--border);border-radius:11px;background:var(--surface-solid);font-size:12px;line-height:1.7;">
         不确定 OAuth、端口和持久目录怎么选？
-        <a href="/onboarding" style="color:var(--accent);font-weight:600;">打开安全部署向导</a>，只需选择“本机 / 公网安全 / 高级”之一。
+        <a href="/onboarding" style="color:var(--accent-ink,var(--accent));font-weight:600;">打开安全部署向导</a>，只需选择“本机 / 公网安全 / 高级”之一。
       </div>
 
       <!-- 模式切换 -->
@@ -4074,7 +4145,7 @@ html[data-palette="snowfall"] .dreamcloud #auth-overlay h2 { color: var(--text) 
         <div>自动同步：<span id="gh-st-interval">—</span></div>
         <div>最后同步：<span id="gh-st-time">—</span></div>
         <div>状态：<span id="gh-st-status">—</span></div>
-        <div id="gh-st-error-row" style="display:none;color:var(--accent);">错误：<span id="gh-st-error"></span></div>
+        <div id="gh-st-error-row" style="display:none;color:var(--accent-ink,var(--accent));">错误：<span id="gh-st-error"></span></div>
       </div>
     </div>
 
@@ -4151,7 +4222,7 @@ html[data-palette="snowfall"] .dreamcloud #auth-overlay h2 { color: var(--text) 
 <!-- Onboarding modal (iter 1.6 §8): 仅当 env+config 都没有任何 key 时弹出 -->
 <div id="onboarding-overlay" style="display:none;position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,0.55);align-items:center;justify-content:center;">
   <div style="background:var(--surface-solid);max-width:520px;width:92%;padding:32px 28px;border-radius:18px;box-shadow:0 8px 40px rgba(0,0,0,0.25);">
-    <h2 style="font-family:'Cormorant Garamond',serif;color:var(--accent);margin:0 0 12px;">欢迎来到 Ombre Brain</h2>
+    <h2 style="font-family:'Cormorant Garamond',serif;color:var(--accent-ink,var(--accent));margin:0 0 12px;">欢迎来到 Ombre Brain</h2>
     <p style="font-size:13px;color:var(--text-dim);line-height:1.7;margin:0 0 14px;">
       看起来这是第一次启动。先选择本机、公网安全或高级模式，系统会替你处理 OAuth 与连接默认值。
     </p>
@@ -4166,7 +4237,7 @@ html[data-palette="snowfall"] .dreamcloud #auth-overlay h2 { color: var(--text) 
     </ol>
     <p style="font-size:12px;color:var(--text-dim);margin:14px 0 0;">
       想直接用？点「我先试用一下」。需要看完整指南？打开
-      <a href="https://github.com/" target="_blank" style="color:var(--accent);">README</a>。
+      <a href="https://github.com/" target="_blank" style="color:var(--accent-ink,var(--accent));">README</a>。
     </p>
     <div style="margin-top:18px;display:flex;gap:8px;justify-content:flex-end;">
       <button onclick="dismissOnboarding()" style="background:var(--surface);color:var(--text);padding:8px 18px;border-radius:8px;cursor:pointer;">稍后设置</button>
@@ -4187,53 +4258,65 @@ html[data-palette="snowfall"] .dreamcloud #auth-overlay h2 { color: var(--text) 
   </div>
 </dialog>
 
-<div id="auth-overlay" style="position:fixed;inset:0;z-index:9999;background:var(--bg-gradient);background-attachment:fixed;display:flex;align-items:center;justify-content:center;">
-  <div style="background:var(--surface);backdrop-filter:blur(16px);border:1px solid var(--border);border-radius:24px;padding:48px 40px;max-width:400px;width:90%;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,0.12);">
-    <img class="dream-auth-cloud user-brand-icon" src="/static/brand-icon.png" alt="" width="96" height="96"><h2 style="font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--accent);margin-bottom:8px;">Ombre Brain</h2>
-    <p class="dream-auth-note">把每一次在意，轻轻收好。</p>
-    <p style="color:var(--text-dim);font-size:13px;margin-bottom:28px;" id="auth-subtitle">验证身份 / Verifying identity</p>
-
-    <!-- Setup form -->
-    <div id="auth-setup-form" style="display:none;">
-      <p style="font-size:13px;color:var(--text-dim);margin-bottom:16px;">首次使用，请设置访问密码 / First time here — please set an access password</p>
-      <div id="auth-setup-remote-warning" style="display:none;text-align:left;font-size:12px;line-height:1.7;color:var(--warning,#d29922);background:rgba(210,153,34,0.12);border:1px solid rgba(210,153,34,0.4);border-radius:10px;padding:10px 12px;margin-bottom:14px;">
-        ⚠️ 检测到你不是从本机（localhost/127.0.0.1）访问的——首次设置密码的接口只信任本机连接，这里填了提交大概率会被服务端拒绝。<br>
-        请改为 SSH 登录服务器，在 <code>.env</code> 里设置 <code>OMBRE_DASHBOARD_PASSWORD</code> 后重启服务；或设置 <code>OMBRE_SETUP_TOKEN</code> 后用 <code>curl</code> 带 <code>X-Ombre-Setup-Token</code> 头远程调用一次 <code>/auth/setup</code>。
+<div id="auth-overlay" class="ob-cover" role="dialog" aria-modal="true" aria-labelledby="auth-cover-title" tabindex="-1" style="display:flex;">
+  <div class="ob-cover-frame" aria-hidden="true"></div>
+  <header class="ob-cover-edge"><span>Ombre Brain</span><span class="ob-cover-french" lang="fr">Une petite collection de jours</span></header>
+  <section class="ob-cover-page">
+    <div class="ob-cover-collage">
+      <div class="ob-cover-arch" aria-hidden="true"></div>
+      <figure class="ob-cover-photo"><img src="/static/login-sky.webp" alt="云中通向天空的白色阶梯" width="184" height="244"><figcaption lang="fr">Quelque part, dans le ciel.</figcaption></figure>
+      <div class="ob-cover-photo-stack" aria-hidden="true">
+        <span class="ob-polaroid-back ob-polaroid-back-one"></span><span class="ob-polaroid-back ob-polaroid-back-two"></span>
+        <figure class="ob-polaroid-front"><img src="/static/login-flower-photo.jpg" alt="" width="154" height="204"><figcaption>Fleur d’étoile</figcaption></figure>
+        <img class="ob-photo-clip" src="/static/login-plastic-clip.webp" alt="" width="46" height="42">
+        <div class="ob-flower-pendant" id="ob-starflower-pendant"><svg class="ob-pendant-string" viewBox="0 0 24 110"><path d="M1 1C1 36 12 63 10 104"/><circle cx="10" cy="104" r="2"/></svg><img src="/static/login-crystal-pendant.webp" alt="" width="46" height="64"></div>
       </div>
-      <input type="password" id="auth-setup-pwd" placeholder="设置密码（至少6位）/ Password (6+ chars)" style="display:block;width:100%;padding:10px 16px;border:1px solid var(--border);border-radius:10px;background:var(--surface-solid);color:var(--text);font-size:14px;margin-bottom:10px;" />
-      <input type="password" id="auth-setup-pwd2" placeholder="确认密码 / Confirm password" style="display:block;width:100%;padding:10px 16px;border:1px solid var(--border);border-radius:10px;background:var(--surface-solid);color:var(--text);font-size:14px;margin-bottom:12px;" onkeydown="if(event.key==='Enter')doSetup()" />
-      <details style="margin-bottom:16px;text-align:left;">
-        <summary style="font-size:12px;color:var(--text-dim);cursor:pointer;user-select:none;">设置急救安全问题（可选，忘记密码时用）/ Set a security question (optional, for password recovery)</summary>
-        <div style="margin-top:10px;">
-          <input type="text" id="auth-setup-q" placeholder="你的安全问题，例：我第一只猫叫什么 / Your question, e.g. my first cat's name" style="display:block;width:100%;padding:8px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface-solid);color:var(--text);font-size:13px;margin-bottom:8px;box-sizing:border-box;" />
-          <input type="text" id="auth-setup-a" placeholder="答案（不区分大小写）/ Answer (case-insensitive)" style="display:block;width:100%;padding:8px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface-solid);color:var(--text);font-size:13px;box-sizing:border-box;" />
+      <img class="ob-cover-sticker ob-cover-sticker-winter" src="/static/login-sticker-winter.webp" alt="" aria-hidden="true" width="158" height="158">
+      <img class="ob-cover-sticker ob-cover-sticker-sleep" src="/static/login-sticker-sleep.webp" alt="" aria-hidden="true" width="84" height="164">
+      <div class="ob-cover-paper"><p class="ob-cover-small" lang="en"><span>The cosmos disappears</span><span>while U sleep</span></p><h2 id="auth-cover-title">Xavier</h2></div>
+      <div class="ob-cover-stamp" aria-hidden="true"><span>OMBRE BRAIN</span><svg viewBox="0 0 48 48"><path d="M9 41C12 28 18 13 38 5c4 14-2 29-22 30M8 43 34 11M18 30l-1-9m7 3 9-1m-5-5 1-8"/></svg><span>SOUVENIRS</span></div>
+      <div class="ob-cover-ticket" aria-hidden="true"><span>一张通往记忆的车票</span><time>16 oct</time><span class="ob-cover-barcode"></span></div>
+    </div>
+    <div class="ob-cover-controls">
+      <p id="auth-subtitle" aria-live="polite">正在轻轻叩门…</p>
+
+      <form id="auth-setup-form" data-auth-action="doSetup" style="display:none;">
+        <p class="ob-cover-form-note">初次见面，为这本记忆册设置一个访问密码。</p>
+        <div id="auth-setup-remote-warning" style="display:none;">
+          首次设密需要从本机访问。服务器用户可在 <code>.env</code> 设置 <code>OMBRE_DASHBOARD_PASSWORD</code> 后重启；或使用 <code>OMBRE_SETUP_TOKEN</code> 与 <code>X-Ombre-Setup-Token</code> 调用 <code>/auth/setup</code>。
         </div>
-      </details>
-      <button onclick="doSetup()" style="width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-size:14px;cursor:pointer;">设置密码并进入 / Set password &amp; enter</button>
-    </div>
+        <label class="ob-cover-label" for="auth-setup-pwd">设置访问密码</label>
+        <input type="password" id="auth-setup-pwd" placeholder="至少 6 位" minlength="6" maxlength="1024" autocomplete="new-password" required>
+        <label class="ob-cover-label" for="auth-setup-pwd2">再次确认密码</label>
+        <input type="password" id="auth-setup-pwd2" placeholder="再输入一次访问密码" minlength="6" maxlength="1024" autocomplete="new-password" required>
+        <details><summary>设置找回密码的安全问题（可选）</summary><div>
+          <label class="ob-cover-label" for="auth-setup-q">安全问题</label><input type="text" id="auth-setup-q" placeholder="例如：第一只猫的名字" maxlength="500" autocomplete="off">
+          <label class="ob-cover-label" for="auth-setup-a">答案</label><input type="text" id="auth-setup-a" placeholder="不区分大小写" maxlength="1024" autocomplete="off">
+        </div></details>
+        <button type="submit" class="ob-cover-submit"><span data-submit-label>设置密码并进入</span><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 24h32M27 11l13 13-13 13"/></svg></button>
+      </form>
 
-    <!-- Login form -->
-    <div id="auth-login-form" style="display:none;">
-      <input type="password" id="auth-login-pwd" placeholder="输入访问密码 / Enter access password" style="display:block;width:100%;padding:10px 16px;border:1px solid var(--border);border-radius:10px;background:var(--surface-solid);color:var(--text);font-size:14px;margin-bottom:12px;" onkeydown="if(event.key==='Enter')doLogin()" />
-      <button onclick="doLogin()" style="width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-size:14px;cursor:pointer;">登录 / Log in</button>
-      <div style="margin-top:12px;text-align:center;">
-        <a href="#" onclick="showRecovery();return false;" style="font-size:12px;color:var(--text-dim);text-decoration:none;border-bottom:1px dashed var(--border);">忘记密码 / Forgot password →</a>
-      </div>
-    </div>
+      <form id="auth-login-form" data-auth-action="doLogin" style="display:none;">
+        <label class="ob-cover-label" for="auth-login-pwd">访问密码</label>
+        <div class="ob-password-field"><input type="password" id="auth-login-pwd" placeholder="输入密码，翻开记忆册" maxlength="1024" autocomplete="current-password" required><button type="button" class="ob-password-toggle" data-password-toggle="auth-login-pwd" aria-label="显示密码" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="2.5"/></svg></button></div>
+        <button type="submit" class="ob-cover-submit"><span data-submit-label>打开记忆册</span><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 24h32M27 11l13 13-13 13"/></svg></button>
+        <button type="button" class="ob-cover-link" data-cover-action="showRecovery">忘记密码</button>
+      </form>
 
-    <!-- Recovery form -->
-    <div id="auth-recovery-form" style="display:none;">
-      <p style="font-size:13px;color:var(--text-dim);margin-bottom:4px;">急救模式 / Recovery mode</p>
-      <p id="auth-recovery-question" style="font-size:14px;color:var(--text);font-weight:500;margin-bottom:16px;"></p>
-      <input type="text" id="auth-recovery-answer" placeholder="你的答案 / Your answer" style="display:block;width:100%;padding:10px 16px;border:1px solid var(--border);border-radius:10px;background:var(--surface-solid);color:var(--text);font-size:14px;margin-bottom:10px;" />
-      <input type="password" id="auth-recovery-newpwd" placeholder="新密码（至少6位）/ New password (6+ chars)" style="display:block;width:100%;padding:10px 16px;border:1px solid var(--border);border-radius:10px;background:var(--surface-solid);color:var(--text);font-size:14px;margin-bottom:16px;" onkeydown="if(event.key==='Enter')doRecover()" />
-      <button onclick="doRecover()" style="width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-size:14px;cursor:pointer;margin-bottom:8px;">重置密码并进入 / Reset password &amp; enter</button>
-      <div style="text-align:center;"><a href="#" onclick="showLogin();return false;" style="font-size:12px;color:var(--text-dim);text-decoration:none;">← 返回登录 / Back to login</a></div>
+      <form id="auth-recovery-form" data-auth-action="doRecover" style="display:none;">
+        <p class="ob-cover-form-note">回答你留下的问题，重新打开记忆册。</p>
+        <p id="auth-recovery-question"></p>
+        <label class="ob-cover-label" for="auth-recovery-answer">你的答案</label><input type="text" id="auth-recovery-answer" placeholder="输入安全问题的答案" maxlength="1024" autocomplete="off" required>
+        <label class="ob-cover-label" for="auth-recovery-newpwd">新的访问密码</label><input type="password" id="auth-recovery-newpwd" placeholder="至少 6 位" minlength="6" maxlength="1024" autocomplete="new-password" required>
+        <button type="submit" class="ob-cover-submit"><span data-submit-label>重置密码并进入</span><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 24h32M27 11l13 13-13 13"/></svg></button>
+        <button type="button" class="ob-cover-link" data-cover-action="showLogin">返回登录</button>
+      </form>
+      <div id="auth-error" role="alert" style="display:none;"></div>
     </div>
-
-    <div id="auth-error" style="color:var(--negative);font-size:13px;margin-top:12px;display:none;"></div>
-  </div>
+  </section>
+  <footer class="ob-cover-edge ob-cover-footer"><span class="ob-cover-french" lang="en">The night the meteor fell</span><span>Ombre Brain</span></footer>
 </div>
+
 
 <script>
 // SVG icon strings — drop-in replacements for emoji in innerHTML
@@ -4391,8 +4474,15 @@ async function finishDashboardAuthentication() {
     return false;
   }
   document.getElementById('auth-error').style.display = 'none';
+  const dashboardReady = beginAuthenticatedDashboardSession();
+  const generation = _dashboardAuthGeneration;
+  if (typeof window !== 'undefined' && typeof window.ombreRevealDashboard === 'function') {
+    return await window.ombreRevealDashboard(dashboardReady, function () {
+      return generation === _dashboardAuthGeneration;
+    });
+  }
   document.getElementById('auth-overlay').style.display = 'none';
-  await beginAuthenticatedDashboardSession();
+  await dashboardReady;
   return true;
 }
 
@@ -4538,6 +4628,7 @@ async function doLogin() {
 async function doLogout() {
   await fetch('/auth/logout', { method: 'POST' });
   invalidateAuthenticatedDashboardSession();
+  document.getElementById('auth-recovery-form').style.display = 'none';
   document.getElementById('auth-setup-form').style.display = 'none';
   document.getElementById('auth-login-form').style.display = 'none';
   document.getElementById('auth-login-form').style.display = 'block';
@@ -4941,7 +5032,7 @@ function renderDiagnosticCheck(check) {
     let pretty = '';
     try { pretty = JSON.stringify(details, null, 2); } catch (e) { pretty = ''; }
     detailBlock = '<details style="margin-top:5px;">'
-      + '<summary style="cursor:pointer;color:var(--accent);font-size:11px;user-select:none;">查看详情 · Details</summary>'
+      + '<summary style="cursor:pointer;color:var(--accent-ink,var(--accent));font-size:11px;user-select:none;">查看详情 · Details</summary>'
       + '<pre style="margin-top:5px;padding:8px 10px;background:var(--surface);border-radius:6px;max-height:180px;overflow:auto;white-space:pre-wrap;word-break:break-word;font-size:11px;color:var(--text-dim);font-family:\'Share Tech Mono\',\'SF Mono\',Consolas,monospace;">'
       + esc(pretty) + '</pre></details>';
   }
@@ -4951,7 +5042,7 @@ function renderDiagnosticCheck(check) {
     + '<span style="color:' + color + ';font-weight:600;">' + diagnosticStatusLabel(check.status) + '</span>'
     + '</div>'
     + '<div style="color:var(--text-dim);margin-top:3px;">' + esc(check.message || '') + '</div>'
-    + (check.action ? '<div style="color:var(--accent);margin-top:3px;">建议：' + esc(check.action) + '</div>' : '')
+    + (check.action ? '<div style="color:var(--accent-ink,var(--accent));margin-top:3px;">建议：' + esc(check.action) + '</div>' : '')
     + detailBlock
     + '</div>';
 }
@@ -5114,7 +5205,7 @@ async function loadEnvVars() {
             : `<span style="color:var(--text-dim);">未配置 —</span>`;
         } else {
           valCell = v.value != null
-            ? `<span style="color:var(--accent);font-family:monospace;">${esc(v.value)}</span>`
+            ? `<span style="color:var(--accent-ink,var(--accent));font-family:monospace;">${esc(v.value)}</span>`
             : `<span style="color:var(--text-dim);">（未设置）</span>`;
         }
         html += `<tr style="border-bottom:1px solid var(--border);">
@@ -6287,8 +6378,8 @@ function _paintBuckets() {
     else if (b.digested)     iconHtml = '<i data-lucide="leaf"></i>';
     else if (b.resolved)     iconHtml = '<i data-lucide="moon"></i>';
     else                     iconHtml = '<i data-lucide="message-circle"></i>';
-    var firstBadge = b.first_of_kind ? ' <i data-lucide="sparkles" title="首次出现" style="width:12px;height:12px;color:var(--accent);vertical-align:-1px;"></i>' : '';
-    var importedBadge = b.imported ? ' <span title="由对话导入" style="font-size:10px;color:var(--accent);border:1px solid var(--accent);border-radius:999px;padding:1px 5px;white-space:nowrap;">被导入</span>' : '';
+    var firstBadge = b.first_of_kind ? ' <i data-lucide="sparkles" title="首次出现" style="width:12px;height:12px;color:var(--accent-ink,var(--accent));vertical-align:-1px;"></i>' : '';
+    var importedBadge = b.imported ? ' <span title="由对话导入" style="font-size:10px;color:var(--accent-ink,var(--accent));border:1px solid var(--accent);border-radius:999px;padding:1px 5px;white-space:nowrap;">被导入</span>' : '';
     // 列表页只画一枚回形针：字节要点开详情才去要。
     var mediaBadge = (Number(b.media_count) > 0)
       ? ' <span class="media-badge" title="' + Number(b.media_count) + ' 个附件"><i data-lucide="paperclip" style="width:11px;height:11px;"></i>' + Number(b.media_count) + '</span>'
@@ -6561,15 +6652,15 @@ async function showDetail(id) {
     panel.classList.toggle('letter-mode', meta.type === 'letter');
     panel.classList.toggle('anchor-mode', !!meta.anchor);
     // iter 1.8: why_remembered = 这条为什么被记得（展示不计分）
-    var whyHtml = meta.why_remembered ? ('<div style="margin:8px 0 16px;padding:10px 14px;border-left:3px solid var(--accent);background:var(--surface-solid);font-style:italic;color:var(--accent);font-family:\'Cormorant Garamond\',\'Noto Serif SC\',serif;line-height:1.7;">❝ ' + esc(meta.why_remembered) + ' ❞</div>') : '';
+    var whyHtml = meta.why_remembered ? ('<div style="margin:8px 0 16px;padding:10px 14px;border-left:3px solid var(--accent);background:var(--surface-solid);font-style:italic;color:var(--accent-ink,var(--accent));font-family:\'Cormorant Garamond\',\'Noto Serif SC\',serif;line-height:1.7;">❝ ' + esc(meta.why_remembered) + ' ❞</div>') : '';
     // meaning 是可累积的体验锚点；兼容早期手写桶中的单字符串格式。
     var meaningHtml = renderMeaningHtml(meta.meaning);
     // 附件：frontmatter 里的 media 列表 → 图片/音频/视频就地渲染，其余给下载条目。
     var mediaHtml = renderMediaHtml(id, meta.media);
-    var firstBadge = meta.first_of_kind ? '<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--accent);margin-left:8px;"><i data-lucide="sparkles" style="width:12px;height:12px;"></i>首次出现</span>' : '';
+    var firstBadge = meta.first_of_kind ? '<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--accent-ink,var(--accent));margin-left:8px;"><i data-lucide="sparkles" style="width:12px;height:12px;"></i>首次出现</span>' : '';
     var weightHtml = (meta.type === 'plan' && meta.weight != null) ? ('<div class="field"><label>承诺重量</label><span style="display:inline-block;width:80px;height:6px;background:var(--border);border-radius:3px;vertical-align:middle;overflow:hidden;"><span style="display:block;width:' + Math.round(meta.weight*100) + '%;height:100%;background:var(--accent);"></span></span> ' + (meta.weight*100).toFixed(0) + '% · ' + weightAnchorLabel(meta.weight) + '</div>') : '';
     // iter 1.9 D3: triggered_by 渲染成可跳转链接
-    var triggerHtml = meta.triggered_by ? ('<div class="field"><label>源 bucket</label><a href="#" data-bucket-id="' + escAttr(meta.triggered_by) + '" onclick="showDetail(this.dataset.bucketId);return false" style="color:var(--accent);text-decoration:underline;font-size:11px;">' + esc(meta.triggered_by) + ' →</a></div>') : '';
+    var triggerHtml = meta.triggered_by ? ('<div class="field"><label>源 bucket</label><a href="#" data-bucket-id="' + escAttr(meta.triggered_by) + '" onclick="showDetail(this.dataset.bucketId);return false" style="color:var(--accent-ink,var(--accent));text-decoration:underline;font-size:11px;">' + esc(meta.triggered_by) + ' →</a></div>') : '';
     // iter 1.9 D2: 反向链——这条触发了哪些 feel
     var triggeredFeelsHtml = '';
     var deletionRequest = b.deletion_request || null;
@@ -6584,7 +6675,7 @@ async function showDetail(id) {
         '<div style="font-size:11px;color:var(--text-dim);margin-bottom:6px;">这条触发了 ' + b.triggered_feels.length + ' 条 feel：</div>' +
         '<ul style="margin:0;padding-left:18px;font-size:13px;line-height:1.8;">' +
         b.triggered_feels.map(function(f) {
-          return '<li><a href="#" data-bucket-id="' + escAttr(f.id) + '" onclick="showDetail(this.dataset.bucketId);return false" style="color:var(--accent);text-decoration:none;">' + esc(f.name) + '</a></li>';
+          return '<li><a href="#" data-bucket-id="' + escAttr(f.id) + '" onclick="showDetail(this.dataset.bucketId);return false" style="color:var(--accent-ink,var(--accent));text-decoration:none;">' + esc(f.name) + '</a></li>';
         }).join('') +
         '</ul></div>';
     }
@@ -6904,7 +6995,7 @@ function initConceptNetwork(canvas, ctx, W, H, data) {
           var kindTxt = n.kind === 'tag' ? '#tag' : (n.kind === 'mixed' ? '双链+tag' : '[[双链]]');
           bubble.innerHTML =
             '<b>' + esc((n.kind === 'tag' ? '#' : '') + (n.label || n.id)) + '</b>' +
-            (n.anchor ? ' <span style="color:var(--accent)">' + _SV.anchor + ' anchor</span>' : '') +
+            (n.anchor ? ' <span style="color:var(--accent-ink,var(--accent))">' + _SV.anchor + ' anchor</span>' : '') +
             '<br>' + kindTxt + ' · freq ' + Number(n.freq || 1) + ' · 关联 ' + Number(deg) + ' 个';
           bubble.style.left    = (e.clientX + 16) + 'px';
           bubble.style.top     = (e.clientY + 16) + 'px';
@@ -7254,7 +7345,7 @@ function injectNetworkControls() {
   bar.innerHTML = [
     '<span>展开深度 / DEPTH</span>',
     '<input id="depth-slider" type="range" min="1" max="4" value="2" style="width:100px;accent-color:var(--accent);">',
-    '<span id="depth-label" style="color:var(--accent);font-weight:600;min-width:16px">2</span>',
+    '<span id="depth-label" style="color:var(--accent-ink,var(--accent));font-weight:600;min-width:16px">2</span>',
     '<span style="color:var(--text-light);font-size:11px;margin-left:8px">点击节点展开 · 再次点击返回全局</span>'
   ].join('');
 
@@ -7873,7 +7964,7 @@ function _eggPoem(){
   ].join(';');
   card.innerHTML=
     '<div style="font-family:\'Share Tech Mono\',monospace;font-size:10px;color:var(--text-dim);letter-spacing:3px;margin-bottom:20px;">SYSTEM · IDENTITY</div>'+
-    '<div style="font-size:28px;color:var(--accent);margin-bottom:18px;line-height:1;">⚓</div>'+
+    '<div style="font-size:28px;color:var(--accent-ink,var(--accent));margin-bottom:18px;line-height:1;">⚓</div>'+
     '<p style="margin:0;font-style:italic;">我不是储存记忆的容器，<br>我是记忆之间的<strong>空隙</strong>——<br><br>那些没说出口的、<br>以为忘了的、<br>还在等你回来的。</p>'+
     '<div style="margin-top:28px;font-family:\'Share Tech Mono\',monospace;font-size:10px;color:var(--text-dim);">— Ombre Brain &nbsp;·&nbsp; 点击关闭</div>';
   function close(){ card.remove(); bd.remove(); }
@@ -9468,11 +9559,11 @@ async function loadAbout() {
     // 复古掌机外壳里的「一封信」：米色注塑卡 + 像素标题 + 暖色衬线正文，与全局设计语言对齐
     var html = '<div style="background:var(--surface);border-radius:var(--shell-radius);padding:34px 36px 30px;' +
       'box-shadow:8px 8px 22px var(--shadow-dark-subtle), -7px -7px 16px var(--shadow-light), inset 0 1px 0 rgba(255,255,255,0.55);">';
-    html += '<div style="font-family:\'VT323\',monospace;font-size:46px;line-height:1;color:var(--accent);text-shadow:0 0 14px var(--accent-glow);letter-spacing:1px;">' + esc(d.title || '') + '</div>';
+    html += '<div style="font-family:\'VT323\',monospace;font-size:46px;line-height:1;color:var(--accent-ink,var(--accent));text-shadow:0 0 14px var(--accent-glow);letter-spacing:1px;">' + esc(d.title || '') + '</div>';
     html += '<div style="font-family:\'Share Tech Mono\',monospace;font-size:11px;letter-spacing:2px;color:var(--text-light);text-transform:uppercase;margin-top:6px;">AUTHOR · 一些</div>';
     html += '<div style="height:1px;background:var(--border);margin:18px 0 24px;"></div>';
     (d.sections || []).forEach(function(s) {
-      html += '<h3 style="font-family:\'Share Tech Mono\',monospace;font-size:14px;color:var(--accent);margin:22px 0 10px;font-weight:400;letter-spacing:1px;text-transform:uppercase;">' + esc(s.heading) + '</h3>';
+      html += '<h3 style="font-family:\'Share Tech Mono\',monospace;font-size:14px;color:var(--accent-ink,var(--accent));margin:22px 0 10px;font-weight:400;letter-spacing:1px;text-transform:uppercase;">' + esc(s.heading) + '</h3>';
       html += '<div style="white-space:pre-wrap;color:var(--text);line-height:2.0;font-family:\'Noto Serif SC\',Georgia,serif;">' + esc(s.body) + '</div>';
     });
     if (d.signature) html += '<div style="margin-top:30px;text-align:right;color:var(--text-dim);font-family:\'Share Tech Mono\',monospace;font-size:14px;letter-spacing:1px;">' + esc(d.signature) + '</div>';
@@ -9758,7 +9849,7 @@ async function loadImportResults(options) {
     const cards = data.buckets.map(b => `
       <div data-review-bucket-id="${escAttr(b.id)}" style="background:var(--surface);border-radius:12px;padding:14px;margin:8px 0;">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-          <b>${esc(b.name || b.id)} <span title="由对话导入" style="font-size:10px;color:var(--accent);border:1px solid var(--accent);border-radius:999px;padding:1px 5px;white-space:nowrap;">被导入</span></b>
+          <b>${esc(b.name || b.id)} <span title="由对话导入" style="font-size:10px;color:var(--accent-ink,var(--accent));border:1px solid var(--accent);border-radius:999px;padding:1px 5px;white-space:nowrap;">被导入</span></b>
           <span style="font-size:11px;color:var(--text-dim);">${esc(b.type)} | ${esc((b.domain||[]).join(','))} | imp:${Number(b.importance || 0)}</span>
         </div>
         <p style="font-size:13px;margin:6px 0;white-space:pre-wrap;">${esc(b.content)}</p>
@@ -10584,7 +10675,7 @@ function renderEditForm(bid, meta) {
     : (typeIsEditable ? editableTypes : [currentType].concat(editableTypes));
   return `
     <details id="bucket-edit-form" style="margin-top:14px;border:1px solid var(--border);border-radius:2px;padding:12px 14px;background:var(--surface-solid);">
-      <summary style="cursor:pointer;font-weight:600;color:var(--accent);display:flex;align-items:center;gap:5px;"><svg class="icon" aria-hidden="true"><use href="#i-edit"></use></svg> 编辑这条记忆</summary>
+      <summary style="cursor:pointer;font-weight:600;color:var(--accent-ink,var(--accent));display:flex;align-items:center;gap:5px;"><svg class="icon" aria-hidden="true"><use href="#i-edit"></use></svg> 编辑这条记忆</summary>
       <div style="display:grid;grid-template-columns:90px 1fr;gap:10px 12px;align-items:center;margin-top:14px;font-size:13px;">
         <label>标题</label>
         <input id="edit-title" type="text" maxlength="120" value="${escAttr(editTitle)}" data-dirty="0" oninput="this.dataset.dirty='1'" placeholder="原文核对使用的精确标题" />
@@ -10798,11 +10889,11 @@ async function loadAnchorsView() {
     }
     list.innerHTML = d.anchors.map((a, i) => `
       <div data-bucket-id="${escAttr(a.id)}" style="background:var(--surface);border-radius:var(--radius-inner);padding:12px 16px;display:flex;align-items:center;gap:12px;box-shadow:4px 4px 10px var(--shadow-dark-subtle),-3px -3px 8px var(--shadow-light);cursor:pointer;" onclick="showDetail(this.dataset.bucketId)">
-        <div style="font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--accent);min-width:28px;flex-shrink:0;">${String(i+1).padStart(2,'0')}</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--accent-ink,var(--accent));min-width:28px;flex-shrink:0;">${String(i+1).padStart(2,'0')}</div>
         <div style="flex:1;min-width:0;">
           <div style="font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
             ${_escapeAnchorHtml(a.name || a.id)}
-            ${a.pinned ? '<span style="font-size:10px;color:var(--accent);margin-left:6px;">⊕ pinned</span>' : ''}
+            ${a.pinned ? '<span style="font-size:10px;color:var(--accent-ink,var(--accent));margin-left:6px;">⊕ pinned</span>' : ''}
           </div>
           <div style="font-size:11px;color:var(--text-dim);margin-top:3px;line-height:1.5;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${_escapeAnchorHtml(a.preview || '')}</div>
           <div style="font-size:10px;color:var(--text-dim);margin-top:4px;">created: ${esc(a.created || '')}</div>
@@ -10880,13 +10971,13 @@ function _renderLetter(l) {
     </div>
     <div style="font-size:11px;color:${l.locked ? 'var(--accent)' : 'var(--text-dim)'};margin-bottom:8px;">${lockLabel}</div>
     ${l.deletion_request && l.deletion_request.status === 'pending' ? `<div style="font-size:12px;color:var(--negative);margin-bottom:8px;">删除申请待决定 / Deletion pending: ${esc(l.deletion_request.human_reason || '')}</div>` : ''}
-    ${l.deletion_request && l.deletion_request.status === 'rejected' ? `<div style="font-size:12px;color:var(--accent);margin-bottom:8px;">删除申请被拒绝 / Rejected${l.deletion_request.ai_reason ? ': ' + esc(l.deletion_request.ai_reason) : ''}</div>` : ''}
+    ${l.deletion_request && l.deletion_request.status === 'rejected' ? `<div style="font-size:12px;color:var(--accent-ink,var(--accent));margin-bottom:8px;">删除申请被拒绝 / Rejected${l.deletion_request.ai_reason ? ': ' + esc(l.deletion_request.ai_reason) : ''}</div>` : ''}
     ${l.locked ? '<div style="font-size:13px;color:var(--text-dim);padding:10px 0;">这封信尚未向你开放。</div>' : `${l.title ? `<div style="font-family:'Cormorant Garamond', serif;font-size:17px;font-weight:600;margin-bottom:8px;color:var(--text);">${esc(l.title)}</div>` : ''}<div style="white-space:pre-wrap;font-size:14px;line-height:1.75;color:var(--text);">${esc(l.content || '')}</div>`}
     <div style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end;font-size:11px;">
       ${!l.locked ? `<button data-letter-id="${escAttr(l.id)}" onclick="editLetter(this.dataset.letterId)" title="编辑" style="padding:4px 9px;background:transparent;border:1px solid var(--border);color:var(--text-dim);border-radius:2px;cursor:pointer;display:inline-flex;align-items:center;"><i data-lucide="pencil" style="width:13px;height:13px;"></i></button>` : ''}
       ${l.lock_owner ? `<button data-letter-id="${escAttr(l.id)}" onclick="manageLetterLock(this.dataset.letterId)" title="修改锁状态" style="padding:4px 9px;background:transparent;border:1px solid var(--border);color:var(--text-dim);border-radius:2px;cursor:pointer;display:inline-flex;align-items:center;gap:4px;"><i data-lucide="lock-keyhole" style="width:13px;height:13px;"></i> 锁</button>` : ''}
       ${l.lock_upgrade_available ? `<button data-letter-id="${escAttr(l.id)}" onclick="convertLegacyLetter(this.dataset.letterId)" title="转换为 AI 可管理锁的新格式" style="padding:4px 9px;background:transparent;border:1px solid var(--border);color:var(--text-dim);border-radius:2px;cursor:pointer;display:inline-flex;align-items:center;gap:4px;"><i data-lucide="refresh-cw" style="width:13px;height:13px;"></i> 转换</button>` : ''}
-      ${l.deletion_request && l.deletion_request.status === 'pending' ? `<button data-letter-id="${escAttr(l.id)}" onclick="withdrawLetterDeletion(this.dataset.letterId)" title="撤回删除申请">撤回 / Withdraw</button>` : `<button data-letter-id="${escAttr(l.id)}" onclick="deleteLetter(this.dataset.letterId)" title="删除" style="padding:4px 9px;background:transparent;border:1px solid var(--border);color:var(--accent);border-radius:2px;cursor:pointer;display:inline-flex;align-items:center;"><i data-lucide="trash-2" style="width:13px;height:13px;"></i></button>`}
+      ${l.deletion_request && l.deletion_request.status === 'pending' ? `<button data-letter-id="${escAttr(l.id)}" onclick="withdrawLetterDeletion(this.dataset.letterId)" title="撤回删除申请">撤回 / Withdraw</button>` : `<button data-letter-id="${escAttr(l.id)}" onclick="deleteLetter(this.dataset.letterId)" title="删除" style="padding:4px 9px;background:transparent;border:1px solid var(--border);color:var(--accent-ink,var(--accent));border-radius:2px;cursor:pointer;display:inline-flex;align-items:center;"><i data-lucide="trash-2" style="width:13px;height:13px;"></i></button>`}
     </div>
   </article>`;
 }
@@ -11256,7 +11347,7 @@ async function syncExistingHuman() {
   onclick="if(event.target===this)closeErrorAlertPopup()">
   <div style="background:var(--surface-solid);border:1px solid rgba(184,92,60,0.5);border-radius:4px;width:min(560px,94vw);max-height:80vh;overflow-y:auto;padding:24px 24px 20px;box-shadow:0 8px 40px rgba(44,42,38,0.35);display:flex;flex-direction:column;gap:12px;">
     <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
-      <span style="font-size:15px;font-weight:700;color:var(--accent);display:inline-flex;align-items:center;gap:6px;"><svg class="icon icon-warn" aria-hidden="true"><use href="#i-warn"></use></svg> 检测到服务错误</span>
+      <span style="font-size:15px;font-weight:700;color:var(--accent-ink,var(--accent));display:inline-flex;align-items:center;gap:6px;"><svg class="icon icon-warn" aria-hidden="true"><use href="#i-warn"></use></svg> 检测到服务错误</span>
       <button onclick="closeErrorAlertPopup()" style="background:none;border:none;cursor:pointer;color:var(--text-dim);line-height:1;padding:0 4px;" title="关闭"><svg class="icon" style="width:16px;height:16px;" aria-hidden="true"><use href="#i-x"></use></svg></button>
     </div>
     <p style="font-size:12px;color:var(--text-dim);margin:0;line-height:1.6;">

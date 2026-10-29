@@ -17,6 +17,54 @@ def _dashboard_section(start_marker: str, end_marker: str) -> str:
     return html[start:end]
 
 
+@pytest.mark.skipif(shutil.which("node") is None, reason="Node.js is unavailable")
+@pytest.mark.parametrize("invalidate_during_reveal", [False, True])
+def test_verified_session_initializes_behind_cover_and_guards_reveal(invalidate_during_reveal):
+    source = _dashboard_section("var _dashboardAuthGeneration", "// 只是浏览器地址栏")
+    script = r"""
+const overlay = {style:{display:'flex'}};
+const document = {readyState:'complete',getElementById(id){return id==='auth-overlay'?overlay:{style:{}};}};
+function setInterval(){return 1;}
+function clearInterval(){}
+let initialized = 0;
+async function loadBuckets(){initialized++;}
+async function syncRestartRequirement(){}
+async function refreshAnchorCounter(){}
+async function loadOwnerBadge(){}
+async function pollHeartbeat(){}
+async function pollCriticalErrors(){}
+async function maybeShowOnboarding(){}
+async function fetch(){return {ok:true,async json(){return {authenticated:true};}};}
+let seen;
+const window = {async ombreRevealDashboard(ready,isCurrent){
+  await ready;
+  seen = {display:overlay.style.display,initialized,currentBefore:isCurrent()};
+  if (INVALIDATE) invalidateAuthenticatedDashboardSession();
+  seen.currentAfter = isCurrent();
+  if(isCurrent()) overlay.style.display='none';
+  return isCurrent();
+}};
+""".replace("INVALIDATE", json.dumps(invalidate_during_reveal)) + source + r"""
+(async()=>{
+  const result=await finishDashboardAuthentication();
+  process.stdout.write(JSON.stringify({seen,result,display:overlay.style.display}));
+})().catch(error=>{console.error(error);process.exit(1);});
+"""
+    completed = subprocess.run(
+        [shutil.which("node"), "-e", script], check=True, capture_output=True,
+        text=True, encoding="utf-8",
+    )
+    result = json.loads(completed.stdout)
+    assert result == {
+        "seen": {
+            "display": "flex", "initialized": 1, "currentBefore": True,
+            "currentAfter": not invalidate_during_reveal,
+        },
+        "result": not invalidate_during_reveal,
+        "display": "flex" if invalidate_during_reveal else "none",
+    }
+
+
 def test_all_auth_success_paths_share_the_dashboard_initializer():
     html = DASHBOARD.read_text(encoding="utf-8")
     initializer = _dashboard_section(

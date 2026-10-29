@@ -27,8 +27,8 @@
     },
     {
       "path": "frontend/dashboard.html",
-      "sha256": "345d9f8aa9831aeb74799b47f9afbb27e78c687eba5878d23b4335aa0960da31",
-      "size": 611954
+      "sha256": "7c5237932ab8eec36bb64d0581a7f0bac87d8d6aaacb81fd9bfed20f66e25251",
+      "size": 615472
     },
     {
       "path": "frontend/favicon.svg",
@@ -39,6 +39,71 @@
       "path": "frontend/icon.svg",
       "sha256": "4eaf4ca023e969fe2fd617be08ab8537ff30486cac89e2b4617731bccdbc0813",
       "size": 1474
+    },
+    {
+      "path": "frontend/login-cover.css",
+      "sha256": "0726358f68b523628702a87dddc15276d873e2497bfc2d7750c0eb0944c689e4",
+      "size": 12209
+    },
+    {
+      "path": "frontend/login-cover.js",
+      "sha256": "ccae2aca29c85495ab6a0b465cc66abcce598b1bdfb6b56454222722406f0340",
+      "size": 14081
+    },
+    {
+      "path": "frontend/login-crystal-pendant.webp",
+      "sha256": "a850547eadf039ac314a244932848eea244a73c3f74adc8e3149d72e304e3d62",
+      "size": 26544
+    },
+    {
+      "path": "frontend/login-flower-photo.jpg",
+      "sha256": "52616508a101ea8a8966483e95adbfbb4e9cf01e591b4eb6d8bcb1bf44c9f6ef",
+      "size": 437381
+    },
+    {
+      "path": "frontend/login-font-OFL.txt",
+      "sha256": "6f5a41d57400577a50aae88475b11f292f3d7de78ee7d5113c69577331d8ad31",
+      "size": 4386
+    },
+    {
+      "path": "frontend/login-paper-texture.svg",
+      "sha256": "9de9179f311866d17f06a784ea1357b7b8f4b8d846cf6afe678da6871fd09cbd",
+      "size": 109697
+    },
+    {
+      "path": "frontend/login-plastic-clip.webp",
+      "sha256": "c67670d58e2f5e9d52d9921f7c87dd23cf5600884bb3712ca3c5287e8f3a4687",
+      "size": 19056
+    },
+    {
+      "path": "frontend/login-rose-frame.webp",
+      "sha256": "9a83e5f16ab838763a3722be3a6f50fa627dc4308826acf5d9a4369fb05db7d2",
+      "size": 739180
+    },
+    {
+      "path": "frontend/login-serif-italic.woff2",
+      "sha256": "6f2f5c3b1abc3d0bb035a927f66a90ca873f94fc31c4966c8d024142c2036e55",
+      "size": 39260
+    },
+    {
+      "path": "frontend/login-serif.woff2",
+      "sha256": "d80df8ff5aecd299a61549f9e29ab1ed0b9b05f4ea71d50fe978e07d5240b235",
+      "size": 37640
+    },
+    {
+      "path": "frontend/login-sky.webp",
+      "sha256": "d1d4fe09fd7ffd63205b850fbccc2a330151caf00d167ceeb0232c06f839a0ba",
+      "size": 111706
+    },
+    {
+      "path": "frontend/login-sticker-sleep.webp",
+      "sha256": "96502e7e3e3e5ecab6a166417cad2fcc2db183866acc7bf8b60f47b228a0a53d",
+      "size": 29716
+    },
+    {
+      "path": "frontend/login-sticker-winter.webp",
+      "sha256": "337bb4c539d0db8fd07a82aedfd9defed628ce744100bdeaac1f0c9a1ca83ec8",
+      "size": 38388
     },
     {
       "path": "frontend/manifest.json",
@@ -52,7 +117,7 @@
     },
     {
       "path": "src/VERSION",
-      "sha256": "050b1be586f238ff4c9b66a45397a4df7bd9de6a8809205f4f7dba0234d93790",
+      "sha256": "5c0f9e710d6f59bb59980444f3dc58886fc564a0a2d8a1d534d3296be2c67da8",
       "size": 6
     },
     {
@@ -827,8 +892,8 @@
     },
     {
       "path": "src/web/dashboard.py",
-      "sha256": "dfedf8f3a1b081a84b8618e450ce461ee54ad8e08b65986e0780c7b8e5284d50",
-      "size": 5256
+      "sha256": "12da5e2b698ee8c01bab3825edfbd1f10d87c101beea34142e55f25605eff8eb",
+      "size": 6451
     },
     {
       "path": "src/web/embedding.py",
@@ -917,5 +982,5 @@
     }
   ],
   "rollout_strategy": "single-node",
-  "version": "3.6.14"
+  "version": "3.9.0"
 }

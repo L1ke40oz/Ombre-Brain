@@ -1,6 +1,8 @@
 """Public routes expose only constant-time, UI-essential information."""
 
 import json
+from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -20,6 +22,53 @@ class _MCP:
             return handler
 
         return decorator
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "name,content_type",
+    [
+        ("login-cover.css", "text/css"),
+        ("login-cover.js", "application/javascript"),
+        ("login-sky.webp", "image/webp"),
+        ("login-flower-photo.jpg", "image/jpeg"),
+        ("login-crystal-pendant.webp", "image/webp"),
+        ("login-plastic-clip.webp", "image/webp"),
+        ("login-sticker-winter.webp", "image/webp"),
+        ("login-sticker-sleep.webp", "image/webp"),
+        ("login-rose-frame.webp", "image/webp"),
+        ("login-paper-texture.svg", "image/svg+xml"),
+        ("login-serif.woff2", "font/woff2"),
+        ("login-serif-italic.woff2", "font/woff2"),
+    ],
+)
+async def test_login_cover_assets_are_available_without_a_session(
+    monkeypatch, name, content_type
+):
+    root = Path(__file__).resolve().parents[1]
+    monkeypatch.setattr(dashboard_web.sh, "repo_root", str(root))
+    mcp = _MCP()
+    dashboard_web.register(mcp)
+    request = SimpleNamespace(path_params={"name": name})
+
+    response = await mcp.routes[("GET", "/static/{name}")](request)
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].split(";")[0] == content_type
+    assert response.body == (root / "frontend" / name).read_bytes()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("name", [".env", "config.yaml", "../config.yaml", "login-other.js"])
+async def test_login_cover_does_not_open_the_static_file_boundary(name):
+    mcp = _MCP()
+    dashboard_web.register(mcp)
+
+    response = await mcp.routes[("GET", "/static/{name}")](
+        SimpleNamespace(path_params={"name": name})
+    )
+
+    assert response.status_code == 404
 
 
 @pytest.mark.asyncio
