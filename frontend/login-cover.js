@@ -68,13 +68,29 @@
           ]);
           clearTimeout(timeout);
           if (!current()) return false;
+          // 等面板首帧画完再起水波，避免首帧渲染挤占动画开头。
+          await new Promise(function (resolve) { requestAnimationFrame(function () { requestAnimationFrame(resolve); }); });
+          if (!current()) return false;
           if (reduced.matches || !window.CSS || !CSS.supports('mask-image','radial-gradient(black,transparent)')) {
             hideCover();
             return true;
           }
-          light = document.createElement('div');
+          // 光晕是羽化 100px 以上的柔和渐变，没有细节可丢：画在半分辨率画布上再由合成器放大，
+          // 观感不变，但手机上每帧不再以设备像素重绘 4 层全屏渐变。
+          var SCALE = .5;
+          var width = window.innerWidth, height = window.innerHeight;
+          var x = Math.max(0,Math.min(width,origin.x));
+          var y = Math.max(0,Math.min(height,origin.y));
+          var reach = Math.hypot(Math.max(x,width - x),Math.max(y,height - y));
+          var feather = reach * .34;
+          var center = x + 'px ' + y + 'px';
+          light = document.createElement('canvas');
           light.className = 'ob-cover-waterlight';
           light.setAttribute('aria-hidden','true');
+          light.width = Math.max(1,Math.ceil(width * SCALE));
+          light.height = Math.max(1,Math.ceil(height * SCALE));
+          var paint = light.getContext('2d');
+          if (!paint) throw new Error('canvas unavailable');
           document.body.appendChild(light);
           cover.classList.add('ob-cover-opening');
           // 光晕扩散：极快起步的超宽羽化光圈，前沿带几团错位光斑像云雾翻涌，
@@ -90,28 +106,19 @@
               if (started === null) started = now;
               var progress = Math.min(1,(now - started) / 680);
               var grow = 1 - Math.pow(1 - progress,3.4);
-              var width = window.innerWidth, height = window.innerHeight;
-              var x = Math.max(0,Math.min(width,origin.x));
-              var y = Math.max(0,Math.min(height,origin.y));
-              var reach = Math.hypot(Math.max(x,width - x),Math.max(y,height - y));
-              var feather = reach * .34;
               var radius = (reach + feather) * 1.06 * grow;
-              var center = x + 'px ' + y + 'px';
               var mask = 'radial-gradient(circle at ' + center + ',transparent ' + (radius - feather) + 'px,#000 ' + radius + 'px)';
               cover.style.maskImage = mask;
               cover.style.webkitMaskImage = mask;
               var wash = .8 * Math.pow(1 - progress,2.6);
-              function band(cx, cy, r, peak) {
-                return 'radial-gradient(circle at ' + cx + 'px ' + cy + 'px,'
-                  + 'rgba(255,255,255,' + wash + ') ' + Math.max(0,r - feather * 1.1) + 'px,'
-                  + 'rgba(255,255,255,' + peak + ') ' + (r - feather * .38) + 'px,'
-                  + 'rgba(236,239,255,' + peak * .5 + ') ' + r + 'px,'
-                  + 'rgba(236,239,255,0) ' + (r + feather * .45) + 'px)';
-              }
               var drift = feather * .38 * grow;
-              light.style.backgroundImage = lobes.map(function (lobe) {
-                return band(x + lobe.dx * drift,y + lobe.dy * drift,radius * lobe.scale,.55);
-              }).concat(band(x,y,radius,.97)).join(',');
+              paint.setTransform(SCALE,0,0,SCALE,0,0);
+              paint.clearRect(0,0,width,height);
+              // 与原 CSS 叠层顺序一致：主光圈在最下，三团错位光斑依次叠在上面。
+              band(paint,x,y,radius,.97,wash,feather,width,height);
+              for (var i = lobes.length - 1; i >= 0; i--) {
+                band(paint,x + lobes[i].dx * drift,y + lobes[i].dy * drift,radius * lobes[i].scale,.55,wash,feather,width,height);
+              }
               light.style.opacity = String(Math.min(1,progress / .06) * (1 - Math.max(0,(progress - .4) / .6)));
               if (progress < 1) frame = requestAnimationFrame(tick);
               else resolve(true);
@@ -139,6 +146,24 @@
       openingPromise.then(function () { openingPromise = null; },function () { openingPromise = null; });
       return openingPromise;
     };
+
+    // 按 CSS radial-gradient 的色标规则（首个位置不小于 0，之后单调不减）画一圈柔光。
+    function band(context, cx, cy, r, peak, wash, feather, width, height) {
+      var stops = [
+        [Math.max(0,r - feather * 1.1),[255,255,255,wash]],
+        [r - feather * .38,[255,255,255,peak]],
+        [r,[236,239,255,peak * .5]],
+        [r + feather * .45,[236,239,255,0]]
+      ];
+      for (var i = 1; i < stops.length; i++) stops[i][0] = Math.max(stops[i][0],stops[i - 1][0]);
+      var outer = stops[stops.length - 1][0];
+      if (outer <= 0) return;
+      var gradient = context.createRadialGradient(cx,cy,0,cx,cy,outer);
+      function rgba(c) { return 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + Math.max(0,Math.min(1,c[3])) + ')'; }
+      stops.forEach(function (stop) { gradient.addColorStop(stop[0] / outer,rgba(stop[1])); });
+      context.fillStyle = gradient;
+      context.fillRect(0,0,width,height);
+    }
 
     function play(element, frames, delay, duration) {
       if (!element || reduced.matches || typeof element.animate !== 'function') return;
@@ -184,6 +209,7 @@
       enterPiece('.ob-cover-ticket', 16, 10, 280, 900);
       enterPiece('.ob-cover-sticker-winter', 0, 10, 210, 900);
       enterPiece('.ob-cover-sticker-sleep', 10, 12, 260, 950);
+      enterPiece('.ob-cover-sticker-birdcage', -10, 12, 240, 950);
       play(cover.querySelector('.ob-cover-controls'), [{opacity:0},{opacity:1}], 300, 750);
       var pendant = cover.querySelector('.ob-flower-pendant');
       if (!pendantSwayed && pendant && !reduced.matches && typeof pendant.animate === 'function') {

@@ -4,6 +4,12 @@
   'use strict';
   var SVG = 'http://www.w3.org/2000/svg';
   var STORE = 'ob-chime-open';
+  // 写成完整地址，服务器才能给每张吊牌图附上内容版本号，手机直接用本地缓存。
+  var IMAGES = {
+    list:'/static/chime-list.webp', breath:'/static/chime-breath.webp', network:'/static/chime-network.webp',
+    plan:'/static/chime-plan.webp', letters:'/static/chime-letters.webp', anchors:'/static/chime-anchors.webp',
+    import:'/static/chime-import.webp', logs:'/static/chime-logs.webp', settings:'/static/chime-settings.webp'
+  };
 
   // 吊牌外形：路径都在 60×84 的画布里，顶部 0~18 留给丝带与吊环。
   function scallop(cx, cy, radius, bumps) {
@@ -128,7 +134,7 @@
       // 瓷釉吊牌图（丝带已画在图上）；图片缺失时退回内置 SVG。
       var img = document.createElement('img');
       img.className = 'ob-chime-img';
-      img.src = '/static/chime-' + (entry.image || key) + '.webp';
+      img.src = IMAGES[entry.image || key] || '/static/chime-' + (entry.image || key) + '.webp';
       img.alt = '';
       img.draggable = false;
       img.decoding = 'async';
@@ -191,10 +197,17 @@
     new MutationObserver(syncActive).observe(nav, {subtree:true, attributes:true, attributeFilter:['class']});
     syncActive();
 
+    // 吊牌按从上到下递减的层级叠放；摆动时把它暂时提到最上层，顶端丝带不会被上一个吊牌压住。
     function ring(node, strength) {
       if (reduced.matches || typeof node.animate !== 'function') return;
       var a = 9 * strength;
-      node.animate([
+      var li = node.closest('.ob-chime-item');
+      if (li) {
+        if (!li._swings) li._baseZ = li.style.zIndex;
+        li._swings = (li._swings || 0) + 1;
+        li.style.zIndex = '40';
+      }
+      var swing = node.animate([
         {transform:'rotate(0deg)'},
         {transform:'rotate(' + a + 'deg)', offset:.18},
         {transform:'rotate(' + (-a * .62) + 'deg)', offset:.42},
@@ -202,6 +215,10 @@
         {transform:'rotate(' + (-a * .12) + 'deg)', offset:.85},
         {transform:'rotate(0deg)'}
       ], {duration:900 + strength * 250, easing:'ease-out'});
+      if (li) swing.finished.catch(function () {}).then(function () {
+        li._swings -= 1;
+        if (!li._swings) li.style.zIndex = li._baseZ;
+      });
     }
 
     var open = false;

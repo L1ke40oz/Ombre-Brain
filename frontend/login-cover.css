@@ -46,6 +46,8 @@
 .ob-cover-sticker{position:absolute;display:block;object-fit:contain;pointer-events:none;filter:drop-shadow(1px 3px 2px #77628430);z-index:4}
 .ob-cover-sticker-winter{left:270px;top:-5px;width:158px;height:158px;transform:rotate(3deg)}
 .ob-cover-sticker-sleep{left:577px;top:109px;width:84px;height:164px;transform:rotate(6deg);z-index:6}
+/* 鸟笼贴纸：左侧拍立得下方，压住信封左下角 */
+.ob-cover-sticker-birdcage{left:44px;top:246px;width:100px;height:122px;transform:rotate(-7deg);z-index:4}
 .ob-flower-pendant{position:absolute;left:74px;top:12px;width:46px;height:170px;transform-origin:0 0;transform:rotate(0deg);z-index:7;will-change:auto}
 .ob-pendant-string{position:absolute;left:0;top:0;width:24px;height:110px;fill:none;stroke:#8b7d96;stroke-width:.85;stroke-linecap:round}
 .ob-flower-pendant img{position:absolute;left:-13px;top:96px;width:46px;height:52px;object-fit:contain;filter:drop-shadow(1px 3px 2px #79608630)}
@@ -82,10 +84,11 @@
 .ob-cover-footer .ob-cover-french{font-size:16px}
 .ob-cover-footer>span:last-child{font-size:9px}
 .ob-cover[aria-busy=true] .ob-cover-submit{cursor:wait}
-.ob-cover.ob-cover-opening{pointer-events:none;will-change:mask-image}
+/* 揭幕期间封面单独成层：内容栅格保持不动，每帧只更新遮罩。 */
+.ob-cover.ob-cover-opening{pointer-events:none;will-change:transform,mask-image}
 .ob-cover-press-ripple,.ob-cover-waterlight{position:fixed;z-index:10001;pointer-events:none}
 .ob-cover-press-ripple{border:1px solid #ffffffd9;border-radius:50%;box-shadow:0 0 22px 9px #ffffff70,inset 0 0 18px 5px #ffffff52;transform:translate(-50%,-50%)}
-.ob-cover-waterlight{inset:0;opacity:0;will-change:opacity,background-image}
+.ob-cover-waterlight{inset:0;width:100%;height:100%;opacity:0;will-change:opacity}
 @media(max-width:680px){
   .ob-cover-frame{inset:8px;border-width:30px;opacity:.65}
   .ob-cover .ob-cover-edge{padding:44px 9% 18px;font-size:9px;letter-spacing:1px}

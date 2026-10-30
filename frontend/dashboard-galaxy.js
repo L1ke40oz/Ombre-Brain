@@ -1,9 +1,11 @@
 /* 记忆星河：替换原「记忆网络」页。每个记忆桶是一颗星——越早越靠近银河中心，越重要越大越亮；
    点一颗星，同领域的记忆一起亮起、拉出星座连线，文字从底部浮现。
    设计准则：不要做漂浮在太空里的记忆列表，要做一片活的银河。
-   3D 引擎 three.js 从 jsDelivr 按需加载；加载失败时退回原来的记忆网络。 */
+   3D 引擎 three.js r160 随站点下发（/static/galaxy-engine.js），不再依赖国内常连不上的 jsDelivr；
+   本地引擎缺失时再试 CDN，两者都失败或浏览器没有 WebGL 才退回原来的记忆网络，下次进入本页会重试。 */
 (function () {
   'use strict';
+  var ENGINE = '/static/galaxy-engine.js';
   var CDN = 'https://cdn.jsdelivr.net/npm/three@0.160.0/';
   var CONFIG = {
     title: 'Memory',
@@ -33,20 +35,26 @@
   var enginePromise = null;
   function loadEngine() {
     if (!enginePromise) {
-      enginePromise = Promise.all([
-        import(CDN + '+esm'),
-        import(CDN + 'examples/jsm/controls/OrbitControls.js/+esm'),
-        import(CDN + 'examples/jsm/postprocessing/EffectComposer.js/+esm'),
-        import(CDN + 'examples/jsm/postprocessing/RenderPass.js/+esm'),
-        import(CDN + 'examples/jsm/postprocessing/UnrealBloomPass.js/+esm'),
-        import(CDN + 'examples/jsm/postprocessing/OutputPass.js/+esm')
-      ]).then(function (m) {
-        return {THREE:m[0], OrbitControls:m[1].OrbitControls, EffectComposer:m[2].EffectComposer,
-          RenderPass:m[3].RenderPass, UnrealBloomPass:m[4].UnrealBloomPass, OutputPass:m[5].OutputPass};
+      enginePromise = import(ENGINE).catch(function (err) {
+        console.warn('本地星河引擎加载失败，改从 CDN 加载', err);
+        return loadCdnEngine();
       });
       enginePromise.catch(function () { enginePromise = null; });
     }
     return enginePromise;
+  }
+  function loadCdnEngine() {
+    return Promise.all([
+      import(CDN + '+esm'),
+      import(CDN + 'examples/jsm/controls/OrbitControls.js/+esm'),
+      import(CDN + 'examples/jsm/postprocessing/EffectComposer.js/+esm'),
+      import(CDN + 'examples/jsm/postprocessing/RenderPass.js/+esm'),
+      import(CDN + 'examples/jsm/postprocessing/UnrealBloomPass.js/+esm'),
+      import(CDN + 'examples/jsm/postprocessing/OutputPass.js/+esm')
+    ]).then(function (m) {
+      return {THREE:m[0], OrbitControls:m[1].OrbitControls, EffectComposer:m[2].EffectComposer,
+        RenderPass:m[3].RenderPass, UnrealBloomPass:m[4].UnrealBloomPass, OutputPass:m[5].OutputPass};
+    });
   }
 
   function fetchStars() {
@@ -207,6 +215,14 @@
       origColor = Float32Array.from(col); origSize = Float32Array.from(sz);
     };
     this.core = function () { return mem[0] || null; };
+    this.ids = function () { return mem.map(function (m) { return m.s.id; }); };
+    // 从「寻找一颗记忆星」菜单选中：点亮对应的星和同领域星座，返回这颗星
+    this.focus = function (id) {
+      var index = mem.findIndex(function (m) { return String(m.s.id) === String(id); });
+      if (index < 0) return null;
+      highlight(index);
+      return mem[index];
+    };
 
     function clearHighlight() {
       if (hlLines) { scene.remove(hlLines); hlLines.geometry.dispose(); hlLines.material.dispose(); hlLines = null; }
@@ -338,7 +354,9 @@
     host.setAttribute('aria-label', '记忆星河');
     host.innerHTML =
       '<canvas class="ob-galaxy-gl"></canvas>' +
-      '<header class="ob-galaxy-head"><h2></h2><p class="sub"></p><p class="zh"></p></header>' +
+      '<header class="ob-galaxy-head"><h2></h2><p class="sub"></p><p class="zh"></p><p class="count"></p></header>' +
+      '<div class="ob-galaxy-tools"><label class="ob-galaxy-sr" for="ob-galaxy-picker">寻找一颗记忆星</label>' +
+        '<select id="ob-galaxy-picker" class="ob-galaxy-picker" disabled><option value="">寻找一颗记忆星…</option></select></div>' +
       '<p class="ob-galaxy-loading">entering the galaxy…</p>' +
       '<p class="ob-galaxy-hint">drag to orbit · scroll to fly · tap a star</p>' +
       '<div class="ob-galaxy-card" aria-live="polite">' +
@@ -356,13 +374,31 @@
     host.querySelector('.zh').textContent = CONFIG.motto;
 
     var galaxy = null, current = null, loadingEl = host.querySelector('.ob-galaxy-loading'), card = host.querySelector('.ob-galaxy-card');
-    function closeCard() { card.classList.remove('show'); current = null; if (galaxy) galaxy.clearHighlight(); }
+    var picker = host.querySelector('.ob-galaxy-picker'), countEl = host.querySelector('.count');
+    function closeCard() { card.classList.remove('show'); current = null; picker.value = ''; if (galaxy) galaxy.clearHighlight(); }
+    // 菜单按星河里的时间顺序列出每颗星；名称为空时取正文开头
+    function fillPicker(stars) {
+      var keep = picker.value;
+      picker.replaceChildren(new Option('寻找一颗记忆星…', ''));
+      stars.forEach(function (s) {
+        var label = (s.name && String(s.name).trim()) || String(s.content || '').slice(0, 16) || '（无题）';
+        picker.append(new Option(label, s.id));
+      });
+      picker.disabled = !stars.length;
+      countEl.textContent = stars.length + ' 颗记忆星';
+      picker.value = stars.some(function (s) { return String(s.id) === keep; }) ? keep : '';
+    }
+    picker.addEventListener('change', function () {
+      if (!picker.value) { closeCard(); return; }
+      var m = galaxy && galaxy.focus(picker.value);
+      if (m) openCard(m, m.isCore);
+    });
     host.querySelector('.c-close').addEventListener('click', closeCard);
     host.querySelector('.c-open').addEventListener('click', function () {
       if (current && typeof window.showDetail === 'function') window.showDetail(current.id);
     });
     function openCard(m, isCore) {
-      var s = m.s; current = s;
+      var s = m.s; current = s; picker.value = String(s.id);
       card.querySelector('.t').textContent = (s.name && String(s.name).trim()) || String(s.content || '').slice(0, 16) || '（无题）';
       card.querySelector('.en').textContent = isCore ? CONFIG.coreEn : '';
       card.querySelector('.c-date').textContent = String(s.created || '').slice(0, 10).replace(/-/g, '.');
@@ -375,25 +411,35 @@
     }
     if (typeof ResizeObserver === 'function') new ResizeObserver(function () { if (galaxy) galaxy.resize(); }).observe(host);
 
+    // 只在本次进入时退回原网络；不替换 loadNetwork，下次打开本页仍会重试星河。
     function useLegacy(err) {
       console.warn('记忆星河加载失败，退回原记忆网络', err);
       view.classList.remove('ob-galaxy-mode');
       host.hidden = true;
-      window.loadNetwork = legacyLoad;
       return legacyLoad();
     }
 
     window.loadNetwork = function () {
       host.hidden = false;
+      view.classList.add('ob-galaxy-mode');
       loadingEl.textContent = 'entering the galaxy…';
       loadingEl.style.display = '';
       return Promise.all([loadEngine(), fetchStars()]).then(function (r) {
         if (!galaxy) {
-          galaxy = new Galaxy(host, r[0]);
+          try {
+            galaxy = new Galaxy(host, r[0]);
+          } catch (err) {
+            // 拿不到 WebGL 上下文（设备或浏览器关闭了硬件加速）
+            galaxy = null;
+            return useLegacy(err);
+          }
           galaxy.onPick = function (m) { openCard(m, m.isCore); };
         }
+        var reopen = picker.value;
         closeCard();
         galaxy.setStars(r[1]);
+        fillPicker(galaxy.ids().map(function (id) { return r[1].find(function (s) { return s.id === id; }); }));
+        if (reopen) { var again = galaxy.focus(reopen); if (again) openCard(again, again.isCore); }
         loadingEl.style.display = r[1].length ? 'none' : '';
         if (!r[1].length) loadingEl.textContent = '还没有回忆……';
         galaxy.start();

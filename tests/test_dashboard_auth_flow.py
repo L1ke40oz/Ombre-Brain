@@ -127,9 +127,11 @@ const document = {
   },
 };
 function invalidateAuthenticatedDashboardSession() {}
+function setDashboardAuthPending() {}
 async function fetch(url, options) {
-  fetchCall = {url, options: options ?? null};
+  fetchCall = {url, cache: options ? options.cache : null};
   return {
+    ok: true,
     async json() { return {authenticated:true, setup_needed:false}; },
   };
 }
@@ -156,7 +158,7 @@ async function fetch(url, options) {
         "authenticated": True,
         "fetchCall": {
             "url": "/auth/status",
-            "options": {"cache": "no-store"},
+            "cache": "no-store",
         },
     }
 
@@ -226,8 +228,9 @@ const document = {{
   }},
 }};
 function invalidateAuthenticatedDashboardSession() {{}}
+function setDashboardAuthPending() {{}}
 async function fetch(url, options) {{
-  return {{ async json() {{ return {{authenticated:false, setup_needed:true}}; }} }};
+  return {{ ok: true, async json() {{ return {{authenticated:false, setup_needed:true}}; }} }};
 }}
 """ + section + r"""
 

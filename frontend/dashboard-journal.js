@@ -2,6 +2,25 @@
    搬动原有节点、复用原有筛选和操作处理函数；列表内编辑共享侧栏表单与保存校验，不改变后端接口。 */
 (function () {
   'use strict';
+  // 主页整体用 zoom 缩小（见 dashboard-journal.css）。实测 100vh/100vw 渲染后的实际尺寸，
+  // 浏览器没按缩放换算时补一个系数，整屏高的侧栏不会在底部留空。
+  (function measureViewportUnits() {
+    var probe = document.createElement('div');
+    probe.style.cssText = 'position:fixed;left:0;top:0;width:1px;height:100vh;visibility:hidden;pointer-events:none';
+    function measure() {
+      if (!document.body) return;
+      document.body.appendChild(probe);
+      var rect = probe.getBoundingClientRect();
+      probe.remove();
+      if (!(rect.height > 0)) return;
+      // vh 与 vw 随缩放的换算方式相同，用高度测得的系数同时补偿两者
+      var factor = (window.innerHeight / rect.height).toFixed(4);
+      document.documentElement.style.setProperty('--ob-vk', factor);
+      document.documentElement.style.setProperty('--ob-wk', factor);
+    }
+    measure();
+    window.addEventListener('resize', measure);
+  })();
   var SORTS = [
     {value:'score', label:'综合分优先'},
     {value:'created_desc', label:'最新创建优先'},

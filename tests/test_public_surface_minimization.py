@@ -1,6 +1,7 @@
 """Public routes expose only constant-time, UI-essential information."""
 
 import json
+import re
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -71,7 +72,12 @@ async def test_login_cover_assets_are_available_without_a_session(
 
     assert response.status_code == 200
     assert response.headers["content-type"].split(";")[0] == content_type
-    assert response.body == (root / "frontend" / name).read_bytes()
+    original = (root / "frontend" / name).read_bytes()
+    if content_type in {"text/css", "application/javascript"}:
+        # 样式表与脚本里引用的静态资源会附上内容版本号，其余内容原样返回。
+        assert re.sub(rb"\?v=[a-f0-9]{16}", b"", response.body) == original
+    else:
+        assert response.body == original
 
 
 @pytest.mark.asyncio
@@ -167,3 +173,60 @@ async def test_public_onboarding_omits_credential_sources_and_profile(
 
     assert payload == {"first_run": False, "embedding_enabled": True}
     assert response.headers["cache-control"] == "no-store"
+
+
+@pytest.mark.asyncio
+async def test_static_assets_are_cached_by_content_version(monkeypatch):
+    root = Path(__file__).resolve().parents[1]
+    monkeypatch.setattr(dashboard_web.sh, "repo_root", str(root))
+    mcp = _MCP()
+    dashboard_web.register(mcp)
+    route = mcp.routes[("GET", "/static/{name}")]
+    name = "login-flower-photo.jpg"
+    version = dashboard_web._asset_revision(name)
+
+    versioned = await route(SimpleNamespace(path_params={"name": name}, query_params={"v": version}, headers={}))
+    stale = await route(SimpleNamespace(path_params={"name": name}, query_params={"v": "0" * 16}, headers={}))
+    revalidated = await route(SimpleNamespace(
+        path_params={"name": name}, query_params={}, headers={"if-none-match": versioned.headers["etag"]}))
+
+    assert versioned.headers["cache-control"] == "public, max-age=31536000, immutable"
+    assert stale.headers["cache-control"] == "no-cache"
+    assert revalidated.status_code == 304
+
+
+@pytest.mark.asyncio
+async def test_dashboard_html_revalidates_and_versions_assets(monkeypatch):
+    root = Path(__file__).resolve().parents[1]
+    monkeypatch.setattr(dashboard_web.sh, "repo_root", str(root))
+    mcp = _MCP()
+    dashboard_web.register(mcp)
+    route = mcp.routes[("GET", "/")]
+
+    first = await route(SimpleNamespace(headers={"accept-encoding": "gzip"}))
+    again = await route(SimpleNamespace(headers={"if-none-match": first.headers["etag"]}))
+    plain = await route(SimpleNamespace(headers={}))
+
+    assert first.headers["cache-control"] == "no-cache"
+    assert first.headers["content-encoding"] == "gzip"
+    assert again.status_code == 304
+    html = plain.body.decode("utf-8")
+    assert "/static/login-flower-photo.jpg?v=" + dashboard_web._asset_revision("login-flower-photo.jpg") in html
+    assert '<html lang="zh-CN" class="auth-pending">' in html
+    assert 'id="auth-overlay" class="ob-cover"' in html and 'style="display:none;"' in html
+
+
+@pytest.mark.asyncio
+async def test_galaxy_engine_is_served_locally(monkeypatch):
+    root = Path(__file__).resolve().parents[1]
+    monkeypatch.setattr(dashboard_web.sh, "repo_root", str(root))
+    mcp = _MCP()
+    dashboard_web.register(mcp)
+    route = mcp.routes[("GET", "/static/{name}")]
+
+    galaxy = await route(SimpleNamespace(path_params={"name": "dashboard-galaxy.js"}, headers={}))
+    engine = await route(SimpleNamespace(path_params={"name": "galaxy-engine.js"}, headers={}))
+
+    assert b"/static/galaxy-engine.js?v=" in galaxy.body
+    assert engine.status_code == 200
+    assert b"UnrealBloomPass" in engine.body
