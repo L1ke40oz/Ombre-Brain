@@ -8,7 +8,7 @@
 
 - 手账面板包含雾紫信纸、暖沙、雾蓝三套配色；支持浅色、深色、跟随系统，在「设置 → 常规 → 面板外观」切换。选择保存在当前浏览器。
 - 风铃吊牌导航、分页面手账抬头、贴纸和吉祥物装饰；记忆列表沿用原有搜索、筛选、排序、分页和批量操作，将控件整理进列表区域。
-- 记忆星河按需从 jsDelivr 加载 Three.js，以星点展示记忆和领域关联；加载失败时退回原来的记忆网络。业务数据继续来自既有接口。
+- 记忆星河从本站按需加载 Three.js，不再依赖外网 CDN；手机保留泛光，以较低分辨率处理，减少粒子并限制到 30 帧。WebGL 不可用时显示可选中记忆的 Canvas 星河。业务数据继续来自既有接口。
 - 单列全宽记忆列表，每条记忆提供遗忘、沉底、归档、删除和编辑入口。编辑在列表内展开，复用原有完整字段、校验与保存接口；刷新列表保留未保存输入，保存失败可重试。侧边栏详情与原编辑入口保留，归档规则和删除确认沿用原流程。
 - 桌面顶部操作按钮靠右，始终为风铃预留正文间距，开合导航不横移；手机顶部与导航维持原有布局。戴眼镜的自定义图标。
 - 透明循环摇尾巴的小伙伴，拎起时左右轻晃；保留拖拽位置和减少动态效果支持。动画素材已随源码保存，部署服务器无需 FFmpeg。
@@ -77,11 +77,11 @@ Docker 部署需要从本 fork 源码构建并替换镜像，继续使用原来�
 
 ## 登录封面与后续前端整理
 
-登录外观位于 `frontend/login-cover.css`，入场动画与表单状态位于 `frontend/login-cover.js`；这两个文件不定义密码校验、会话或业务接口。`frontend/dashboard.html` 保留现有鉴权函数与完整业务功能。`src/web/dashboard.py` 只增加登录资源的静态白名单及版本标记。`login-sky.webp` 和花形水晶素材 `login-crystal-pendant.webp` 使用内置生图工具制作，`login-flower-photo.jpg` 来自用户提供的参考照片；`login-paper-texture.svg` 是固定随机种子生成的纸纤维与颗粒，只作为背景使用，颗粒整体透明度为 42%。`login-plastic-clip.webp` 是依参考生成的透明塑料夹子，`login-sticker-winter.webp` 与 `login-sticker-sleep.webp` 是通过内置生图工具处理的用户供图白边贴纸，保留原素材署名来源（苏落落、琳星 LXing），不将这些供图标记为项目原创。左下角文案为斜体 `The night the meteor fell`。`login-rose-frame.webp` 是以用户参考风格生成的透明古典玫瑰边框，使用九宫格切片与平铺适配屏幕；塑料夹子与照片同为顺时针 8 度，小挂坠层级高于邮戳。Cormorant Garamond 字体的许可位于 `frontend/login-font-OFL.txt`。
+登录外观位于 `frontend/login-cover.css`，入场动画与表单状态位于 `frontend/login-cover.js`；这两个文件不定义密码校验、会话或业务接口。`frontend/dashboard.html` 保留现有鉴权函数与完整业务功能。`src/web/dashboard.py` 只增加登录资源的静态白名单及版本标记。`login-sky.webp` 和花形水晶素材 `login-crystal-pendant.webp` 使用内置生图工具制作，`login-flower-photo.webp` 来自用户提供的参考照片；`login-paper-texture.svg` 是固定随机种子生成的纸纤维与颗粒，只作为背景使用，颗粒整体透明度为 42%。`login-plastic-clip.webp` 是依参考生成的透明塑料夹子，`login-sticker-winter.webp` 与 `login-sticker-sleep.webp` 是通过内置生图工具处理的用户供图白边贴纸，保留原素材署名来源（苏落落、琳星 LXing），不将这些供图标记为项目原创。左下角文案为斜体 `The night the meteor fell`。`login-rose-frame.webp` 是以用户参考风格生成的透明古典玫瑰边框，使用九宫格切片与平铺适配屏幕；塑料夹子与照片同为顺时针 8 度，小挂坠层级高于邮戳。Cormorant Garamond 字体的许可位于 `frontend/login-font-OFL.txt`。
 
 手账面板的表现层位于 `frontend/dashboard-journal.css`、`dashboard-journal.js`、`dashboard-chime.js`、`dashboard-galaxy.js`；贴纸、吉祥物、风铃 WebP 素材随源码收录，静态路由只允许指定前缀、小写文件名和 WebP 后缀，禁止路径分隔符。
 
-当前约 600 KB 的单文件混合了承担不同职责的功能，不应按文件体积直接删除。后续可以保持现有 REST API 与 Cookie 协议，分阶段拆分或重写前端；已增强登录封面、手账表现层和行内编辑，没有执行全站重写。迁移时需要逐项保留：
+当前约 600 KB 的单文件混合了承担不同职责的功能，不应按文件体积直接删除。后续可以保持现有 REST API 与 Cookie 协议，分阶段拆分或重写前端；已增强登录封面、手账表现层和行内编辑，没有执行全站重写。旧版样式闪烁通过首屏鉴权遮挡、提前启用手账样式和资源版本控制修复，不能靠删除仍被业务模块使用的代码处理。迁移时需要逐项保留：
 
 - 鉴权：`/auth/status`、`/auth/login`、`/auth/logout`、首次设密、安全问题与密码找回，以及登录后初始化与轮询。
 - 记忆：列表、排序、分页、筛选、详情、编辑、归档、恢复、管理员明确确认后的永久删除、媒体附件展示。
@@ -91,5 +91,16 @@ Docker 部署需要从本 fork 源码构建并替换镜像，继续使用原来�
 - 导入与维护：历史对话导入、预检、任务进度、日志、备份与恢复。
 - 设置与连接：模型、向量化、运行目录、MCP、Tunnel、GitHub 同步、更新来源、系统重启。
 - 本地定制：配色、深浅模式、键盘与小屏适配、小伙伴及拖拽状态。
+
+## 3.11.1 手机加载与 PWA
+
+- 登录的花朵照片改为 14 KB WebP，替代约 437 KB 的 JPEG；原照片来源不变。静态资源使用内容摘要作为版本号，版本化资源可长期缓存；未版本化请求使用 ETag 重新验证。CSS 和脚本内引用的图片、字体、星河模块也带版本号，更换依赖时会同时更新父资源版本。
+- 手机保留全屏柔边水波：光圈预绘为 256 px Canvas 后交给合成器缩放，遮罩限制每秒更新 30 次；桌面保留原水波。减少动态效果偏好仍跳过入场动画。
+- 列表只预览 96 个字符、最多两行，卡片与操作栏收紧；详情和编辑继续读取完整正文。登录状态检查失败时保留封面；退出立即遮挡主页，并阻止过期检查结果恢复主页。
+- 增加 192/512 PNG 应用图标、根作用域与 Service Worker。仅公开且带内容版本号的图片、字体和星河引擎进入本地 Cache Storage，最多 100 项；不保存页面 HTML、会话、记忆正文或附件。断网打开应用时显示重试页。
+- PWA 安装需使用 HTTPS 域名；通过 1Panel/OpenResty 将 `/sw.js`、`/static/*`、`/auth/*`、`/api/*` 一起代理给应用。若之前手动给 `/static` 配置了 `no-store` 或固定旧目录，应移除该覆盖，让应用返回的资源与缓存头生效；HTML 与鉴权响应继续禁止缓存。手机浏览器和系统决定实际安装入口，WebAPK 还取决于浏览器和系统支持。
+- Three.js 固定为 0.160.0，连同 OrbitControls、EffectComposer、RenderPass、UnrealBloomPass、OutputPass 打包为本地 `galaxy-engine.js`，MIT 许可随附 `galaxy-engine-LICENSE.txt`。服务器运行及热更新不需要 Node.js。
+
+此版本可通过现有 fork 热更新安装。Docker 用户沿用原数据卷和配置重建镜像；不需要重装、删除数据库或清空手机站点数据。更新后首次读取新版本资源，后续同内容资源复用缓存。
 
 重写前先对每项登记当前请求参数、响应字段和成功/失败状态，再替换对应视图；后端业务接口只有在明确发现契约不足时才另行讨论修改。页面暂时不可见的模块不等于无用代码。

@@ -12,11 +12,48 @@ web/dashboard.py — 仪表板页面 + 静态资源 + 健康检查
 
 import os
 import re
+import hashlib
+from functools import lru_cache
 
 from starlette.requests import Request
 from starlette.responses import Response
 
 from . import _shared as sh
+
+
+@lru_cache(maxsize=256)
+def _asset_digest(path, mtime_ns, size):
+    with open(path, "rb") as asset:
+        return hashlib.sha256(asset.read()).hexdigest()[:16]
+
+
+def _asset_revision(name):
+    path = os.path.join(sh.repo_root, "frontend", name)
+    stat = os.stat(path)
+    digest = _asset_digest(path, stat.st_mtime_ns, stat.st_size)
+    if name.endswith((".css", ".js")) and name != "galaxy-engine.js":
+        with open(path, encoding="utf-8") as asset:
+            names = sorted(set(re.findall(r"/static/([A-Za-z0-9_-]+\.[a-z0-9]+)", asset.read())))
+        dependencies = []
+        for dependency in names:
+            dep_path = os.path.join(sh.repo_root, "frontend", dependency)
+            try:
+                dep_stat = os.stat(dep_path)
+                dependencies.append(_asset_digest(dep_path, dep_stat.st_mtime_ns, dep_stat.st_size))
+            except OSError:
+                continue
+        digest = hashlib.sha256((digest + ''.join(dependencies)).encode()).hexdigest()[:16]
+    return digest
+
+
+def _version_assets(text):
+    def replace(match):
+        name = match.group(1)
+        try:
+            return f"/static/{name}?v={_asset_revision(name)}"
+        except OSError:
+            return match.group(0)
+    return re.sub(r"/static/([A-Za-z0-9_-]+\.[a-z0-9]+)(?:\?v=[A-Za-z0-9.-]+)?", replace, text)
 
 
 def register(mcp) -> None:
@@ -34,29 +71,10 @@ def register(mcp) -> None:
         try:
             with open(dashboard_path, "r", encoding="utf-8") as f:
                 html = f.read()
-            # Include the asset revision: custom icons can change without VERSION.
-            for asset in ("/static/icon.svg", "/static/favicon.svg", "/static/brand-icon.png",
-                          "/static/companion-idle.png", "/static/companion-idle.webp",
-                          "/static/companion-lifted.png", "/static/login-cover.css",
-                          "/static/login-cover.js", "/static/dashboard-journal.css",
-                          "/static/dashboard-chime.js", "/static/dashboard-galaxy.js",
-                          "/static/dashboard-journal.js",
-                          "/static/login-sky.webp",
-                          "/static/login-flower-photo.jpg", "/static/login-crystal-pendant.webp",
-                          "/static/login-plastic-clip.webp", "/static/login-sticker-winter.webp",
-                          "/static/login-sticker-sleep.webp",
-                          "/static/login-rose-frame.webp",
-                          "/static/login-paper-texture.svg",
-                          "/static/login-serif.woff2", "/static/login-serif-italic.woff2"):
-                try:
-                    revision = os.stat(os.path.join(sh.repo_root, "frontend", asset.rsplit("/", 1)[-1])).st_mtime_ns
-                    asset_version = f"{sh.version}-{revision}"
-                except OSError:
-                    asset_version = sh.version
-                html = html.replace(asset, f"{asset}?v={asset_version}")
+            html = _version_assets(html)
             # 别让浏览器缓存仪表板 HTML：否则改了 dashboard.html 重新下发后，
             # 用户看到的还是旧版面（U-09 只 cache-bust 了 SVG，HTML 本身没设）。
-            # HTML 很小、又是每次从磁盘读，禁缓存代价可忽略，省掉「为什么改了没生效」。
+            # HTML 每次取最新入口，图片、字体和脚本则由内容版本复用缓存。
             return HTMLResponse(
                 html,
                 headers={"Cache-Control": "no-cache, no-store, must-revalidate"},
@@ -85,6 +103,11 @@ def register(mcp) -> None:
             "icon.svg": "image/svg+xml",
             "favicon.svg": "image/svg+xml",
             "brand-icon.png": "image/png",
+            "app-icon-180.png": "image/png",
+            "app-icon-192.png": "image/png",
+            "app-icon-512.png": "image/png",
+            "galaxy-engine.js": "application/javascript",
+            "pwa.js": "application/javascript",
             "companion-idle.png": "image/png",
             "companion-idle.webp": "image/webp",
             "companion-lifted.png": "image/png",
@@ -108,7 +131,7 @@ def register(mcp) -> None:
             "chime-logs.webp": "image/webp",
             "chime-settings.webp": "image/webp",
             "login-sky.webp": "image/webp",
-            "login-flower-photo.jpg": "image/jpeg",
+            "login-flower-photo.webp": "image/webp",
             "login-crystal-pendant.webp": "image/webp",
             "login-plastic-clip.webp": "image/webp",
             "login-sticker-winter.webp": "image/webp",
@@ -127,9 +150,32 @@ def register(mcp) -> None:
         path = os.path.join(sh.repo_root, "frontend", name)
         try:
             with open(path, "rb") as f:
-                return _Resp(f.read(), media_type=media_type)
+                payload = f.read()
+            # Rewrite nested CSS/image/module URLs too. The public version is
+            # content based, so redeploying identical files keeps phone caches.
+            if media_type in {"text/css", "application/javascript"} and name != "galaxy-engine.js":
+                payload = _version_assets(payload.decode("utf-8")).encode("utf-8")
+            etag = '"' + hashlib.sha256(payload).hexdigest() + '"'
+            version = request.query_params.get("v")
+            versioned = version == _asset_revision(name)
+            headers = {
+                "Cache-Control": "public, max-age=31536000, immutable" if versioned else "no-cache",
+                "ETag": etag,
+                "X-Content-Type-Options": "nosniff",
+            }
+            if request.headers.get("if-none-match") == etag:
+                return _Resp(status_code=304, headers=headers)
+            return _Resp(payload, media_type=media_type, headers=headers)
         except FileNotFoundError:
             return JSONResponse({"error": "not found"}, status_code=404)
+
+    @mcp.custom_route("/sw.js", methods=["GET"])
+    async def service_worker(request: Request) -> Response:
+        with open(os.path.join(sh.repo_root, "frontend", "sw.js"), "rb") as script:
+            return Response(script.read(), media_type="application/javascript", headers={
+                "Cache-Control": "no-cache", "Service-Worker-Allowed": "/",
+                "X-Content-Type-Options": "nosniff",
+            })
 
     # 浏览器打开任意页都会自动请求 /favicon.ico，301 永久重定向到 SVG 版本。
     @mcp.custom_route("/favicon.ico", methods=["GET"])

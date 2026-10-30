@@ -4,6 +4,14 @@
   'use strict';
   var SVG = 'http://www.w3.org/2000/svg';
   var STORE = 'ob-chime-open';
+  // Explicit URLs allow the server to version every image by its content.
+  var IMAGES = {
+    list:'/static/chime-list.webp', self:'/static/chime-breath.webp',
+    network:'/static/chime-network.webp', plan:'/static/chime-plan.webp',
+    letters:'/static/chime-letters.webp', anchors:'/static/chime-anchors.webp',
+    import:'/static/chime-import.webp', logs:'/static/chime-logs.webp',
+    settings:'/static/chime-settings.webp'
+  };
 
   // 吊牌外形：路径都在 60×84 的画布里，顶部 0~18 留给丝带与吊环。
   function scallop(cx, cy, radius, bumps) {
@@ -128,13 +136,12 @@
       // 瓷釉吊牌图（丝带已画在图上）；图片缺失时退回内置 SVG。
       var img = document.createElement('img');
       img.className = 'ob-chime-img';
-      img.src = '/static/chime-' + key + '.webp';
+      img.src = IMAGES[key];
       img.alt = '';
       img.draggable = false;
       img.decoding = 'async';
       img.addEventListener('error', function onError() {
         // 专属吊牌图还没生成时先借用同形状的图，再不行就用内置 SVG。
-        if (entry.fallback && img.src.indexOf(entry.fallback) < 0) { img.src = '/static/chime-' + entry.fallback + '.webp'; return; }
         img.removeEventListener('error', onError);
         img.replaceWith(tagSvg(key));
       });
