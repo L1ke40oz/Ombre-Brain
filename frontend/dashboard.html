@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN" class="auth-pending">
+<html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,9 +7,7 @@
 <title>Ombre Brain</title>
 <meta name="theme-color" content="#fff9f6">
 <link rel="icon" type="image/png" href="/static/brand-icon.png">
-<link rel="apple-touch-icon" href="/static/app-icon-180.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<style>html.auth-pending body>:not(#auth-overlay):not(script):not(style):not(link){visibility:hidden!important}html.auth-pending{background:#f3f1fb}</style>
+<link rel="apple-touch-icon" href="/static/brand-icon.png">
 <link rel="manifest" href="/static/manifest.json">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600&family=Noto+Sans+SC:wght@400;500&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/lucide@1.24.0/dist/umd/lucide.min.js"
@@ -2800,9 +2798,8 @@ html[data-palette="violet-mist"] .dreamcloud #memory-delete-confirm { color: var
 <script src="/static/dashboard-chime.js" defer></script>
 <script src="/static/dashboard-galaxy.js" defer></script>
 <script src="/static/dashboard-journal.js" defer></script>
-<script src="/static/pwa.js" defer></script>
 </head>
-<body class="dreamcloud ob-journal">
+<body class="dreamcloud">
 
 <!-- SVG icon sprite — all icons referenced via <use href="#i-*"> -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
@@ -4271,10 +4268,10 @@ html[data-palette="violet-mist"] .dreamcloud #memory-delete-confirm { color: var
   <section class="ob-cover-page">
     <div class="ob-cover-collage">
       <div class="ob-cover-arch" aria-hidden="true"></div>
-      <figure class="ob-cover-photo"><img src="/static/login-sky.webp" alt="云中通向天空的白色阶梯" width="184" height="244" decoding="async" fetchpriority="high"><figcaption lang="fr">Quelque part, dans le ciel.</figcaption></figure>
+      <figure class="ob-cover-photo"><img src="/static/login-sky.webp" alt="云中通向天空的白色阶梯" width="184" height="244"><figcaption lang="fr">Quelque part, dans le ciel.</figcaption></figure>
       <div class="ob-cover-photo-stack" aria-hidden="true">
         <span class="ob-polaroid-back ob-polaroid-back-one"></span><span class="ob-polaroid-back ob-polaroid-back-two"></span>
-        <figure class="ob-polaroid-front"><img src="/static/login-flower-photo.webp" alt="" width="154" height="204" decoding="async" fetchpriority="high"><figcaption>Fleur d’étoile</figcaption></figure>
+        <figure class="ob-polaroid-front"><img src="/static/login-flower-photo.jpg" alt="" width="154" height="204"><figcaption>Fleur d’étoile</figcaption></figure>
         <img class="ob-photo-clip" src="/static/login-plastic-clip.webp" alt="" width="46" height="42">
         <div class="ob-flower-pendant" id="ob-starflower-pendant"><svg class="ob-pendant-string" viewBox="0 0 24 110"><path d="M1 1C1 36 12 63 10 104"/><circle cx="10" cy="104" r="2"/></svg><img src="/static/login-crystal-pendant.webp" alt="" width="46" height="64"></div>
       </div>
@@ -4410,7 +4407,6 @@ function stopAuthenticatedDashboardPolling() {
 function invalidateAuthenticatedDashboardSession() {
   _dashboardAuthGeneration += 1;
   stopAuthenticatedDashboardPolling();
-  if (document.documentElement) document.documentElement.classList.add('auth-pending');
 }
 
 function initializeAuthenticatedDashboard(generation) {
@@ -4490,7 +4486,6 @@ async function finishDashboardAuthentication() {
     });
   }
   document.getElementById('auth-overlay').style.display = 'none';
-  if (document.documentElement) document.documentElement.classList.remove('auth-pending');
   await dashboardReady;
   return true;
 }
@@ -4508,7 +4503,6 @@ async function checkAuth() {
   var requestedGeneration = _dashboardAuthGeneration;
   try {
     const resp = await fetch('/auth/status', { cache: 'no-store' });
-    if (!resp.ok) throw new Error('HTTP ' + resp.status);
     const data = await resp.json();
     if (requestedGeneration !== _dashboardAuthGeneration) return false;
     if (data.setup_needed) {
@@ -4521,9 +4515,8 @@ async function checkAuth() {
       var remoteWarn = document.getElementById('auth-setup-remote-warning');
       if (remoteWarn) remoteWarn.style.display = _isLikelyLoopbackHost() ? 'none' : 'block';
       return false;
-    } else if (data.authenticated === true) {
+    } else if (data.authenticated) {
       document.getElementById('auth-overlay').style.display = 'none';
-      if (document.documentElement) document.documentElement.classList.remove('auth-pending');
       return true;
     } else {
       invalidateAuthenticatedDashboardSession();
@@ -4534,11 +4527,8 @@ async function checkAuth() {
     }
   } catch {
     if (requestedGeneration !== _dashboardAuthGeneration) return false;
-    invalidateAuthenticatedDashboardSession();
-    document.getElementById('auth-login-form').style.display = 'block';
-    document.getElementById('auth-overlay').style.display = 'flex';
-    showAuthError('暂时无法确认登录状态，请检查网络后重试。');
-    return false;
+    document.getElementById('auth-overlay').style.display = 'none';
+    return true;
   }
 }
 
@@ -4640,6 +4630,7 @@ async function doLogin() {
 }
 
 async function doLogout() {
+  await fetch('/auth/logout', { method: 'POST' });
   invalidateAuthenticatedDashboardSession();
   document.getElementById('auth-recovery-form').style.display = 'none';
   document.getElementById('auth-setup-form').style.display = 'none';
@@ -4648,12 +4639,6 @@ async function doLogout() {
   document.getElementById('auth-subtitle').textContent = '请输入访问密码 / Enter access password';
   document.getElementById('auth-error').style.display = 'none';
   document.getElementById('auth-overlay').style.display = 'flex';
-  try {
-    const response = await fetch('/auth/logout', { method: 'POST' });
-    if (!response.ok) throw new Error('HTTP ' + response.status);
-  } catch (_) {
-    showAuthError('退出请求未完成，请检查网络后再次退出。');
-  }
 }
 
 async function changePassword() {
@@ -5874,7 +5859,6 @@ async function restartService() {
 
 // authFetch: wraps fetch, shows auth overlay on 401
 async function authFetch(url, options) {
-  const generation = _dashboardAuthGeneration;
   let resp = await fetch(url, options);
   // 瞬时网关错误（多见于 Cloudflare 隧道刚重连的几秒窗口）：自动重试一次。
   // 这些后端接口都是幂等的（读取 / upsert），重试安全，能让隧道抖动对用户隐形。
@@ -5883,11 +5867,7 @@ async function authFetch(url, options) {
     try { resp = await fetch(url, options); } catch (e) { /* 保留首个响应 */ }
   }
   if (resp.status === 401) {
-    if (generation === _dashboardAuthGeneration) {
-      invalidateAuthenticatedDashboardSession();
-      document.getElementById('auth-overlay').style.display = 'flex';
-      checkAuth();
-    }
+    checkAuth();
     return null;
   }
   return resp;
@@ -6320,11 +6300,6 @@ var bucketPage = 1;
 var _curBuckets = [];
 var BUCKETS_PER_PAGE = 10;
 
-function memoryPreview(value) {
-  var text = Array.from(String(value || '').replace(/\s+/g, ' ').trim());
-  return text.slice(0, 96).join('') + (text.length > 96 ? '…' : '');
-}
-
 function renderBuckets(buckets, preservePage) {
   _curBuckets = buckets || [];
   if (!preservePage) bucketPage = 1;
@@ -6449,7 +6424,7 @@ function _paintBuckets() {
         '</div>' +
         '<span class="time" title="' + escAttr(timeTitle) + '">' + esc(timeLabel) + '</span>' +
       '</div>' +
-      '<div class="bucket-row-bottom"><span class="preview">' + esc(memoryPreview(b.content_preview)) + '</span></div>' +
+      '<div class="bucket-row-bottom"><span class="preview">' + esc(b.content_preview) + '</span></div>' +
     '</div>';
   }).join('') + _bucketPagerHtml(visible.length, totalPages);
   if (window.lucide) lucide.createIcons();

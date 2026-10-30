@@ -1,12 +1,10 @@
 /* 记忆星河：替换原「记忆网络」页。每个记忆桶是一颗星——越早越靠近银河中心，越重要越大越亮；
    点一颗星，同领域的记忆一起亮起、拉出星座连线，文字从底部浮现。
    设计准则：不要做漂浮在太空里的记忆列表，要做一片活的银河。
-   3D 引擎随站点按需加载；没有 WebGL 时使用轻量 Canvas 星河。 */
+   3D 引擎 three.js 从 jsDelivr 按需加载；加载失败时退回原来的记忆网络。 */
 (function () {
   'use strict';
-  var ENGINE = '/static/galaxy-engine.js';
-  var lightweight = window.matchMedia('(pointer: coarse), (max-width: 700px), (prefers-reduced-motion: reduce)').matches;
-  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var CDN = 'https://cdn.jsdelivr.net/npm/three@0.160.0/';
   var CONFIG = {
     title: 'Memory',
     subtitle: 'A constellation of memories',
@@ -35,7 +33,17 @@
   var enginePromise = null;
   function loadEngine() {
     if (!enginePromise) {
-      enginePromise = import(ENGINE);
+      enginePromise = Promise.all([
+        import(CDN + '+esm'),
+        import(CDN + 'examples/jsm/controls/OrbitControls.js/+esm'),
+        import(CDN + 'examples/jsm/postprocessing/EffectComposer.js/+esm'),
+        import(CDN + 'examples/jsm/postprocessing/RenderPass.js/+esm'),
+        import(CDN + 'examples/jsm/postprocessing/UnrealBloomPass.js/+esm'),
+        import(CDN + 'examples/jsm/postprocessing/OutputPass.js/+esm')
+      ]).then(function (m) {
+        return {THREE:m[0], OrbitControls:m[1].OrbitControls, EffectComposer:m[2].EffectComposer,
+          RenderPass:m[3].RenderPass, UnrealBloomPass:m[4].UnrealBloomPass, OutputPass:m[5].OutputPass};
+      });
       enginePromise.catch(function () { enginePromise = null; });
     }
     return enginePromise;
@@ -64,7 +72,7 @@
     '  float br=0.9+0.1*sin(uTime*0.28+aPhase);',
     '  vTw=br;',
     '  vec4 mv=modelViewMatrix*vec4(position,1.0);',
-    '  gl_PointSize=clamp(aSize*uPix*br*(6.0/max(0.2,-mv.z)),1.0,64.0);',
+    '  gl_PointSize=aSize*uPix*br*(1.0/-mv.z);',
     '  gl_Position=projectionMatrix*mv;',
     '}'].join('\n');
   var P_FRAG = [
@@ -82,10 +90,9 @@
     var self = this;
     var canvas = host.querySelector('.ob-galaxy-gl');
     var GAL_R = 5, BRANCHES = 2, SPIN = 1.15;
-    var renderer = new THREE.WebGLRenderer({canvas:canvas, antialias:!lightweight, alpha:false, powerPreference:'low-power'});
-    host.dataset.renderer = 'webgl';
+    var renderer = new THREE.WebGLRenderer({canvas:canvas, antialias:true, alpha:false});
     // 泛光后处理很吃 GPU：像素比封顶 1.5，帧率封顶 60（高刷屏上不跟着跑 144/165 帧）
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, lightweight ? 1 : 1.5));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.05;
     var scene = new THREE.Scene();
@@ -94,7 +101,7 @@
     camera.position.set(0, 3.1, 8.4);
     var controls = new E.OrbitControls(camera, canvas);
     controls.enableDamping = true; controls.dampingFactor = .05;
-    controls.enablePan = false; controls.autoRotate = !reduced; controls.autoRotateSpeed = .32;
+    controls.enablePan = false; controls.autoRotate = true; controls.autoRotateSpeed = .32;
     controls.minDistance = 2.2; controls.maxDistance = 14;
     controls.maxPolarAngle = Math.PI * .86;
 
@@ -116,7 +123,7 @@
 
     // 银河盘：核心重心 + 被星尘糊化的弥漫双臂
     (function buildGalaxy() {
-      var N = lightweight ? 4500 : 14000, pos = new Float32Array(N * 3), col = new Float32Array(N * 3), sz = new Float32Array(N), ph = new Float32Array(N);
+      var N = 14000, pos = new Float32Array(N * 3), col = new Float32Array(N * 3), sz = new Float32Array(N), ph = new Float32Array(N);
       var cIn = C('#ffdcf2'), cMid = C('#c891ff'), cOut = C('#8fb0ff'), gold = C('#ffcf9a');
       for (var i = 0; i < N; i++) {
         var r = pw(1.7) * GAL_R, branch = (i % BRANCHES) / BRANCHES * Math.PI * 2, spin = r * SPIN, scat = .55;
@@ -133,7 +140,7 @@
     })();
     // 弥漫星尘：铺满空间，增强景深
     (function buildDust() {
-      var N = lightweight ? 1000 : 6400, pos = new Float32Array(N * 3), col = new Float32Array(N * 3), sz = new Float32Array(N), ph = new Float32Array(N);
+      var N = 6400, pos = new Float32Array(N * 3), col = new Float32Array(N * 3), sz = new Float32Array(N), ph = new Float32Array(N);
       var cols = [C('#e8b8ff'), C('#9fb8ff'), C('#ffd0ec'), C('#c8a0f0'), C('#ffe0b0')];
       for (var i = 0; i < N; i++) {
         var r = pw(1.1) * GAL_R * 1.7 + .5, th = Math.random() * Math.PI * 2, y = (Math.random() - .5) * GAL_R * 1.1;
@@ -162,11 +169,9 @@
       self.coreGlow.scale.set(1.8, 1.8, 1); scene.add(self.coreGlow);
     })();
 
-    var composer = new E.EffectComposer(renderer), bloom = null;
-    // Mobile keeps the glow, but processes it at 60% CSS resolution.
-    composer.setPixelRatio(lightweight ? .6 : renderer.getPixelRatio());
+    var composer = new E.EffectComposer(renderer);
     composer.addPass(new E.RenderPass(scene, camera));
-    bloom = new E.UnrealBloomPass(new THREE.Vector2(1, 1), .6, .62, .12);
+    var bloom = new E.UnrealBloomPass(new THREE.Vector2(1, 1), .6, .62, .12);
     composer.addPass(bloom);
     composer.addPass(new E.OutputPass());
 
@@ -286,16 +291,15 @@
       var w = host.clientWidth, h = host.clientHeight;
       if (!w || !h) return;
       camera.aspect = w / h; camera.updateProjectionMatrix();
-      renderer.setSize(w, h, false);
-      if (composer) composer.setSize(w, h);
+      renderer.setSize(w, h, false); composer.setSize(w, h); bloom.setSize(w, h);
     };
 
     // ── 主循环：页面不可见时自动停，回到本页再起 ──
     var clock = new THREE.Clock(), openT = 0, frame = null, lastDraw = 0, inView = true;
     function tick(now) {
-      if (!host.isConnected || host.offsetParent === null || document.hidden || !inView || document.documentElement.classList.contains('auth-pending')) { frame = null; clock.stop(); return; }
+      if (!host.isConnected || host.offsetParent === null || document.hidden || !inView) { frame = null; clock.stop(); return; }
       frame = requestAnimationFrame(tick);
-      if (now - lastDraw < 1000 / (reduced ? 15 : lightweight ? 30 : 60) - 2) return;
+      if (now - lastDraw < 1000 / 60 - 2) return;
       lastDraw = now;
       var dt = Math.min(clock.getDelta(), .1), et = clock.elapsedTime;
       self.galaxy.material.uniforms.uTime.value = et;
@@ -303,11 +307,11 @@
       if (memPoints) memPoints.material.uniforms.uTime.value = et;
       var p = 1 + .1 * Math.sin(et * .85);
       self.coreGlow.scale.setScalar(1.8 * p); self.coreGlow.material.opacity = .36 + .08 * Math.sin(et * .85);
-      meteorTimer -= dt; if (!reduced && meteorTimer <= 0) { spawnMeteor(); meteorTimer = rand(2.4, 6.5); }
+      meteorTimer -= dt; if (meteorTimer <= 0) { spawnMeteor(); meteorTimer = rand(2.4, 6.5); }
       updateMeteors(dt);
       if (openT < 1) { openT = Math.min(1, openT + dt * .42); camera.position.z = 8.4 - 2.1 * (1 - Math.pow(1 - openT, 3)); }
       controls.update();
-      if (composer) composer.render(); else renderer.render(scene, camera);
+      composer.render();
     }
     // 银河滚出可视区也停
     if (typeof IntersectionObserver === 'function') {
@@ -324,84 +328,10 @@
     };
   }
 
-  // The same spiral and selectable memories without WebGL or external modules.
-  function CanvasGalaxy(host) {
-    var self = this, canvas = host.querySelector('canvas'), ctx = canvas.getContext('2d');
-    var stars = [], dust = [], projected = [], selected = -1;
-    var w = 1, h = 1, angle = 0, zoom = 1, frame = null, last = 0, down = null;
-    for (var i = 0; i < 1600; i++) {
-      var r = pw(1.6), theta = (i % 2) * Math.PI + r * 5.8;
-      dust.push({x:Math.cos(theta)*r + rand(-.11,.11),y:Math.sin(theta)*r + rand(-.11,.11),size:rand(.4,1.5),color:FALL[i % FALL.length]});
-    }
-    this.resize = function () {
-      w = host.clientWidth; h = host.clientHeight;
-      if (!w || !h) return;
-      canvas.width = w; canvas.height = h;
-      draw();
-    };
-    function project(x, y) {
-      var c = Math.cos(angle), s = Math.sin(angle), scale = Math.min(w*.43,h*.62)*zoom;
-      return {x:w/2+(x*c-y*s)*scale,y:h*.52+(x*s+y*c)*scale*.52};
-    }
-    function draw() {
-      if (!ctx) return;
-      ctx.fillStyle='#050209'; ctx.fillRect(0,0,w,h);
-      var glow=ctx.createRadialGradient(w/2,h*.52,0,w/2,h*.52,Math.min(w,h)*.46);
-      glow.addColorStop(0,'#b58bb066');glow.addColorStop(.25,'#8053aa22');glow.addColorStop(1,'#05020900');
-      ctx.fillStyle=glow;ctx.fillRect(0,0,w,h);
-      dust.forEach(function (star) {
-        var p=project(star.x,star.y);ctx.globalAlpha=.45;ctx.fillStyle=star.color;
-        ctx.beginPath();ctx.arc(p.x,p.y,star.size,0,Math.PI*2);ctx.fill();
-      });
-      ctx.globalAlpha=1;
-      projected=stars.map(function (m,i) {
-        var p=project(m.x,m.y), size=(m.isCore || m.s.pinned ? 3.4 : 2.2)+(i===selected?2:0);
-        ctx.shadowBlur=i===selected?16:7;ctx.shadowColor=m.color;ctx.fillStyle=m.color;
-        ctx.beginPath();ctx.arc(p.x,p.y,size,0,Math.PI*2);ctx.fill();
-        return p;
-      });
-      ctx.shadowBlur=0;
-    }
-    this.setStars = function (items) {
-      selected=-1;
-      stars=items.map(function (s,i) {
-        var r=.05+Math.sqrt(i/Math.max(1,items.length-1))*.93, t=(i%2)*Math.PI+r*5.8;
-        return {s:s,isCore:i===0,color:domCol(s.domain),x:i?Math.cos(t)*r:0,y:i?Math.sin(t)*r:0};
-      });draw();
-    };
-    this.clearHighlight=function () { selected=-1;draw(); };
-    this.core=function () { return stars[0] || null; };
-    function tick(now) {
-      if (document.hidden || host.offsetParent===null || !host.isConnected || document.documentElement.classList.contains('auth-pending')) { frame=null;return; }
-      if (now-last>1000/24) { angle+=.001;draw();last=now; }
-      frame=requestAnimationFrame(tick);
-    }
-    this.start=function () { self.resize(); if (!reduced && frame===null) frame=requestAnimationFrame(tick); };
-    canvas.addEventListener('pointerdown',function (event) { down={x:event.clientX,y:event.clientY,last:event.clientX,moved:0};canvas.setPointerCapture(event.pointerId); });
-    canvas.addEventListener('pointermove',function (event) {
-      if (!down) return;
-      down.moved+=Math.abs(event.clientX-down.last);angle+=(event.clientX-down.last)*.006;down.last=event.clientX;draw();
-    });
-    canvas.addEventListener('pointerup',function (event) {
-      if (!down) return;
-      var tap=down.moved<8 && Math.abs(event.clientY-down.y)<8;down=null;
-      if (!tap) return;
-      var rect=canvas.getBoundingClientRect(), x=event.clientX-rect.left,y=event.clientY-rect.top,best=20;
-      selected=-1;projected.forEach(function (p,i) { var d=Math.hypot(p.x-x,p.y-y);if(d<best){selected=i;best=d;} });
-      draw();if(selected>=0 && self.onPick) self.onPick(stars[selected]);
-    });
-    canvas.addEventListener('pointercancel',function () { down=null; });
-    canvas.addEventListener('wheel',function (event) { event.preventDefault();zoom=Math.max(.5,Math.min(2,zoom-event.deltaY*.001));draw(); },{passive:false});
-    if (typeof IntersectionObserver==='function') new IntersectionObserver(function (entries) {
-      if (entries[0].isIntersecting) self.start();
-      else if (frame!==null) { cancelAnimationFrame(frame);frame=null; }
-    }).observe(host);
-    host.dataset.renderer='canvas';
-  }
-
   function mount() {
     var view = document.getElementById('network-view');
     if (!view || typeof window.loadNetwork !== 'function' || document.getElementById('ob-galaxy')) return;
+    var legacyLoad = window.loadNetwork;
     var host = document.createElement('section');
     host.className = 'ob-galaxy';
     host.id = 'ob-galaxy';
@@ -445,21 +375,21 @@
     }
     if (typeof ResizeObserver === 'function') new ResizeObserver(function () { if (galaxy) galaxy.resize(); }).observe(host);
 
+    function useLegacy(err) {
+      console.warn('记忆星河加载失败，退回原记忆网络', err);
+      view.classList.remove('ob-galaxy-mode');
+      host.hidden = true;
+      window.loadNetwork = legacyLoad;
+      return legacyLoad();
+    }
+
     window.loadNetwork = function () {
       host.hidden = false;
       loadingEl.textContent = 'entering the galaxy…';
       loadingEl.style.display = '';
-      return Promise.all([loadEngine().catch(function () { return null; }), fetchStars()]).then(function (r) {
+      return Promise.all([loadEngine(), fetchStars()]).then(function (r) {
         if (!galaxy) {
-          try {
-            if (!r[0]) throw new Error('3D engine unavailable');
-            galaxy = new Galaxy(host, r[0]);
-          } catch (error) {
-            console.warn('使用轻量星河', error);
-            var oldCanvas = host.querySelector('canvas');
-            oldCanvas.replaceWith(oldCanvas.cloneNode(false));
-            galaxy = new CanvasGalaxy(host);
-          }
+          galaxy = new Galaxy(host, r[0]);
           galaxy.onPick = function (m) { openCard(m, m.isCore); };
         }
         closeCard();
@@ -467,19 +397,17 @@
         loadingEl.style.display = r[1].length ? 'none' : '';
         if (!r[1].length) loadingEl.textContent = '还没有回忆……';
         galaxy.start();
-      }).catch(function (err) {
+      }, function (err) {
+        // 拿不到 3D 引擎就回到原网络；只是数据接口出错则留在银河里提示
+        if (!galaxy && !enginePromise) return useLegacy(err);
         loadingEl.style.display = '';
-        loadingEl.textContent = '星河暂时没有连接上，点击重试';
-        loadingEl.onclick = function () { window.loadNetwork(); };
+        loadingEl.textContent = '还没有回忆……';
         console.error(err);
       });
     };
     document.addEventListener('visibilitychange', function () {
       if (!document.hidden && galaxy && host.offsetParent !== null) galaxy.start();
     });
-    new MutationObserver(function () {
-      if (!document.documentElement.classList.contains('auth-pending') && galaxy && host.offsetParent !== null) galaxy.start();
-    }).observe(document.documentElement, {attributes:true,attributeFilter:['class']});
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount, {once:true});
   else mount();

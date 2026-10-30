@@ -3,7 +3,6 @@
 import json
 from pathlib import Path
 from types import SimpleNamespace
-from starlette.requests import Request
 
 import pytest
 
@@ -48,11 +47,7 @@ class _MCP:
         ("chime-logs.webp", "image/webp"),
         ("chime-settings.webp", "image/webp"),
         ("login-sky.webp", "image/webp"),
-        ("login-flower-photo.webp", "image/webp"),
-        ("galaxy-engine.js", "application/javascript"),
-        ("pwa.js", "application/javascript"),
-        ("app-icon-192.png", "image/png"),
-        ("app-icon-512.png", "image/png"),
+        ("login-flower-photo.jpg", "image/jpeg"),
         ("login-crystal-pendant.webp", "image/webp"),
         ("login-plastic-clip.webp", "image/webp"),
         ("login-sticker-winter.webp", "image/webp"),
@@ -70,17 +65,13 @@ async def test_login_cover_assets_are_available_without_a_session(
     monkeypatch.setattr(dashboard_web.sh, "repo_root", str(root))
     mcp = _MCP()
     dashboard_web.register(mcp)
-    request = Request({"type":"http", "method":"GET", "path":"/static/" + name,
-                       "path_params":{"name":name}, "query_string":b"", "headers":[]})
+    request = SimpleNamespace(path_params={"name": name})
 
     response = await mcp.routes[("GET", "/static/{name}")](request)
 
     assert response.status_code == 200
     assert response.headers["content-type"].split(";")[0] == content_type
-    expected = (root / "frontend" / name).read_bytes()
-    if content_type in {"text/css", "application/javascript"} and name != "galaxy-engine.js":
-        expected = dashboard_web._version_assets(expected.decode()).encode()
-    assert response.body == expected
+    assert response.body == (root / "frontend" / name).read_bytes()
 
 
 @pytest.mark.asyncio

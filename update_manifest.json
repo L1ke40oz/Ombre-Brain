@@ -6,21 +6,6 @@
       "size": 3264764
     },
     {
-      "path": "frontend/app-icon-180.png",
-      "sha256": "f0a52fe940ccc7efeafb121dac7f919437b2919ea2cdc2a2496bb429c8de4ead",
-      "size": 52324
-    },
-    {
-      "path": "frontend/app-icon-192.png",
-      "sha256": "894e12b75cd75d9d941e7e0cbcc7cb0ae3fcbdca767b87be4f3683deff74d9cf",
-      "size": 58167
-    },
-    {
-      "path": "frontend/app-icon-512.png",
-      "sha256": "e6ab986c42ffc7c6b8c542ce647908c698423f9c1d8857438ef54b9275833ac4",
-      "size": 295010
-    },
-    {
       "path": "frontend/brand-icon.png",
       "sha256": "abb6d5f797835fecb994556e33c985614f12e21ecea431aae2d920d1cd5e5584",
       "size": 1488752
@@ -92,18 +77,18 @@
     },
     {
       "path": "frontend/dashboard-chime.js",
-      "sha256": "506b97be1b7832b58846426392971e68931eb53d73d22a6f479e575cd25b2359",
-      "size": 15373
+      "sha256": "0c14398540b25347c5fc33e504a2713f8a2ea11aa43f798054fad5d059f20332",
+      "size": 15092
     },
     {
       "path": "frontend/dashboard-galaxy.js",
-      "sha256": "3c37f7224923806134f84f64abd50abbe141a98e5e761cc29aa9dda0196d4bbe",
-      "size": 27649
+      "sha256": "04412e0e821550004b11fbf52e1827b5bc2c56f1b6d6549e3e6aadcba3cae475",
+      "size": 23268
     },
     {
       "path": "frontend/dashboard-journal.css",
-      "sha256": "7dc3a74ae15affcb4f073e10620e06e2c9c591e66e566f369111f8af81c3f560",
-      "size": 50674
+      "sha256": "7c9176b8ec81f8e39f928d2b03bc9d8a5d1a9caa2dc83706959f62ca7cafd200",
+      "size": 50567
     },
     {
       "path": "frontend/dashboard-journal.js",
@@ -112,23 +97,13 @@
     },
     {
       "path": "frontend/dashboard.html",
-      "sha256": "db643502deae980217212336a49b61daf245c29a0091f78cb7b4eff1d27885dd",
-      "size": 618744
+      "sha256": "daa02365594c5b074c5da003e0ff69dff467a501b6d3f1f326ae48c720bd40de",
+      "size": 617192
     },
     {
       "path": "frontend/favicon.svg",
       "sha256": "98d8894785aff636f71702b922590db479f5b363d6e7c892fceec0d9c35195ff",
       "size": 658
-    },
-    {
-      "path": "frontend/galaxy-engine-LICENSE.txt",
-      "sha256": "852e0e8699169bf9f6fdc6bda3e682d078dcbc738b5d33e74df594721bff271d",
-      "size": 1081
-    },
-    {
-      "path": "frontend/galaxy-engine.js",
-      "sha256": "824e62e2ddd17f0b2aaa023f8c32be7d448c50c1174425c43ef95b881c083474",
-      "size": 694558
     },
     {
       "path": "frontend/icon.svg",
@@ -142,8 +117,8 @@
     },
     {
       "path": "frontend/login-cover.js",
-      "sha256": "c27041c474888ef84e329548bbd8bc86ca7c8320088abece59ae9b3b5852ed5c",
-      "size": 16888
+      "sha256": "326c45fdc8c14d1ffc5a46206e9c2e54cf54a6450a09c6e3ed44a9dd11bd7ad4",
+      "size": 14961
     },
     {
       "path": "frontend/login-crystal-pendant.webp",
@@ -151,9 +126,9 @@
       "size": 26544
     },
     {
-      "path": "frontend/login-flower-photo.webp",
-      "sha256": "b3de20755281d08511aae6a8313199d3521bc535f2beea12b89e5029d35c3d5e",
-      "size": 14310
+      "path": "frontend/login-flower-photo.jpg",
+      "sha256": "52616508a101ea8a8966483e95adbfbb4e9cf01e591b4eb6d8bcb1bf44c9f6ef",
+      "size": 437381
     },
     {
       "path": "frontend/login-font-OFL.txt",
@@ -202,8 +177,8 @@
     },
     {
       "path": "frontend/manifest.json",
-      "sha256": "19730e5199f9c6c1b2e210852d955c8f910c4e9f382f62ebe2b508f29c9fb3f3",
-      "size": 527
+      "sha256": "1ae2158332e7b132b936820ef2a56220c05870ad453914c87d4ac7d835d58bc4",
+      "size": 402
     },
     {
       "path": "frontend/mascot-bowl.webp",
@@ -249,11 +224,6 @@
       "path": "frontend/onboarding.html",
       "sha256": "421dac5d9c4a7fd5093296891b092115a8f4e172deabf3212ad3a9700f5c32e9",
       "size": 10589
-    },
-    {
-      "path": "frontend/pwa.js",
-      "sha256": "30e8990132b0c9195f5a45510f80ce7f7afa934bfc644a64661ec677968e41dc",
-      "size": 1021
     },
     {
       "path": "frontend/sticker-birdcage.webp",
@@ -336,13 +306,8 @@
       "size": 11136
     },
     {
-      "path": "frontend/sw.js",
-      "sha256": "4ebe6f9e63d88622886ddcdc5cffea74c3997db266d256d2114d4f485730615a",
-      "size": 2184
-    },
-    {
       "path": "src/VERSION",
-      "sha256": "8cf0cfc21e584bc76ce0d7716517eeb0dc0498ba57c05d028543748d51155c09",
+      "sha256": "ed5d8a4bfa50433e2be65693d0ab6a59b3fb2886769f5e9e4c3e44ba3ad1dcc3",
       "size": 7
     },
     {
@@ -1117,8 +1082,8 @@
     },
     {
       "path": "src/web/dashboard.py",
-      "sha256": "96fd9e5cb4e690f00b5dcaba448f53e4a4bdf58508829adaa8a33a7823f60c0f",
-      "size": 9224
+      "sha256": "b5a36fc68e0b919d5f250c1b76f24539dbba7faa4f75260ddc406fb2fccde142",
+      "size": 7701
     },
     {
       "path": "src/web/embedding.py",
@@ -1207,5 +1172,5 @@
     }
   ],
   "rollout_strategy": "single-node",
-  "version": "3.11.1"
+  "version": "3.11.2"
 }

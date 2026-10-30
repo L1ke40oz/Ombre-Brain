@@ -5,7 +5,6 @@
     var cover = document.getElementById('auth-overlay');
     if (!cover || !cover.classList.contains('ob-cover')) return;
     var reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
-    var mobile = window.matchMedia('(pointer: coarse), (max-width: 700px)');
     var wasVisible = false;
     var lastForm = '';
     var pending = false;
@@ -51,7 +50,6 @@
         var frame = null;
         function current() { return typeof isCurrent !== 'function' || isCurrent(); }
         function hideCover() {
-          document.documentElement.classList.remove('auth-pending');
           cover.style.display = 'none';
           sync();
           var target = document.querySelector('main') || document.querySelector('.main');
@@ -70,7 +68,6 @@
           ]);
           clearTimeout(timeout);
           if (!current()) return false;
-          document.documentElement.classList.remove('auth-pending');
           if (reduced.matches || !window.CSS || !CSS.supports('mask-image','radial-gradient(black,transparent)')) {
             hideCover();
             return true;
@@ -80,35 +77,6 @@
           light.setAttribute('aria-hidden','true');
           document.body.appendChild(light);
           cover.classList.add('ob-cover-opening');
-          var width = window.innerWidth, height = window.innerHeight;
-          var x = Math.max(0,Math.min(width,origin.x));
-          var y = Math.max(0,Math.min(height,origin.y));
-          var reach = Math.hypot(Math.max(x,width - x),Math.max(y,height - y));
-          var feather = reach * .34;
-          var center = x + 'px ' + y + 'px';
-          if (mobile.matches) {
-            light.style.opacity = '1';
-            // Rasterize the soft water ring once at 256 px, then let the
-            // compositor scale it. Only one cover mask changes at 30 fps.
-            var ring = document.createElement('canvas');
-            ring.width = ring.height = 256;
-            var context = ring.getContext('2d');
-            var glow = context.createRadialGradient(128,128,0,128,128,128);
-            glow.addColorStop(0,'rgba(255,255,255,.2)');
-            glow.addColorStop(.52,'rgba(255,255,255,.6)');
-            glow.addColorStop(.7,'rgba(255,255,255,.95)');
-            glow.addColorStop(.86,'rgba(236,239,255,.35)');
-            glow.addColorStop(1,'rgba(236,239,255,0)');
-            context.fillStyle = glow; context.fillRect(0,0,256,256);
-            light.appendChild(ring);
-            ring.style.cssText = 'position:absolute;width:256px;height:256px;left:' + x + 'px;top:' + y + 'px;will-change:transform,opacity;';
-            var scale = (reach + feather) * 1.5 / 128;
-            ring.animate([
-              {transform:'translate(-50%,-50%) scale(.01)',opacity:0},
-              {opacity:1,offset:.08},
-              {transform:'translate(-50%,-50%) scale(' + scale + ')',opacity:0}
-            ], {duration:680,easing:'cubic-bezier(.15,.65,.25,1)',fill:'forwards'});
-          }
           // 光晕扩散：极快起步的超宽羽化光圈，前沿带几团错位光斑像云雾翻涌，
           // 已扫过的区域先过曝成白再迅速褪开，露出面板。整段约 0.68 秒。
           var lobes = [0,1,2].map(function (i) {
@@ -116,17 +84,19 @@
             return {dx:Math.cos(angle),dy:Math.sin(angle),scale:.82 + Math.random() * .12};
           });
           var completed = await new Promise(function (resolve) {
-            var started = null, lastDraw = -Infinity;
+            var started = null;
             function tick(now) {
               if (!current()) { resolve(false); return; }
               if (started === null) started = now;
               var progress = Math.min(1,(now - started) / 680);
-              if (mobile.matches && progress < 1 && now - lastDraw < 1000 / 30) {
-                frame = requestAnimationFrame(tick); return;
-              }
-              lastDraw = now;
               var grow = 1 - Math.pow(1 - progress,3.4);
+              var width = window.innerWidth, height = window.innerHeight;
+              var x = Math.max(0,Math.min(width,origin.x));
+              var y = Math.max(0,Math.min(height,origin.y));
+              var reach = Math.hypot(Math.max(x,width - x),Math.max(y,height - y));
+              var feather = reach * .34;
               var radius = (reach + feather) * 1.06 * grow;
+              var center = x + 'px ' + y + 'px';
               var mask = 'radial-gradient(circle at ' + center + ',transparent ' + (radius - feather) + 'px,#000 ' + radius + 'px)';
               cover.style.maskImage = mask;
               cover.style.webkitMaskImage = mask;
@@ -139,12 +109,10 @@
                   + 'rgba(236,239,255,0) ' + (r + feather * .45) + 'px)';
               }
               var drift = feather * .38 * grow;
-              if (!mobile.matches) {
-                light.style.backgroundImage = lobes.map(function (lobe) {
-                  return band(x + lobe.dx * drift,y + lobe.dy * drift,radius * lobe.scale,.55);
-                }).concat(band(x,y,radius,.97)).join(',');
-                light.style.opacity = String(Math.min(1,progress / .06) * (1 - Math.max(0,(progress - .4) / .6)));
-              }
+              light.style.backgroundImage = lobes.map(function (lobe) {
+                return band(x + lobe.dx * drift,y + lobe.dy * drift,radius * lobe.scale,.55);
+              }).concat(band(x,y,radius,.97)).join(',');
+              light.style.opacity = String(Math.min(1,progress / .06) * (1 - Math.max(0,(progress - .4) / .6)));
               if (progress < 1) frame = requestAnimationFrame(tick);
               else resolve(true);
             }
@@ -192,7 +160,6 @@
     }
 
     function enter() {
-      if (mobile.matches) return;
       var collage = cover.querySelector('.ob-cover-collage');
       var base = getComputedStyle(collage).transform;
       play(collage, [
@@ -256,7 +223,6 @@
     function sync() {
       var visible = cover.style.display !== 'none';
       if (visible !== wasVisible) {
-        document.documentElement.classList.toggle('auth-pending', visible);
         lockBackground(visible);
         if (visible) enter();
         wasVisible = visible;

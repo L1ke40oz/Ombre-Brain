@@ -130,7 +130,6 @@ function invalidateAuthenticatedDashboardSession() {}
 async function fetch(url, options) {
   fetchCall = {url, options: options ?? null};
   return {
-    ok: true,
     async json() { return {authenticated:true, setup_needed:false}; },
   };
 }
@@ -228,7 +227,7 @@ const document = {{
 }};
 function invalidateAuthenticatedDashboardSession() {{}}
 async function fetch(url, options) {{
-  return {{ ok:true, async json() {{ return {{authenticated:false, setup_needed:true}}; }} }};
+  return {{ async json() {{ return {{authenticated:false, setup_needed:true}}; }} }};
 }}
 """ + section + r"""
 

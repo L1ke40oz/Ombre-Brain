@@ -368,11 +368,11 @@ html.ob-theme-fading body,html.ob-theme-fading body *,html.ob-theme-fading body:
   --ob-sticker-butterfly:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 56'%3E%3Cg fill='%23d3cbf4' stroke='%237c80ad' stroke-width='1.5' stroke-linejoin='round'%3E%3Cpath d='M31 26C26 10 10 2 5 8s2 20 26 20z'/%3E%3Cpath d='M33 26c5-16 21-24 26-18s-2 20-26 20z'/%3E%3Cpath d='M31 29C18 30 9 38 12 45s14 2 19-14z' fill='%23e4def9'/%3E%3Cpath d='M33 29c13 1 22 9 19 16s-14 2-19-14z' fill='%23e4def9'/%3E%3C/g%3E%3Cpath d='M12 11c5 2 11 7 15 13M52 11c-5 2-11 7-15 13' fill='none' stroke='%23ffffff' stroke-width='1.1' opacity='.75'/%3E%3Cpath d='M32 22v24M32 22c-2-6-5-9-8-10M32 22c2-6 5-9 8-10' fill='none' stroke='%235a5886' stroke-width='1.4' stroke-linecap='round'/%3E%3C/svg%3E");
   --ob-sticker-stamp:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cg fill='none' stroke='%238a7ea8'%3E%3Ccircle cx='40' cy='40' r='35' stroke-width='2' stroke-dasharray='3 2'/%3E%3Ccircle cx='40' cy='40' r='27' stroke-width='1'/%3E%3C/g%3E%3Ctext x='40' y='38' text-anchor='middle' font-family='Georgia,serif' font-style='italic' font-size='12' fill='%238a7ea8'%3Esouvenir%3C/text%3E%3Ctext x='40' y='52' text-anchor='middle' font-family='Courier New,monospace' font-size='7' letter-spacing='1' fill='%238a7ea8'%3EOMBRE BRAIN%3C/text%3E%3C/svg%3E");
 }
-.ob-journal .bucket-list{grid-template-columns:minmax(0,1fr)!important;gap:22px}
+.ob-journal .bucket-list{grid-template-columns:minmax(0,1fr)!important;gap:30px}
 .ob-journal .bucket-list{padding-top:12px;counter-reset:ob-memo}
 .ob-journal .bucket-row{
   --tilt:0deg;position:relative;overflow:visible;counter-increment:ob-memo;
-  padding:20px 18px 12px!important;transform:rotate(var(--tilt));transition:transform .2s,box-shadow .2s!important;
+  padding:30px 22px 20px!important;transform:rotate(var(--tilt));transition:transform .2s,box-shadow .2s!important;
 }
 .ob-journal .bucket-row:hover{transform:translateY(-2px) rotate(var(--tilt))}
 /* 编号小签，像便签上的 #126 */
@@ -383,7 +383,7 @@ html.ob-theme-fading body,html.ob-theme-fading body *,html.ob-theme-fading body:
 }
 .ob-journal .bucket-row::after{content:'';position:absolute;pointer-events:none;z-index:2}
 .ob-journal .bucket-row .name{font-family:'Songti SC','STSong','Noto Serif SC',serif;font-size:15px!important;letter-spacing:.5px}
-.ob-journal .bucket-row-bottom .preview{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;line-height:1.65!important;overflow:hidden;white-space:normal;overflow-wrap:anywhere}
+.ob-journal .bucket-row-bottom .preview{-webkit-line-clamp:3;line-clamp:3;line-height:2!important}
 .ob-journal .bucket-row .time{font:italic 12px OmbreCover,'Cormorant Garamond',serif!important;letter-spacing:.3px}
 /* 1：横线信纸 + 格纹胶带 */
 .ob-journal .bucket-row:nth-child(4n+1){--tilt:-.35deg;
@@ -564,7 +564,7 @@ html[data-theme="dark"] .ob-chime-bow{filter:var(--journal-sticker-filter,none) 
   .ob-journal .header-actions .theme-toggle-label{display:inline}
 }
 /* 每条记忆的操作与就地编辑，仍使用原来的记忆接口。 */
-.ob-row-actions{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px;padding-top:6px;border-top:1px dashed var(--journal-line)}
+.ob-row-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:16px;padding-top:12px;border-top:1px dashed var(--journal-line)}
 .ob-journal .ob-row-actions button,.ob-journal .ob-inline-cancel{font:inherit;font-size:11px;line-height:1.5;min-height:34px;padding:6px 12px;background:var(--journal-paper);color:var(--text-dim);border:1px solid var(--journal-line);border-radius:3px;box-shadow:none}
 .ob-row-actions button[data-action=delete]{color:var(--negative)}
 .ob-row-actions button:disabled{opacity:.55;cursor:wait}

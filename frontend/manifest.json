@@ -1,8 +1,6 @@
 {
   "name": "Ombre Brain",
   "short_name": "OB",
-  "id": "/",
-  "scope": "/",
   "description": "A breathing, fading, surfacing memory system for AI models.",
   "start_url": "/",
   "display": "standalone",
@@ -10,11 +8,10 @@
   "theme_color": "#F8F5F9",
   "icons": [
     {
-      "src": "/static/app-icon-192.png",
-      "sizes": "192x192",
+      "src": "/static/brand-icon.png",
+      "sizes": "1254x1254",
       "type": "image/png",
       "purpose": "any"
-    },
-    {"src":"/static/app-icon-512.png","sizes":"512x512","type":"image/png","purpose":"any"}
+    }
   ]
 }
