@@ -7,23 +7,8 @@
   var SVG = 'http://www.w3.org/2000/svg';
   var STORE = 'ob-chime-open';
 
-  // 星形轮廓：64×64 画布，中心 (32,32)。圆角交给 stroke-linejoin。
-  function star(points, outer, inner, rotate) {
-    var d = '';
-    for (var i = 0; i < points * 2; i++) {
-      var r = i % 2 ? inner : outer;
-      var a = (rotate || -90) * Math.PI / 180 + i * Math.PI / points;
-      d += (i ? 'L' : 'M') + (32 + r * Math.cos(a)).toFixed(2) + ' ' + (32 + r * Math.sin(a)).toFixed(2);
-    }
-    return d + 'Z';
-  }
-  // 五角、六角、八角（像封蜡印）轮流用，大小也略有差别，避免一排整齐划一
-  var SHAPES = [
-    {d:star(5, 30, 15.5), scale:1},
-    {d:star(6, 29, 18.5), scale:.94},
-    {d:star(8, 28, 21.5, -90 + 22.5), scale:.9},
-    {d:star(5, 30, 15.5, -90 + 36), scale:.97}
-  ];
+  // 每颗星的大小略有差别，避免一排整齐划一
+  var SCALES = [1, .94, .9, .97];
   var GLINT = 'M0 -7C.6 -2 2 -.6 7 0 2 .6.6 2 0 7-.6 2-2 .6-7 0-2-.6-.6-2 0-7Z';
   var ICONS = {
     list: '<path d="M7 3.5h10V6H7zM8 6v2.5C6.5 9.5 6 11 6 13v5.5A2.5 2.5 0 0 0 8.5 21h7a2.5 2.5 0 0 0 2.5-2.5V13c0-2-.5-3.5-2-4.5V6"/><path d="M12 17.6c-1.8-1.2-2.8-2.2-2.8-3.4a1.4 1.4 0 0 1 2.8-.4 1.4 1.4 0 0 1 2.8.4c0 1.2-1 2.2-2.8 3.4z" class="ob-star-fill"/>',
@@ -45,30 +30,43 @@
     return node;
   }
 
+  // 星星本体是一张手绘珐琅贴纸图（随色系滤镜变色）；页面图标和小闪光仍用 SVG 叠在上面。
+  var ART = '/static/chime-star.webp';
+  function starStack(svg, rotate, scale) {
+    var stack = document.createElement('span');
+    stack.className = 'ob-star-stack';
+    var art = document.createElement('img');
+    art.className = 'ob-star-art';
+    art.src = ART;
+    art.alt = '';
+    art.draggable = false;
+    art.decoding = 'async';
+    art.style.transform = 'rotate(' + rotate + 'deg) scale(' + scale + ')';
+    stack.appendChild(art);
+    stack.appendChild(svg);
+    return stack;
+  }
+
   function starSvg(key, index) {
-    var shape = SHAPES[index % SHAPES.length];
     var svg = el('svg', {viewBox:'0 0 64 64', 'aria-hidden':'true', focusable:'false', 'class':'ob-star'});
-    var g = el('g', {transform:'translate(32 32) scale(' + shape.scale + ') translate(-32 -32)'}, svg);
-    el('path', {d:shape.d, 'class':'ob-star-body'}, g);
-    el('path', {d:shape.d, 'class':'ob-star-stitch', transform:'translate(32 32) scale(.78) translate(-32 -32)'}, g);
     var icon = el('g', {'class':'ob-star-icon', transform:'translate(22 22) scale(.84)'}, svg);
     icon.innerHTML = ICONS[key] || '<circle cx="12" cy="12" r="4"/>';
     // 每颗星旁边一点小闪光，位置轮流换
     var spots = [[53, 11], [11, 15], [54, 50], [9, 48]];
     var spot = spots[index % spots.length];
     el('path', {d:GLINT, 'class':'ob-star-glint', transform:'translate(' + spot[0] + ' ' + spot[1] + ') scale(.8)'}, svg);
-    return svg;
+    // 每颗星略微转个角度、大小也稍有差别，像随手贴上去的
+    return starStack(svg, [0, 9, -7, 4][index % 4], SCALES[index % SCALES.length]);
   }
 
   function toggleSvg() {
     var svg = el('svg', {viewBox:'0 0 64 64', 'aria-hidden':'true', focusable:'false', 'class':'ob-star ob-star-hook'});
     el('circle', {cx:32, cy:32, r:30, 'class':'ob-star-halo'}, svg);
-    el('path', {d:star(5, 25, 12), 'class':'ob-star-body'}, svg);
-    el('path', {d:star(5, 25, 12), 'class':'ob-star-stitch', transform:'translate(32 32) scale(.74) translate(-32 -32)'}, svg);
-    el('circle', {cx:32, cy:33, r:3, 'class':'ob-star-core'}, svg);
     el('path', {d:GLINT, 'class':'ob-star-glint', transform:'translate(53 12)'}, svg);
     el('path', {d:GLINT, 'class':'ob-star-glint ob-star-glint-b', transform:'translate(12 52) scale(.6)'}, svg);
-    return svg;
+    var stack = starStack(svg, 0, .92);
+    stack.classList.add('ob-star-hook');
+    return stack;
   }
 
   function mount() {
@@ -151,11 +149,6 @@
       return {li:li, button:button, svg:svg, tab:entry.tab};
     });
     root.appendChild(list);
-    var defs = el('svg', {width:0, height:0, 'aria-hidden':'true', style:'position:absolute'});
-    // 渐变色用 CSS 变量着色，跟随色系与明暗
-    defs.innerHTML = '<defs><linearGradient id="ob-star-paper" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="ob-star-stop-a"/><stop offset="1" class="ob-star-stop-b"/></linearGradient>'
-      + '<linearGradient id="ob-star-active" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="ob-star-stop-c"/><stop offset="1" class="ob-star-stop-d"/></linearGradient></defs>';
-    root.appendChild(defs);
     header.appendChild(root);
     document.body.appendChild(scrim);
 

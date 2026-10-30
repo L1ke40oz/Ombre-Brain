@@ -25,27 +25,24 @@ body.ob-journal .header h1{padding:8px;margin:-8px}
 body.ob-journal .header h1 button.ob-chime-hook:focus-visible{outline:2px solid var(--accent)!important;outline-offset:4px}
 #ob-chime .ob-chime-tag:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:50%!important}
 
-/* 星星本体：纸色渐变填充 + 重点色描边 + 内圈细线 + 一点小闪光 */
-.ob-star{display:block;overflow:visible}
-.ob-star-stop-a{stop-color:var(--journal-paper,#fffefd)}
-.ob-star-stop-b{stop-color:var(--theme-tint,#f0edf8)}
-.ob-star-stop-c{stop-color:var(--accent-light,#a99bc4)}
-.ob-star-stop-d{stop-color:var(--accent,#7f6fa3)}
-.ob-star-body{fill:url(#ob-star-paper);stroke:var(--accent,#7f6fa3);stroke-width:1.8;stroke-linejoin:round;transition:fill .25s,stroke .25s}
-.ob-star-stitch{fill:none;stroke:var(--accent-light,#a99bc4);stroke-width:1;stroke-dasharray:2.4 2.2;stroke-linejoin:round;opacity:.8}
-.ob-star-icon{fill:none;stroke:var(--accent-ink,#5f5385);stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round;transition:stroke .25s}
+/* 星星本体：手绘珐琅贴纸图（跟随色系滤镜）垫底，页面图标和小闪光的 SVG 叠在上面 */
+.ob-star-stack{position:relative;display:block;width:100%;height:100%}
+.ob-star-art{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;user-select:none;-webkit-user-drag:none;pointer-events:none;
+  filter:var(--journal-sticker-filter,none)}
+.ob-star{position:relative;display:block;width:100%;height:100%;overflow:visible}
+html[data-theme="dark"] .ob-star-art{filter:var(--journal-sticker-filter,) brightness(.9)}
+.ob-star-icon{fill:none;stroke:var(--accent-ink,#5f5385);stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round;transition:stroke .25s}
 .ob-star-icon .ob-star-fill{fill:var(--accent-ink,#5f5385);stroke:none}
 .ob-star-glint{fill:var(--accent-light,#a99bc4);transform-box:fill-box;transform-origin:center;animation:ob-glint 2.8s ease-in-out infinite}
 .ob-star-glint-b{animation-delay:-1.4s}
 @keyframes ob-glint{0%,100%{opacity:.25;scale:.6}50%{opacity:1;scale:1}}
 
 /* 标题旁的星星按钮：外圈一层很淡的光晕，悬停时转一点、亮一点 */
-.ob-star-hook{width:44px;height:44px;filter:drop-shadow(0 2px 3px var(--shadow-dark,#5f5a8f33));transition:transform .3s cubic-bezier(.2,.8,.3,1),filter .3s}
+.ob-star-stack.ob-star-hook{width:44px;height:44px;filter:drop-shadow(0 2px 3px var(--shadow-dark,#5f5a8f33));transition:transform .3s cubic-bezier(.2,.8,.3,1),filter .3s}
 .ob-star-halo{fill:var(--accent-glow,rgba(154,137,181,.16));stroke:var(--journal-line,#c3bad8);stroke-width:1;stroke-dasharray:2 3}
-.ob-star-core{fill:var(--accent,#7f6fa3)}
 body.ob-journal .header h1 button.ob-chime-hook:hover .ob-star-hook{transform:rotate(-14deg) scale(1.06);filter:drop-shadow(0 0 8px var(--accent-light,#a99bc4))}
-body.ob-journal .header h1 button.ob-chime-hook[aria-expanded=true] .ob-star-body{fill:url(#ob-star-active)}
-body.ob-journal .header h1 button.ob-chime-hook[aria-expanded=true] .ob-star-core{fill:var(--journal-paper,#fff)}
+/* 展开时星星亮一圈 */
+body.ob-journal .header h1 button.ob-chime-hook[aria-expanded=true] .ob-star-hook{filter:drop-shadow(0 0 6px var(--accent-light,#a99bc4)) drop-shadow(0 2px 3px var(--shadow-dark,#5f5a8f33))}
 
 .ob-chime-list{
   position:relative;list-style:none;margin:0;padding:0 0 4px;
@@ -59,14 +56,11 @@ body.ob-journal .header h1 button.ob-chime-hook[aria-expanded=true] .ob-star-cor
 #ob-chime .ob-chime-tag{position:relative;display:block;width:56px;height:56px}
 .ob-chime-swing{display:block;width:100%;height:100%;animation:ob-star-float 5s ease-in-out infinite;animation-delay:calc(var(--i,0) * -.6s)}
 @keyframes ob-star-float{0%,100%{translate:0 0;rotate:0deg}50%{translate:0 -3px;rotate:4deg}}
-.ob-chime-tag .ob-star{width:100%;height:100%;filter:drop-shadow(1px 3px 3px var(--shadow-dark,#5f5a8f30));transition:transform .3s cubic-bezier(.2,.8,.3,1),filter .3s}
-.ob-chime-tag:hover .ob-star{transform:rotate(18deg) scale(1.1);filter:drop-shadow(0 0 7px var(--accent-light,#a99bc4))}
-/* 当前所在页：星星填满重点色，图标反白，周围一圈光 */
-.ob-chime-item.is-active .ob-star-body{fill:url(#ob-star-active)}
-.ob-chime-item.is-active .ob-star-icon{stroke:var(--journal-paper,#fff)}
-.ob-chime-item.is-active .ob-star-icon .ob-star-fill{fill:var(--journal-paper,#fff)}
-.ob-chime-item.is-active .ob-star-stitch{stroke:var(--journal-paper,#fff);opacity:.55}
-.ob-chime-item.is-active .ob-star{filter:drop-shadow(0 0 7px var(--accent-light,#a99bc4)) drop-shadow(1px 3px 3px var(--shadow-dark,#5f5a8f30))}
+.ob-chime-tag .ob-star-stack{filter:drop-shadow(1px 3px 3px var(--shadow-dark,#5f5a8f30));transition:transform .3s cubic-bezier(.2,.8,.3,1),filter .3s}
+.ob-chime-tag:hover .ob-star-stack{transform:rotate(18deg) scale(1.1);filter:drop-shadow(0 0 7px var(--accent-light,#a99bc4))}
+/* 当前所在页：星星稍大一点，周围一圈重点色的光 */
+.ob-chime-item.is-active .ob-star-stack{transform:scale(1.08);filter:drop-shadow(0 0 7px var(--accent-light,#a99bc4)) drop-shadow(0 0 2px var(--accent,#7f6fa3)) drop-shadow(1px 3px 3px var(--shadow-dark,#5f5a8f30))}
+.ob-chime-item.is-active .ob-chime-tag:hover .ob-star-stack{transform:rotate(18deg) scale(1.14)}
 /* 喷射时的小火花 */
 .ob-star-sparks{position:fixed;inset:0;z-index:300;pointer-events:none;overflow:hidden}
 .ob-star-spark{position:absolute;width:6px;height:6px;border-radius:50%;background:var(--accent-light,#a99bc4);box-shadow:0 0 6px var(--accent-light,#a99bc4)}
@@ -532,18 +526,22 @@ html[data-palette="mist"][data-theme="dark"] body.dreamcloud.ob-journal{
 .ob-journal .bucket-row:nth-child(4n+1)::after{top:-18px;right:18px;width:72px;height:36px;transform:rotate(5deg);clip-path:none;
   background:url('/static/sticker-tape-gingham.webp') center/contain no-repeat}
 .ob-journal .bucket-row:nth-child(4n+3)::after{top:-20px;right:14px;width:42px;height:38px;transform:rotate(-8deg);
-  background:url('/static/sticker-bow.webp') center/contain no-repeat;filter:var(--journal-sticker-filter,none) drop-shadow(1px 2px 1px #00000022)}
+  background:url('/static/sticker-bow.webp') center/contain no-repeat;filter:var(--journal-sticker-filter,) drop-shadow(1px 2px 1px #00000022)}
 .ob-journal .bucket-row:nth-child(8n+7)::after{top:-21px;right:18px;width:30px;height:40px;transform:rotate(10deg);
-  background:url('/static/sticker-bow-heart.webp') center/contain no-repeat;filter:var(--journal-sticker-filter,none) drop-shadow(1px 2px 1px #00000022)}
+  background:url('/static/sticker-bow-heart.webp') center/contain no-repeat;filter:var(--journal-sticker-filter,) drop-shadow(1px 2px 1px #00000022)}
 .ob-journal .bucket-row:nth-child(4n+4)::after{top:-17px;left:50%;width:78px;height:34px;margin-left:-39px;transform:rotate(-3deg);clip-path:none;
   background:url('/static/sticker-tape-stripe.webp') center/contain no-repeat}
 .ob-journal .bucket-row:nth-child(8n+4) .bucket-row-bottom::after{width:66px;height:58px;opacity:.7;filter:var(--journal-sticker-filter,none);
   background:url('/static/sticker-stamp.webp') center/contain no-repeat}
 .ob-hero-num::after{width:50px;height:44px;left:-10px;top:-2px;background:url('/static/sticker-butterfly.webp') center/contain no-repeat}
-/* 页面右下角压一角蕾丝 */
-.ob-journal::after{content:'';position:fixed;right:0;bottom:0;z-index:-1;width:min(240px,30vw);aspect-ratio:314/360;pointer-events:none;
-  background:url('/static/sticker-lace.webp') right bottom/contain no-repeat;opacity:.55}
-html[data-theme="dark"] .ob-journal::after{opacity:.16}
+/* 整页手账拼贴底图：四周是褪色的纸片、蕾丝、花草与贴纸，中间留白。
+   正片叠底让图里的纸色融进页面底色，只透出淡淡的装饰；竖屏换竖版构图。 */
+.ob-journal::after{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:url('/static/journal-collage-wide.webp') center/cover no-repeat;
+  mix-blend-mode:multiply;opacity:.5}
+@media (max-aspect-ratio:4/5){.ob-journal::after{background-image:url('/static/journal-collage-tall.webp')}}
+/* 深色：反相成深纸浅花，再用滤色叠加，只留下微弱的花纹 */
+html[data-theme="dark"] .ob-journal::after{filter:var(--journal-sticker-filter,) invert(1) hue-rotate(180deg);mix-blend-mode:screen;opacity:.3}
 html[data-theme="dark"] .ob-journal .bucket-row::after,html[data-theme="dark"] .ob-hero-num::after{opacity:.8}
 
 /* ── 小猫吉祥物：每页抬头里坐一只，姿势各不相同 ── */
@@ -642,8 +640,8 @@ body{min-height:calc(100vh * var(--ob-vk,1))}
 /* 「信」页「写一封」卡片右上角的薰衣草贴纸，向左倾斜，跟随色系滤镜 */
 .ob-journal #letters-view .config-section:first-of-type::before{content:'';position:absolute;right:-14px;top:-30px;z-index:3;width:70px;height:118px;pointer-events:none;
   background:url('/static/sticker-lavender.webp') center/contain no-repeat;transform:rotate(-45deg);
-  filter:var(--journal-sticker-filter,none) drop-shadow(1px 3px 2px #00000026)}
+  filter:var(--journal-sticker-filter,) drop-shadow(1px 3px 2px #00000026)}
 html[data-theme="dark"] .ob-journal #letters-view .config-section:first-of-type::before{opacity:.85}
-/* 斜放的贴纸不能把页面撑出横向滚动 */
-.ob-journal #letters-view{overflow-x:clip}
+/* 斜放的贴纸不能把页面撑出横向滚动：裁剪放在 body（即屏幕边缘），页面内的贴纸如蝴蝶不会被截断 */
+body.ob-journal{overflow-x:clip}
 @media (max-width:700px){.ob-journal #letters-view .config-section:first-of-type::before{right:4px;top:-26px;width:54px;height:92px}}
