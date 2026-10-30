@@ -434,8 +434,9 @@
     toast.setAttribute('role', 'status');
     toast.setAttribute('aria-live', 'polite');
     toast.setAttribute('aria-atomic', 'true');
+    toast.innerHTML = '<span class="ob-memory-toast-dot" aria-hidden="true"></span><span class="ob-memory-toast-text"></span>';
     document.body.appendChild(toast);
-    var fadeMs = 180, holdMs = 1500, timer = null;
+    var fadeMs = 500, holdMs = 1500, timer = null;
     var cover = document.getElementById('auth-overlay');
     function covered() { return cover && cover.style.display !== 'none'; }
     function hideToast() {
@@ -444,8 +445,10 @@
     }
     function notify(message, failed) {
       clearTimeout(timer);
-      toast.textContent = message;
+      toast.querySelector('.ob-memory-toast-text').textContent = message;
       toast.classList.toggle('is-error', !!failed);
+      toast.classList.remove('is-visible');
+      void toast.offsetWidth;
       toast.classList.add('is-visible');
       // 淡入完成后完整停留 1.5 秒，再用 CSS 淡出。
       var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;

@@ -688,17 +688,22 @@ html[data-theme="dark"] .ob-row-paper::after{background:color-mix(in srgb,var(--
 #ob-refresh-memories:disabled{cursor:wait;opacity:.55}
 @keyframes ob-refresh-spin{to{transform:rotate(360deg)}}
 .ob-memory-toast{
-  position:fixed;top:max(76px,calc(env(safe-area-inset-top) + 16px));left:50%;z-index:500;
-  transform:translateX(-50%);max-width:calc(100% - 40px);padding:10px 24px;
-  border:1px solid var(--journal-edge,#cec5dd);border-radius:999px;
-  background:var(--journal-paper,#fffefd);color:var(--accent-ink,#5f5385);
-  box-shadow:0 4px 18px var(--shadow-dark-subtle,#c4b9d433);
-  font:500 13px/1.5 'Songti SC','STSong','Noto Serif SC',serif;letter-spacing:1px;text-align:center;
+  position:fixed;top:max(20px,env(safe-area-inset-top));left:50%;z-index:500;
+  display:flex;align-items:center;gap:8px;transform:translateX(-50%) translateY(-60px);
+  max-width:min(92vw,560px);padding:8px 20px;
+  border:1px solid color-mix(in srgb,var(--accent-light,#a99bc4) 25%,transparent);border-radius:50px;
+  background:color-mix(in srgb,var(--surface-solid,#fffefd) 85%,transparent);color:var(--accent-ink,#5f5385);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  box-shadow:0 4px 20px var(--shadow-dark-subtle,#c4b9d433);
+  font-size:13px;line-height:1.5;text-align:center;
   pointer-events:none;opacity:0;visibility:hidden;
-  transition:opacity .18s ease,visibility 0s linear .18s;
+  transition:opacity .5s cubic-bezier(.4,0,.2,1),transform .5s cubic-bezier(.4,0,.2,1),visibility 0s linear .5s;
 }
-.ob-memory-toast.is-visible{opacity:1;visibility:visible;transition-delay:0s}
+.ob-memory-toast.is-visible{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0);transition-delay:0s}
+.ob-memory-toast-dot{width:6px;height:6px;border-radius:50%;background:var(--accent-light,#a99bc4);flex-shrink:0}
+.ob-memory-toast-text{overflow-wrap:anywhere}
 .ob-memory-toast.is-error{color:var(--negative,#a45268)}
+.ob-memory-toast.is-error .ob-memory-toast-dot{background:currentColor}
 @media(max-width:700px){
   #ob-refresh-memories span{display:none}
   .ob-journal .header-actions{gap:3px}
