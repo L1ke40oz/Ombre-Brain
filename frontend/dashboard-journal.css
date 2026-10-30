@@ -645,3 +645,38 @@ html[data-theme="dark"] .ob-journal #letters-view .config-section:first-of-type:
 /* 斜放的贴纸不能把页面撑出横向滚动：裁剪放在 body（即屏幕边缘），页面内的贴纸如蝴蝶不会被截断 */
 body.ob-journal{overflow-x:clip}
 @media (max-width:700px){.ob-journal #letters-view .config-section:first-of-type::before{right:4px;top:-26px;width:54px;height:92px}}
+/* ── 记忆卡片：撕纸边 ──
+   卡片本身透明，纸张画在 .ob-row-paper：外层负责描边与投影（filter 先于遮罩生效，投影放外层）；
+   ::before 是纸面，四条撕口遮罩（--torn-*，由 dashboard-journal.js 按记忆 id 生成）拼出不规则毛边；
+   ::after 用同样的撕口、略大一圈的浅色纸，透出撕开处的白色纤维边。 */
+.ob-journal .bucket-row.ob-torn,.ob-journal .bucket-row.ob-torn:nth-child(n),.ob-journal .bucket-row.ob-torn:nth-child(n):hover{
+  background:transparent!important;border-color:transparent!important;box-shadow:none!important;outline:0;isolation:isolate}
+.ob-row-paper{position:absolute;inset:0;z-index:-1;pointer-events:none;--d:10px;
+  filter:drop-shadow(0 0 .5px var(--journal-line,#c3bad8)) drop-shadow(1px 3px 2px var(--shadow-dark,rgba(110,98,140,.1)));
+  transition:filter .2s}
+.ob-journal .bucket-row.ob-torn:hover .ob-row-paper{filter:drop-shadow(0 0 .5px var(--journal-line,#c3bad8)) drop-shadow(2px 6px 5px var(--shadow-dark,rgba(110,98,140,.14)))}
+.ob-row-paper::before,.ob-row-paper::after{content:'';position:absolute;inset:0;
+  -webkit-mask:
+    linear-gradient(#000 0 0) center/calc(100% - 2*var(--d)) calc(100% - 2*var(--d)) no-repeat,
+    var(--torn-t) top/auto var(--d) round no-repeat,
+    var(--torn-b) bottom/auto var(--d) round no-repeat,
+    var(--torn-l) left/var(--d) auto no-repeat round,
+    var(--torn-r) right/var(--d) auto no-repeat round;
+  mask:
+    linear-gradient(#000 0 0) center/calc(100% - 2*var(--d)) calc(100% - 2*var(--d)) no-repeat,
+    var(--torn-t) top/auto var(--d) round no-repeat,
+    var(--torn-b) bottom/auto var(--d) round no-repeat,
+    var(--torn-l) left/var(--d) auto no-repeat round,
+    var(--torn-r) right/var(--d) auto no-repeat round}
+.ob-row-paper::before{z-index:1;background-color:var(--journal-paper,#fffefd);inset:2px}
+/* 撕口处的纤维白边：比纸面大一圈，颜色更浅 */
+.ob-row-paper::after{z-index:0;background:color-mix(in srgb,var(--journal-paper,#fffefd) 55%,#fff);opacity:.9}
+html[data-theme="dark"] .ob-row-paper::after{background:color-mix(in srgb,var(--journal-paper,#211e2f) 80%,#fff);opacity:.55}
+/* 四种纸纹照旧轮换，画在撕纸上 */
+.ob-journal .bucket-row.ob-torn:nth-child(4n+1) .ob-row-paper::before{background-image:repeating-linear-gradient(180deg,transparent 0 27px,var(--journal-rule) 27px 28px);background-position:0 14px}
+.ob-journal .bucket-row.ob-torn:nth-child(4n+2) .ob-row-paper::before{background-image:linear-gradient(var(--journal-grid) 1px,transparent 1px),linear-gradient(90deg,var(--journal-grid) 1px,transparent 1px);background-size:16px 16px}
+.ob-journal .bucket-row.ob-torn:nth-child(4n+4) .ob-row-paper::before{background-image:radial-gradient(var(--journal-dot) 1px,transparent 1.3px);background-size:14px 14px}
+/* 毛边会吃掉一点边距，内容往里收 */
+.ob-journal .bucket-row.ob-torn{padding-left:20px!important;padding-right:20px!important}
+@media(max-width:700px){.ob-journal .bucket-row.ob-torn{padding-left:16px!important;padding-right:16px!important}}
+

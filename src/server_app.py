@@ -11,6 +11,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import json
+import logging
 import os
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
@@ -35,6 +36,36 @@ DEFAULT_MAX_MANAGEMENT_REQUEST_BYTES = 4 * 1024 * 1024
 DEFAULT_HEALTH_PROBE_TIMEOUT_SECONDS = 5.0
 DEFAULT_KEEPALIVE_INITIAL_DELAY_SECONDS = 10.0
 DEFAULT_KEEPALIVE_INTERVAL_SECONDS = 60.0
+
+
+class _KeepaliveLogFilter(logging.Filter):
+    """Drop the per-minute INFO lines produced by the internal keepalive ping only.
+
+    Covers httpx's "HTTP Request: GET <url>" line and uvicorn's access line for a
+    successful loopback GET of the same path. Failures and external probes still log.
+    """
+
+    def __init__(self, url: str) -> None:
+        super().__init__()
+        self._url = url
+        self._path = httpx.URL(url).path if url else ""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        if record.levelno > logging.INFO or not self._url:
+            return True
+        try:
+            args = record.args if isinstance(record.args, tuple) else ()
+            if record.name == "uvicorn.access" and len(args) >= 5:
+                client, method, path, _, status = args[:5]
+                return not (
+                    str(client).startswith(("127.0.0.1", "[::1]", "::1"))
+                    and method == "GET"
+                    and str(path).split("?", 1)[0] == self._path
+                    and int(status) < 300
+                )
+            return self._url not in record.getMessage()
+        except Exception:
+            return True
 
 TokenValidator = Callable[..., bool]
 AsyncCallback = Callable[[], Awaitable[Any]]
@@ -587,19 +618,35 @@ class RuntimeLifecycle:
 
     async def _keepalive_loop(self) -> None:
         await asyncio.sleep(max(0.0, self.keepalive_initial_delay))
-        async with httpx.AsyncClient() as client:
-            while True:
-                try:
-                    await client.get(
-                        self.keepalive_url,
-                        timeout=self.health_probe_timeout,
-                    )
-                    self.logger.debug("Keepalive ping OK")
-                except asyncio.CancelledError:
-                    raise
-                except Exception as exc:
-                    self.logger.warning("Keepalive ping failed: %s", exc)
-                await asyncio.sleep(max(0.01, self.keepalive_interval))
+        # 自检只打本机回环地址：trust_env=False 绕过系统代理（Windows 上 Clash/V2Ray
+        # 的系统代理会把 127.0.0.1 也转发出去，返回 502）。每分钟一次的成功自检不写
+        # httpx / uvicorn 的 INFO 日志；失败、外部探活和其余请求日志照常输出。
+        quiet = _KeepaliveLogFilter(self.keepalive_url)
+        quiet_loggers = [logging.getLogger("httpx"), logging.getLogger("uvicorn.access")]
+        for quiet_logger in quiet_loggers:
+            quiet_logger.addFilter(quiet)
+        try:
+            async with httpx.AsyncClient(trust_env=False) as client:
+                while True:
+                    try:
+                        response = await client.get(
+                            self.keepalive_url,
+                            timeout=self.health_probe_timeout,
+                        )
+                        if response.is_success:
+                            self.logger.debug("Keepalive ping OK")
+                        else:
+                            self.logger.warning(
+                                "Keepalive ping failed: HTTP %s", response.status_code
+                            )
+                    except asyncio.CancelledError:
+                        raise
+                    except Exception as exc:
+                        self.logger.warning("Keepalive ping failed: %s", exc)
+                    await asyncio.sleep(max(0.01, self.keepalive_interval))
+        finally:
+            for quiet_logger in quiet_loggers:
+                quiet_logger.removeFilter(quiet)
 
     async def start(self) -> None:
         if self._started:

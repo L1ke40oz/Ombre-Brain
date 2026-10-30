@@ -1039,6 +1039,66 @@ async def test_runtime_lifecycle_cancels_keepalive_on_shutdown():
 
 
 @pytest.mark.asyncio
+async def test_keepalive_bypasses_system_proxy_and_reports_bad_status(monkeypatch):
+    """The loopback self-ping must not go through HTTP(S)_PROXY / the Windows system proxy."""
+    created = []
+    real_client = httpx.AsyncClient
+
+    def handler(request):
+        return httpx.Response(502)
+
+    class RecordingClient(real_client):
+        def __init__(self, *args, **kwargs):
+            created.append(kwargs)
+            kwargs["transport"] = httpx.MockTransport(handler)
+            super().__init__(*args, **kwargs)
+
+    monkeypatch.setattr("server_app.httpx.AsyncClient", RecordingClient)
+    logger = RecordingLogger()
+    lifecycle = RuntimeLifecycle(
+        logger=logger,
+        keepalive_url="http://127.0.0.1:1/health",
+        keepalive_initial_delay=0,
+        keepalive_interval=3600,
+    )
+
+    await lifecycle.start()
+    for _ in range(50):
+        if any(level == "warning" for level, _ in logger.messages):
+            break
+        await asyncio.sleep(0.01)
+    await lifecycle.stop()
+
+    assert created and created[0].get("trust_env") is False
+    assert ("warning", "Keepalive ping failed: HTTP 502") in logger.messages
+
+
+def test_keepalive_log_filter_only_hides_the_self_ping():
+    import logging
+
+    from server_app import _KeepaliveLogFilter
+
+    quiet = _KeepaliveLogFilter("http://127.0.0.1:2140/health")
+
+    def record(level, url):
+        return logging.LogRecord("httpx", level, __file__, 1,
+                                 'HTTP Request: %s %s "%s"', ("GET", url, "HTTP/1.1 200 OK"), None)
+
+    assert not quiet.filter(record(logging.INFO, "http://127.0.0.1:2140/health"))
+    assert quiet.filter(record(logging.INFO, "https://api.example.com/v1/embeddings"))
+    assert quiet.filter(record(logging.WARNING, "http://127.0.0.1:2140/health"))
+
+    def access(client, path, status):
+        return logging.LogRecord("uvicorn.access", logging.INFO, __file__, 1,
+                                 '%s - "%s %s HTTP/%s" %d', (client, "GET", path, "1.1", status), None)
+
+    assert not quiet.filter(access("127.0.0.1:50000", "/health", 200))
+    assert quiet.filter(access("127.0.0.1:50000", "/health", 503))
+    assert quiet.filter(access("203.0.113.9:443", "/health", 200))
+    assert quiet.filter(access("127.0.0.1:50000", "/api/buckets", 200))
+
+
+@pytest.mark.asyncio
 async def test_runtime_lifecycle_logs_optional_service_failures_without_leaking():
     logger = RecordingLogger()
 

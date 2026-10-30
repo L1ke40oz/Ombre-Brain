@@ -57,13 +57,13 @@
     },
     {
       "path": "frontend/dashboard-journal.css",
-      "sha256": "c00e80396c333ae21da10c659298b10f47a03f78cbc0c9c8527633f4b643e1f8",
-      "size": 56060
+      "sha256": "19bdda09d5aed87578fcf5528780e734463ad8ea3fc37f5acf91f92b92e5d021",
+      "size": 59158
     },
     {
       "path": "frontend/dashboard-journal.js",
-      "sha256": "da4be4b6a774975ceddf063b9512c4521c4e1dc0a63e28109c147a3056c85f67",
-      "size": 20435
+      "sha256": "0b47864a2537384315956e3d30e7682faa76702ee8328843b163ab397458148f",
+      "size": 23512
     },
     {
       "path": "frontend/dashboard.html",
@@ -797,8 +797,8 @@
     },
     {
       "path": "src/server_app.py",
-      "sha256": "47f7e086a68d5ae4e5cfb324fd21af0d638cf2ba5866b2bcd0db4cfa2d0cab8f",
-      "size": 29333
+      "sha256": "fccb5620a3c28d5d1c95b00bd356ecc798825c9b53d6ecd1bd634d1ea401d332",
+      "size": 31533
     },
     {
       "path": "src/tools/__init__.py",
