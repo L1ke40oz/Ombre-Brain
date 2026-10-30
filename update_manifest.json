@@ -62,13 +62,13 @@
     },
     {
       "path": "frontend/dashboard-journal.js",
-      "sha256": "b9875a117abc3e2fe755be1571d2caa5f683c0ce2762e7c43dfeaaa649b9197c",
+      "sha256": "4ac1a82a1cdc7b91ee771396df36dac2be518feb680ff6af1cb9359f4470749c",
       "size": 25664
     },
     {
       "path": "frontend/dashboard.html",
-      "sha256": "fde0aa55c3b65a5669879619a870b7bff4604b4581af004b06a1d14b80daaa09",
-      "size": 621254
+      "sha256": "481056204d9906e0460c97d6dc44f5adab418b7f851a9e2856ab79892fce097d",
+      "size": 621456
     },
     {
       "path": "frontend/galaxy-engine-LICENSE.txt",

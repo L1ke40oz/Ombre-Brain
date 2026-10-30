@@ -129,6 +129,7 @@ def test_current_page_selection_runtime_boundaries():
         "function _normalizeBucketPage(", "function _visibleBucketTotalPages("
     )
     script = """
+var currentFilter = 'all';
 var _curBuckets = [{id:'hidden', dont_surface:true}].concat(
   Array.from({length:25}, (_, i) => ({id:'b' + (i + 1), dont_surface:false}))
 );
@@ -346,3 +347,49 @@ def test_search_can_preserve_the_page_for_a_refresh_but_not_for_typing():
 
     typing = _dashboard_section("let searchTimer;", "async function loadBuckets()")
     assert "searchBuckets(q);" in typing
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="Node.js is unavailable")
+def test_hidden_and_sunken_filters_use_their_own_flags_and_hidden_pages():
+    source = (
+        _dashboard_section("function updateStats()", "function buildFilters()")
+        + _dashboard_section("function filterBuckets(", "// 翻页状态：")
+        + _dashboard_section("function _currentBucketPageItems(", "function _currentBucketPageIds(")
+        + _dashboard_section("function _normalizeBucketPage(", "function gotoBucketPage(")
+    )
+    script = """
+var allBuckets = Array.from({length:12}, (_,i)=>({
+  id:'hidden-'+i, dont_surface:true, digested:i===0, resolved:i===1
+})).concat([
+  {id:'digested-only', digested:true, resolved:false},
+  {id:'sunken', resolved:true},
+  {id:'visible', resolved:false}
+]);
+var currentFilter='hidden', bucketPage=2, BUCKETS_PER_PAGE=10;
+var _curBuckets=allBuckets;
+var stats={textContent:''};
+var document={getElementById(){return stats;}};
+function updateChick(){}
+""" + source + """
+updateStats();
+var hidden=filterBuckets(allBuckets).map(b=>b.id);
+var secondPage=_currentBucketPageItems().map(b=>b.id);
+var totalPages=_visibleBucketTotalPages();
+currentFilter='resolved';
+var sunken=filterBuckets(allBuckets).map(b=>b.id);
+currentFilter='all';bucketPage=1;
+var visible=_currentBucketPageItems().map(b=>b.id);
+process.stdout.write(JSON.stringify({hidden,secondPage,totalPages,sunken,visible,stats:stats.textContent}));
+"""
+    completed = subprocess.run(
+        [shutil.which("node"), "-e", script], check=True, capture_output=True, text=True, encoding="utf-8",
+    )
+    result = json.loads(completed.stdout)
+    assert result["hidden"] == [f"hidden-{i}" for i in range(12)]
+    assert result["secondPage"] == ["hidden-10", "hidden-11"]
+    assert result["totalPages"] == 2
+    assert result["sunken"] == ["hidden-1", "sunken"]
+    assert result["visible"] == ["digested-only", "sunken", "visible"]
+    assert "12 已隐藏" in result["stats"]
+    assert "2 已沉底" in result["stats"]
+    assert "已消化" not in result["stats"]

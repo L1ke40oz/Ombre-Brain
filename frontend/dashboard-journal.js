@@ -346,7 +346,7 @@
           });
           row.appendChild(actions);
         }
-        var labels = {forget:memory.dont_surface ? '允许浮现' : '遗忘',resolve:memory.resolved ? '取消沉底' : '沉底',archive:'归档',delete:'删除',edit:'编辑'};
+        var labels = {forget:memory.dont_surface ? '取消隐藏' : '隐藏',resolve:memory.resolved ? '取消沉底' : '沉底',archive:'归档',delete:'删除',edit:'编辑'};
         actions.querySelectorAll('button').forEach(function (button) {
           setText(button, labels[button.dataset.action]); button.disabled = busy.has(id);
           if (button.dataset.action === 'delete') button.title = '永久删除，需再次确认';
