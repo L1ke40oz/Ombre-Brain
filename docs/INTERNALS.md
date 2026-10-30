@@ -736,8 +736,8 @@ delete_id="", max_results=12)`，实现位于 `src/tools/them/core.py:15` 与 `o
 | `/api/plans/{id}/action` | POST | 🔒 | iter 1.7 §G：看板操作（resolve / abandon / reopen / edit），自动追加 change_log |
 | `/api/version` | GET | 公开 | iter 1.7 §B：项目版本号（读 `<repo_root>/VERSION`） |
 | `/api/author` | GET | 公开 | iter 1.7 §H：静态作者note + 爱发电链接 |
-| `/static/{name}` | GET | 公开 | iter 1.7 §C：白名单静态资源（icon.svg / favicon.svg / manifest.json） |
-| `/favicon.ico` | GET | 公开 | iter 1.7 §C：301 → /static/favicon.svg |
+| `/static/{name}` | GET | 公开 | iter 1.7 §C：白名单静态资源（manifest.json、应用图标、登录页与手账页素材；sticker-/mascot- 前缀的 webp 按文件名规则放行） |
+| `/favicon.ico` | GET | 公开 | 301 → /static/brand-icon.png |
 | `/api/duplicates` | GET | 🔒 | 列出疑似重复桶对（iter 1.6 §4，sim>0.95，由 hold/grow 后台扫出） |
 | `/api/breath-debug?q=&valence=&arousal=` | GET | 🔒 | 评分调试（每桶四维分解） |
 | `/api/config` | GET | 🔒 | 配置查看（API key 脱敏） |

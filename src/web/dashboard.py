@@ -136,7 +136,7 @@ def register(mcp) -> None:
                 status_code=404,
             )
 
-    # iter 1.7 §C/§H: serve frontend static assets (icon.svg, favicon.svg, manifest.json)
+    # iter 1.7 §C/§H: serve frontend static assets (manifest.json, icons, login/journal assets)
     # 安全要点：必须白名单过滤文件名，绝不能让 request 直接拼路径，
     # 否则会被 ?name=../../etc/passwd 这种「目录穿越」攻击拿走任意文件。
     @mcp.custom_route("/static/{name}", methods=["GET"])
@@ -144,8 +144,6 @@ def register(mcp) -> None:
         from starlette.responses import Response as _Resp, JSONResponse
         name = request.path_params.get("name", "")
         allowed = {
-            "icon.svg": "image/svg+xml",
-            "favicon.svg": "image/svg+xml",
             "brand-icon.png": "image/png",
             "app-icon-180.png": "image/png",
             "app-icon-192.png": "image/png",
@@ -157,23 +155,12 @@ def register(mcp) -> None:
             "companion-idle.webp": "image/webp",
             "companion-lifted.png": "image/png",
             "manifest.json": "application/manifest+json",
-            "RRPL.ttf": "font/truetype",
             "login-cover.css": "text/css",
             "login-cover.js": "application/javascript",
             "dashboard-journal.css": "text/css",
             "dashboard-chime.js": "application/javascript",
             "dashboard-galaxy.js": "application/javascript",
             "dashboard-journal.js": "application/javascript",
-            "chime-hook.webp": "image/webp",
-            "chime-list.webp": "image/webp",
-            "chime-breath.webp": "image/webp",
-            "chime-network.webp": "image/webp",
-            "chime-plan.webp": "image/webp",
-            "chime-letters.webp": "image/webp",
-            "chime-anchors.webp": "image/webp",
-            "chime-import.webp": "image/webp",
-            "chime-logs.webp": "image/webp",
-            "chime-settings.webp": "image/webp",
             "login-sky.webp": "image/webp",
             "login-flower-photo.jpg": "image/jpeg",
             "login-crystal-pendant.webp": "image/webp",
@@ -186,8 +173,8 @@ def register(mcp) -> None:
             "login-serif-italic.woff2": "font/woff2",
         }
         media_type = allowed.get(name)
-        # 手账贴纸 / 吉祥物 / 风铃吊牌图：文件名限定为小写字母和连字符，不含路径分隔符
-        if media_type is None and re.fullmatch(r"(?:sticker|mascot|chime)-[a-z-]+\.webp", name):
+        # 手账贴纸 / 吉祥物：文件名限定为小写字母和连字符，不含路径分隔符
+        if media_type is None and re.fullmatch(r"(?:sticker|mascot)-[a-z-]+\.webp", name):
             media_type = "image/webp"
         if media_type is None:
             return JSONResponse({"error": "not found"}, status_code=404)

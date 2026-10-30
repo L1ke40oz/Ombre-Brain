@@ -1,68 +1,81 @@
-/* 主页手账风：浅色沿用登录封面（雾紫纸张 + 墨紫字），深色是夜空手账；顶部 tab 换成左侧风铃导航。 */
+/* 主页手账风：浅色沿用登录封面（雾紫纸张 + 墨紫字），深色是夜空手账；顶部 tab 换成左侧星星导航。 */
 
-/* ── 风铃导航 ───────────────────────────── */
+/* ── 星星导航 ───────────────────────────── */
+/* 颜色全部取自当前色系变量：换暖沙 / 雾蓝、切深浅色时星星跟着变 */
 .ob-journal nav.tabs{display:none!important}
 .ob-chime{
-  --chime-paper:url(#ob-chime-paper);--chime-line:#6f74a6;--chime-stitch:#a9abd2;--chime-ink:#4f4d7d;
-  --chime-active:url(#ob-chime-paper-active);--chime-shadow:#5f5a8f40;
   position:absolute;left:0;top:100%;z-index:5;width:76px;
   display:flex;flex-direction:column;align-items:center;pointer-events:none;
 }
 .ob-chime>*{pointer-events:auto}
 /* 面板的通用按钮规则用一长串 :not() 抬高了优先级，这里用 id 前缀重置 */
 #ob-chime button{appearance:none;background:none!important;border:0!important;padding:0!important;margin:0!important;border-radius:0!important;box-shadow:none!important;min-width:0;min-height:0;max-width:none;color:inherit;font:inherit;transform:none;transition:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
-/* 挂钩就是标题左边的品牌图标，按钮本身不加任何外框 */
+/* 标题左边的星星按钮，本身不加任何外框 */
 body.ob-journal .header h1 button.ob-chime-hook{
-  appearance:none;display:inline-grid;place-items:center;flex-shrink:0;
+  appearance:none;display:inline-grid;place-items:center;flex-shrink:0;position:relative;z-index:6;
   padding:0!important;margin:0!important;min-width:0!important;min-height:0!important;width:auto!important;height:auto!important;
   background:none!important;border:0!important;border-radius:50%!important;box-shadow:none!important;
   color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:none;
 }
-body.ob-journal .header h1 button.ob-chime-hook{position:relative;z-index:6}
-.ob-chime-bow{display:block;width:54px;height:54px;object-fit:contain;transform-origin:50% 50%;
-  filter:drop-shadow(1px 3px 3px #5f5a8f33);transition:transform .25s cubic-bezier(.2,.8,.3,1),filter .25s}
-body.ob-journal .header h1 button.ob-chime-hook:hover .ob-chime-bow{transform:translateY(-2px) rotate(-6deg);filter:var(--journal-sticker-filter,none) drop-shadow(1px 5px 6px var(--shadow-dark,#5f5a8f44))}
-html[data-theme="dark"] body.ob-journal .header h1 button.ob-chime-hook:hover .ob-chime-bow{filter:var(--journal-sticker-filter,none) brightness(.95) drop-shadow(1px 4px 6px #000a)}
-/* 标题需要 overflow:hidden 做省略号；四周留出 8px 裁剪余量（负外边距抵消），挂钩摆动、上抬时不被截断 */
-body.ob-journal .header h1{padding:8px 8px 8px 8px;margin:-8px -8px -8px -8px}
+/* 标题需要 overflow:hidden 做省略号；四周留出 8px 裁剪余量（负外边距抵消），星星旋转、上抬时不被截断 */
+body.ob-journal .header h1{padding:8px;margin:-8px}
 .ob-journal .header h1 .ob-chime-brand-hidden{display:none!important}
-/* 「我」已经挂进风铃，左下角的悬浮按钮不再需要 */
+/* 「我」已经放进星星导航，左下角的悬浮按钮不再需要 */
 .ob-journal #self-fab{display:none!important}
-body.ob-journal .header h1 button.ob-chime-hook:focus-visible{outline:2px solid #9a89b5!important;outline-offset:4px}
-.ob-chime-tag:focus-visible .ob-chime-body{outline:2px solid #9a89b5;outline-offset:3px}
+body.ob-journal .header h1 button.ob-chime-hook:focus-visible{outline:2px solid var(--accent)!important;outline-offset:4px}
+#ob-chime .ob-chime-tag:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:50%!important}
+
+/* 星星本体：纸色渐变填充 + 重点色描边 + 内圈细线 + 一点小闪光 */
+.ob-star{display:block;overflow:visible}
+.ob-star-stop-a{stop-color:var(--journal-paper,#fffefd)}
+.ob-star-stop-b{stop-color:var(--theme-tint,#f0edf8)}
+.ob-star-stop-c{stop-color:var(--accent-light,#a99bc4)}
+.ob-star-stop-d{stop-color:var(--accent,#7f6fa3)}
+.ob-star-body{fill:url(#ob-star-paper);stroke:var(--accent,#7f6fa3);stroke-width:1.8;stroke-linejoin:round;transition:fill .25s,stroke .25s}
+.ob-star-stitch{fill:none;stroke:var(--accent-light,#a99bc4);stroke-width:1;stroke-dasharray:2.4 2.2;stroke-linejoin:round;opacity:.8}
+.ob-star-icon{fill:none;stroke:var(--accent-ink,#5f5385);stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round;transition:stroke .25s}
+.ob-star-icon .ob-star-fill{fill:var(--accent-ink,#5f5385);stroke:none}
+.ob-star-glint{fill:var(--accent-light,#a99bc4);transform-box:fill-box;transform-origin:center;animation:ob-glint 2.8s ease-in-out infinite}
+.ob-star-glint-b{animation-delay:-1.4s}
+@keyframes ob-glint{0%,100%{opacity:.25;scale:.6}50%{opacity:1;scale:1}}
+
+/* 标题旁的星星按钮：外圈一层很淡的光晕，悬停时转一点、亮一点 */
+.ob-star-hook{width:44px;height:44px;filter:drop-shadow(0 2px 3px var(--shadow-dark,#5f5a8f33));transition:transform .3s cubic-bezier(.2,.8,.3,1),filter .3s}
+.ob-star-halo{fill:var(--accent-glow,rgba(154,137,181,.16));stroke:var(--journal-line,#c3bad8);stroke-width:1;stroke-dasharray:2 3}
+.ob-star-core{fill:var(--accent,#7f6fa3)}
+body.ob-journal .header h1 button.ob-chime-hook:hover .ob-star-hook{transform:rotate(-14deg) scale(1.06);filter:drop-shadow(0 0 8px var(--accent-light,#a99bc4))}
+body.ob-journal .header h1 button.ob-chime-hook[aria-expanded=true] .ob-star-body{fill:url(#ob-star-active)}
+body.ob-journal .header h1 button.ob-chime-hook[aria-expanded=true] .ob-star-core{fill:var(--journal-paper,#fff)}
 
 .ob-chime-list{
   position:relative;list-style:none;margin:0;padding:0 0 4px;
-  display:flex;flex-direction:column;align-items:center;
-  overflow:visible;
+  display:flex;flex-direction:column;align-items:center;gap:6px;overflow:visible;
 }
 .ob-chime-list[hidden]{display:none}
-/* 每块吊牌的丝带塞到上一块的底下，像风铃一样串起来 */
-.ob-chime-item{position:relative;margin-top:-9px;width:76px;display:flex;justify-content:center}
-.ob-chime-item:has(.ob-chime-svg){margin-top:-8px}
-.ob-chime-list .ob-chime-item:first-of-type{margin-top:0}
-#ob-chime .ob-chime-tag{position:relative;display:block;width:auto;height:auto}
-#ob-chime .ob-chime-tag:has(.ob-chime-svg){width:60px;height:84px}
-.ob-chime-img{display:block;height:84px;width:auto;user-select:none;-webkit-user-drag:none;filter:drop-shadow(1px 3px 3px #5f5a8f30);transition:filter .2s,transform .2s}
-.ob-chime-tag:hover .ob-chime-img{filter:drop-shadow(1px 4px 5px #5f5a8f42) brightness(1.03)}
-.ob-chime-item.is-active .ob-chime-img{filter:drop-shadow(0 0 4px #b3a6e8) drop-shadow(1px 3px 3px #5f5a8f30)}
-.ob-chime-swing{display:block;width:100%;height:100%;transform-origin:50% 0;will-change:transform}
-.ob-chime-svg{display:block;width:100%;height:100%;overflow:visible;filter:drop-shadow(1px 3px 2px var(--chime-shadow))}
-.ob-chime-ribbon{fill:none;stroke:var(--chime-line);stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
-.ob-chime-ring{fill:#fff;stroke:var(--chime-line);stroke-width:1.4}
-.ob-chime-body{fill:var(--chime-paper);stroke:var(--chime-line);stroke-width:1.9;stroke-linejoin:round;transition:fill .2s}
-.ob-chime-stitch{fill:none;stroke:var(--chime-stitch);stroke-width:1.1}
-.ob-chime-icon{fill:none;stroke:var(--chime-ink);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-.ob-chime-icon .ob-chime-fill{fill:var(--chime-ink);stroke:none}
-.ob-chime-tag:hover .ob-chime-body{stroke:#56598f}
-.ob-chime-item.is-active .ob-chime-body{fill:var(--chime-active)}
-.ob-chime-item.is-active .ob-chime-stitch{stroke:var(--chime-line)}
-.ob-chime-item.is-active .ob-chime-tag::before{
-  content:'✦';position:absolute;right:-8px;top:34%;z-index:1;font-size:11px;line-height:1;color:var(--accent-light,#9a89b5);pointer-events:none;
-}
-/* 手账小标签：悬停、聚焦时从吊牌右侧探出 */
+/* 星星各自独立，不再相连；左右轻轻错开一点，像随手撒出来的 */
+.ob-chime-item{position:relative;width:76px;display:flex;justify-content:center}
+.ob-chime-item:nth-child(odd){padding-left:8px}
+.ob-chime-item:nth-child(even){padding-right:8px}
+#ob-chime .ob-chime-tag{position:relative;display:block;width:56px;height:56px}
+.ob-chime-swing{display:block;width:100%;height:100%;animation:ob-star-float 5s ease-in-out infinite;animation-delay:calc(var(--i,0) * -.6s)}
+@keyframes ob-star-float{0%,100%{translate:0 0;rotate:0deg}50%{translate:0 -3px;rotate:4deg}}
+.ob-chime-tag .ob-star{width:100%;height:100%;filter:drop-shadow(1px 3px 3px var(--shadow-dark,#5f5a8f30));transition:transform .3s cubic-bezier(.2,.8,.3,1),filter .3s}
+.ob-chime-tag:hover .ob-star{transform:rotate(18deg) scale(1.1);filter:drop-shadow(0 0 7px var(--accent-light,#a99bc4))}
+/* 当前所在页：星星填满重点色，图标反白，周围一圈光 */
+.ob-chime-item.is-active .ob-star-body{fill:url(#ob-star-active)}
+.ob-chime-item.is-active .ob-star-icon{stroke:var(--journal-paper,#fff)}
+.ob-chime-item.is-active .ob-star-icon .ob-star-fill{fill:var(--journal-paper,#fff)}
+.ob-chime-item.is-active .ob-star-stitch{stroke:var(--journal-paper,#fff);opacity:.55}
+.ob-chime-item.is-active .ob-star{filter:drop-shadow(0 0 7px var(--accent-light,#a99bc4)) drop-shadow(1px 3px 3px var(--shadow-dark,#5f5a8f30))}
+/* 喷射时的小火花 */
+.ob-star-sparks{position:fixed;inset:0;z-index:300;pointer-events:none;overflow:hidden}
+.ob-star-spark{position:absolute;width:6px;height:6px;border-radius:50%;background:var(--accent-light,#a99bc4);box-shadow:0 0 6px var(--accent-light,#a99bc4)}
+.ob-star-spark.is-star{width:11px;height:11px;border-radius:0;background:var(--accent,#7f6fa3);box-shadow:none;
+  clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%)}
+
+/* 手账小标签：悬停、聚焦时从星星右侧探出 */
 .ob-chime-label{
-  position:absolute;left:calc(100% + 6px);top:46%;display:flex;flex-direction:column;gap:1px;
+  position:absolute;left:calc(100% + 6px);top:50%;display:flex;flex-direction:column;gap:1px;
   padding:6px 12px 6px 10px;white-space:nowrap;pointer-events:none;
   background:var(--journal-paper,#fffefd);border:1px solid var(--journal-edge,#cec5dd);box-shadow:2px 3px 0 var(--shadow-dark-subtle,#c4b9d433);
   clip-path:polygon(7px 0,100% 0,100% 100%,7px 100%,0 50%);
@@ -71,18 +84,13 @@ body.ob-journal .header h1 button.ob-chime-hook:focus-visible{outline:2px solid 
 .ob-chime-label b{font:500 12px/1.4 'Songti SC','STSong','Noto Serif SC',serif;color:var(--text,#49435f);letter-spacing:1px;padding-left:4px}
 .ob-chime-label i{font:italic 12px/1.1 OmbreCover,'Times New Roman',serif;color:var(--text-dim,#80768f);padding-left:4px}
 .ob-chime-tag:hover .ob-chime-label,.ob-chime-tag:focus-visible .ob-chime-label{opacity:1;transform:translate(0,-50%) rotate(-2deg)}
-.ob-chime-tassel{position:relative;z-index:0;width:10px;height:30px;margin-top:-6px;pointer-events:none}
-.ob-chime-tassel::before{content:'';position:absolute;left:50%;top:0;width:8px;height:8px;margin-left:-4px;border-radius:50%;border:1px solid var(--accent-light,#8f8fd0);background:var(--journal-icon,#e6e4f8)}
-.ob-chime-tassel::after{content:'';position:absolute;left:50%;top:7px;width:8px;height:22px;margin-left:-4px;background:repeating-linear-gradient(90deg,var(--accent-light,#a3a3dc) 0 1px,transparent 1px 2px);clip-path:polygon(35% 0,65% 0,100% 100%,0 100%);opacity:.9}
 
-/* 矮屏收紧吊牌，避免压到左下角的「自我」悬浮按钮 */
-@media (max-height:860px){
-  #ob-chime .ob-chime-tag:has(.ob-chime-svg){width:49px;height:68px}
-  .ob-chime-item{margin-top:-8px}
-  .ob-chime-item:has(.ob-chime-svg){margin-top:-7px}
-  .ob-chime-img{height:68px}
+/* 矮屏收紧星星，避免一列太长 */
+@media (max-height:760px){
+  #ob-chime .ob-chime-tag{width:46px;height:46px}
+  .ob-chime-list{gap:3px}
 }
-/* 桌面始终预留风铃位置，开合导航时正文不横移。 */
+/* 桌面始终预留星星的位置，开合导航时正文不横移。 */
 @media (min-width:1101px){
   html:has(body.ob-journal){scrollbar-gutter:stable}
   .ob-journal .content{padding-left:88px}
@@ -92,13 +100,12 @@ body.ob-journal .header h1 button.ob-chime-hook:focus-visible{outline:2px solid 
   /* 遮罩取当前配色的底色，换色系、深浅模式时跟着变 */
   .ob-journal.ob-chime-open .ob-chime-scrim{display:block;position:fixed;inset:0;z-index:45;background:color-mix(in srgb,var(--bg) 72%,transparent);backdrop-filter:blur(3px)}
   .ob-chime-label{opacity:1;transform:translate(0,-50%) rotate(-2deg)}
-  /* 头部在遮罩之上，展开时把搜索框等淡出，只留图标和风铃 */
+  /* 头部在遮罩之上，展开时把搜索框等淡出，只留按钮和星星 */
   .ob-journal.ob-chime-open .header>:not(h1):not(#ob-chime){opacity:.18;pointer-events:none;transition:opacity .2s}
 }
-@media (max-width:700px){.ob-journal .header h1{font-size:26px}.ob-chime-bow{width:46px;height:46px}}
-html[data-theme="dark"] .ob-chime{--chime-paper:#2c2938;--chime-line:#b3aedc;--chime-stitch:#6e6a92;--chime-ink:#d6d2f2;--chime-active:#403b58;--chime-shadow:#00000066}
+@media (max-width:700px){.ob-journal .header h1{font-size:26px}}
 html[data-theme="dark"] .ob-chime-label{box-shadow:none}
-@media (prefers-reduced-motion:reduce){.ob-chime *{transition:none!important}}
+@media (prefers-reduced-motion:reduce){.ob-chime *,.ob-star-glint{transition:none!important;animation:none!important}}
 
 /* ── 手账纸张主题：浅色是雾紫信纸，深色是夜里的星空手账 ─────────────── */
 /* 两套只换颜色变量，结构规则共用；另有暖沙、雾蓝两套色系见文件末尾。
@@ -211,11 +218,6 @@ body.dreamcloud.ob-journal::before{
 .ob-journal :is(.detail-panel,.self-panel){border-radius:4px;background:var(--journal-panel);box-shadow:-10px 0 40px #00000026}
 .ob-journal :is(#network-container,#network-canvas,#network-canvas.star-active){border-radius:4px;background:var(--journal-panel)!important}
 .ob-journal .bucket-bulkbar{border-top-style:dashed;border-bottom-style:dashed}
-/* 深色下瓷釉吊牌和蝴蝶结压低一点亮度，不在夜色里刺眼 */
-html[data-theme="dark"] .ob-chime-img{filter:brightness(.86) drop-shadow(1px 3px 4px #0009)}
-html[data-theme="dark"] .ob-chime-tag:hover .ob-chime-img{filter:brightness(.95) drop-shadow(1px 4px 6px #000a)}
-html[data-theme="dark"] .ob-chime-item.is-active .ob-chime-img{filter:brightness(.98) drop-shadow(0 0 6px #b7a6e6) drop-shadow(1px 3px 4px #0009)}
-html[data-theme="dark"] .ob-chime-bow{filter:brightness(.9) drop-shadow(1px 3px 4px #0009)}
 
 /* ── 记忆星河（原记忆网络页）：像一张贴在手账里的夜空照片 ── */
 .ob-galaxy-mode>:not(.ob-galaxy):not(.ob-hero){display:none!important}
@@ -525,7 +527,7 @@ html[data-palette="mist"][data-theme="dark"] body.dreamcloud.ob-journal{
 .ob-journal .palette-preview-lilac>span:last-child{background:linear-gradient(135deg,#14121d,#7f6fa3)}
 
 /* ── 贴纸：从贴纸图里抠出来的蝴蝶结、胶带、邮戳、蕾丝，随色系换色 ── */
-.ob-journal .bucket-row::after,.ob-hero-num::after,.ob-journal::after,.ob-chime-img,.ob-chime-bow{filter:var(--journal-sticker-filter,none)}
+.ob-journal .bucket-row::after,.ob-hero-num::after,.ob-journal::after{filter:var(--journal-sticker-filter,none)}
 /* 缩小后的贴纸跨在卡片上沿，标题在下方留出间距。 */
 .ob-journal .bucket-row:nth-child(4n+1)::after{top:-18px;right:18px;width:72px;height:36px;transform:rotate(5deg);clip-path:none;
   background:url('/static/sticker-tape-gingham.webp') center/contain no-repeat}
@@ -543,15 +545,6 @@ html[data-palette="mist"][data-theme="dark"] body.dreamcloud.ob-journal{
   background:url('/static/sticker-lace.webp') right bottom/contain no-repeat;opacity:.55}
 html[data-theme="dark"] .ob-journal::after{opacity:.16}
 html[data-theme="dark"] .ob-journal .bucket-row::after,html[data-theme="dark"] .ob-hero-num::after{opacity:.8}
-/* 深色下吊牌整体压暗（和色系滤镜叠加） */
-html[data-theme="dark"] .ob-chime-img{filter:var(--journal-sticker-filter,none) brightness(.86) drop-shadow(1px 3px 4px #0009)}
-html[data-theme="dark"] .ob-chime-tag:hover .ob-chime-img{filter:var(--journal-sticker-filter,none) brightness(.95) drop-shadow(1px 4px 6px #000a)}
-html[data-theme="dark"] .ob-chime-item.is-active .ob-chime-img{filter:var(--journal-sticker-filter,none) brightness(.98) drop-shadow(0 0 6px var(--accent)) drop-shadow(1px 3px 4px #0009)}
-html[data-theme="dark"] .ob-chime-bow{filter:var(--journal-sticker-filter,none) brightness(.9) drop-shadow(1px 3px 4px #0009)}
-.ob-chime-img{filter:var(--journal-sticker-filter,none) drop-shadow(1px 3px 3px var(--shadow-dark,#5f5a8f30))}
-.ob-chime-tag:hover .ob-chime-img{filter:var(--journal-sticker-filter,none) drop-shadow(1px 4px 5px var(--shadow-dark,#5f5a8f42)) brightness(1.03)}
-.ob-chime-item.is-active .ob-chime-img{filter:var(--journal-sticker-filter,none) drop-shadow(0 0 4px var(--accent-light)) drop-shadow(1px 3px 3px var(--shadow-dark,#5f5a8f30))}
-.ob-chime-bow{filter:var(--journal-sticker-filter,none) drop-shadow(1px 3px 3px var(--shadow-dark,#5f5a8f33))}
 
 /* ── 小猫吉祥物：每页抬头里坐一只，姿势各不相同 ── */
 .ob-hero::after{content:'';position:absolute;right:250px;bottom:-1px;width:112px;height:104px;pointer-events:none;
@@ -569,14 +562,12 @@ html[data-theme="dark"] .ob-chime-bow{filter:var(--journal-sticker-filter,none) 
 /* ── 顶部横条收紧：矮一点、字小一点，别把下面的贴纸压住 ── */
 .ob-journal .header{min-height:0!important;padding-top:8px!important;padding-bottom:8px!important;gap:14px}
 .ob-journal .header h1{font-size:26px!important;gap:10px}
-.ob-journal .ob-chime-bow{width:42px;height:42px}
 .ob-journal .header .stats,.ob-journal #heartbeat-indicator,.ob-journal #anchor-counter{font-size:10px!important}
 @media (min-width:701px){.ob-journal .header .header-actions button{height:30px!important;font-size:11px!important}}
 .ob-journal .header-meta{gap:4px 10px}
 @media (max-width:700px){
   .ob-journal .header{padding:8px 14px!important;gap:6px}
   .ob-journal .header h1{font-size:22px!important}
-  .ob-journal .ob-chime-bow{width:36px;height:36px}
 }
 
 /* 桌面顶栏单独排版；手机继续沿用原有布局。 */
