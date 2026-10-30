@@ -32,6 +32,26 @@
   var pw = function (p) { return Math.pow(Math.random(), p); };
   function esc(t) { return String(t || '').replace(/[&<>"]/g, function (m) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]; }); }
 
+  function memoryDomains(value) {
+    return (Array.isArray(value) ? value : [value]).filter(function (domain) {
+      return typeof domain === 'string' && domain.trim();
+    }).map(function (domain) { return domain.trim(); }).filter(function (domain, index, domains) {
+      return domains.indexOf(domain) === index;
+    });
+  }
+
+  function relatedMemories(memories, index) {
+    var source = memories[index].s;
+    var domains = memoryDomains(source.domains || source.domain).filter(function (domain) {
+      return !Object.prototype.hasOwnProperty.call(NOISE_DOM, domain);
+    });
+    return memories.map(function (memory, i) { return {m:memory, i:i}; }).filter(function (item) {
+      return item.i !== index && memoryDomains(item.m.s.domains || item.m.s.domain).some(function (domain) {
+        return domains.indexOf(domain) >= 0;
+      });
+    }).sort(function (a, b) { return b.m.imp - a.m.imp; }).slice(0, 8);
+  }
+
   var enginePromise = null;
   function loadEngine() {
     if (!enginePromise) {
@@ -63,8 +83,8 @@
       return res.json().then(function (data) {
         if (!res.ok || !Array.isArray(data)) throw new Error((data && data.error) || ('HTTP ' + res.status));
         return data.filter(function (b) { return !b.letter_locked; }).map(function (b) {
-          var domain = Array.isArray(b.domain) ? (b.domain[0] || '') : (b.domain || '');
-          return {id:b.id, name:b.name, domain:domain, importance:Number(b.importance) || 5,
+          var domains = memoryDomains(b.domain);
+          return {id:b.id, name:b.name, domain:domains[0] || '', domains:domains, importance:Number(b.importance) || 5,
             pinned:!!b.pinned, created:b.created || '', content:b.content_preview || ''};
         });
       });
@@ -225,6 +245,7 @@
     };
 
     function clearHighlight() {
+      host.dataset.constellationLinks = '0';
       if (hlLines) { scene.remove(hlLines); hlLines.geometry.dispose(); hlLines.material.dispose(); hlLines = null; }
       if (hlActive.length && memPoints) {
         var cA = memPoints.geometry.attributes.aColor, sA = memPoints.geometry.attributes.aSize;
@@ -240,9 +261,8 @@
     function highlight(index) {
       clearHighlight();
       var A = mem[index];
-      var rel = mem.map(function (m, i) { return {m:m, i:i}; }).filter(function (o) {
-        return o.i !== index && o.m.s.domain === A.s.domain && !NOISE_DOM[A.s.domain];
-      }).sort(function (a, b) { return b.m.imp - a.m.imp; }).slice(0, 8);
+      var rel = relatedMemories(mem, index);
+      host.dataset.constellationLinks = String(rel.length);
       var idxs = [index].concat(rel.map(function (o) { return o.i; }));
       var cA = memPoints.geometry.attributes.aColor, sA = memPoints.geometry.attributes.aSize;
       idxs.forEach(function (i, k) {
@@ -254,7 +274,8 @@
       rel.forEach(function (o) { lp.push(A.x, A.y, A.z, o.m.x, o.m.y, o.m.z); });
       if (lp.length) {
         var g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(lp, 3));
-        hlLines = new THREE.LineSegments(g, new THREE.LineBasicMaterial({color:new THREE.Color(A.color), transparent:true, opacity:.4, blending:THREE.AdditiveBlending, depthWrite:false}));
+        hlLines = new THREE.LineSegments(g, new THREE.LineBasicMaterial({color:new THREE.Color(A.color), transparent:true, opacity:.55, blending:THREE.AdditiveBlending, depthWrite:false, depthTest:false}));
+        hlLines.renderOrder = 1;
         scene.add(hlLines);
       }
     }
@@ -355,15 +376,15 @@
     host.innerHTML =
       '<canvas class="ob-galaxy-gl"></canvas>' +
       '<header class="ob-galaxy-head"><h2></h2><p class="sub"></p><p class="zh"></p><p class="count"></p></header>' +
-      '<div class="ob-galaxy-tools"><label class="ob-galaxy-sr" for="ob-galaxy-picker">寻找一颗记忆星</label>' +
-        '<select id="ob-galaxy-picker" class="ob-galaxy-picker" disabled><option value="">寻找一颗记忆星…</option></select></div>' +
+      '<div class="ob-galaxy-tools"><button type="button" id="ob-galaxy-picker" class="ob-galaxy-picker" aria-haspopup="listbox" aria-controls="ob-galaxy-menu" aria-expanded="false" disabled>寻找一颗记忆星…</button>' +
+        '<div id="ob-galaxy-menu" class="ob-galaxy-menu" role="listbox" aria-label="寻找一颗记忆星" hidden></div></div>' +
       '<p class="ob-galaxy-loading">entering the galaxy…</p>' +
       '<p class="ob-galaxy-hint">drag to orbit · scroll to fly · tap a star</p>' +
       '<div class="ob-galaxy-card" aria-live="polite">' +
         '<div class="c-head"><svg class="c-star" viewBox="0 0 32 32" aria-hidden="true"></svg>' +
         '<div class="c-title"><div class="t"></div><div class="en"></div></div>' +
         '<button type="button" class="c-close" aria-label="收起">✕</button></div>' +
-        '<div class="c-meta"><span class="c-date"></span><span class="c-tag"></span></div>' +
+        '<div class="c-meta"><span class="c-date"></span><span class="c-tag"></span><span class="c-related"></span></div>' +
         '<div class="c-body"></div>' +
         '<div class="c-acts"><button type="button" class="c-open">展开这段记忆 <i>Open</i></button></div>' +
       '</div>';
@@ -374,35 +395,97 @@
     host.querySelector('.zh').textContent = CONFIG.motto;
 
     var galaxy = null, current = null, loadingEl = host.querySelector('.ob-galaxy-loading'), card = host.querySelector('.ob-galaxy-card');
-    var picker = host.querySelector('.ob-galaxy-picker'), countEl = host.querySelector('.count');
-    function closeCard() { card.classList.remove('show'); current = null; picker.value = ''; if (galaxy) galaxy.clearHighlight(); }
+    var picker = host.querySelector('.ob-galaxy-picker'), menu = host.querySelector('.ob-galaxy-menu'), countEl = host.querySelector('.count');
+    var pickedId = '', pickerStars = [];
+    function closeMenu(restoreFocus) {
+      menu.hidden = true;
+      picker.setAttribute('aria-expanded', 'false');
+      if (restoreFocus) picker.focus({preventScroll:true});
+    }
+    function syncPicker() {
+      var selected = pickerStars.find(function (star) { return String(star.id) === pickedId; });
+      picker.textContent = selected ? memoryLabel(selected) : '寻找一颗记忆星…';
+      menu.querySelectorAll('[role=option]').forEach(function (option) {
+        option.setAttribute('aria-selected', String(option.dataset.memoryId === pickedId));
+      });
+    }
+    function closeCard() {
+      card.classList.remove('show'); current = null; pickedId = ''; syncPicker();
+      if (galaxy) galaxy.clearHighlight();
+    }
+    function memoryLabel(star) {
+      return (star.name && String(star.name).trim()) || String(star.content || '').slice(0, 16) || '（无题）';
+    }
     // 菜单按星河里的时间顺序列出每颗星；名称为空时取正文开头
     function fillPicker(stars) {
-      var keep = picker.value;
-      picker.replaceChildren(new Option('寻找一颗记忆星…', ''));
+      var focused = menu.contains(document.activeElement);
+      closeMenu(focused);
+      pickerStars = stars;
+      menu.replaceChildren();
       stars.forEach(function (s) {
-        var label = (s.name && String(s.name).trim()) || String(s.content || '').slice(0, 16) || '（无题）';
-        picker.append(new Option(label, s.id));
+        var option = document.createElement('button');
+        option.type = 'button'; option.className = 'ob-galaxy-option'; option.setAttribute('role', 'option');
+        option.dataset.memoryId = String(s.id); option.tabIndex = -1; option.textContent = memoryLabel(s);
+        menu.appendChild(option);
       });
       picker.disabled = !stars.length;
       countEl.textContent = stars.length + ' 颗记忆星';
-      picker.value = stars.some(function (s) { return String(s.id) === keep; }) ? keep : '';
+      if (!stars.some(function (s) { return String(s.id) === pickedId; })) pickedId = '';
+      syncPicker();
     }
-    picker.addEventListener('change', function () {
-      if (!picker.value) { closeCard(); return; }
-      var m = galaxy && galaxy.focus(picker.value);
-      if (m) openCard(m, m.isCore);
+    function openMenu(last) {
+      if (picker.disabled) return;
+      menu.hidden = false;
+      picker.setAttribute('aria-expanded', 'true');
+      var options = Array.from(menu.querySelectorAll('[role=option]'));
+      var option = last ? options[options.length - 1] : options.find(function (item) { return item.dataset.memoryId === pickedId; }) || options[0];
+      if (option) { option.focus({preventScroll:true}); option.scrollIntoView({block:'nearest'}); }
+    }
+    picker.addEventListener('click', function () { if (menu.hidden) openMenu(false); else closeMenu(false); });
+    picker.addEventListener('keydown', function (event) {
+      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+        event.preventDefault(); openMenu(event.key === 'ArrowUp');
+      } else if (event.key === 'Escape') { event.preventDefault(); closeMenu(false); }
     });
+    menu.addEventListener('click', function (event) {
+      var option = event.target.closest('[role=option]');
+      if (!option || !menu.contains(option)) return;
+      var m = galaxy && galaxy.focus(option.dataset.memoryId);
+      if (m) { openCard(m, m.isCore); closeMenu(true); }
+    });
+    menu.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape') { event.preventDefault(); closeMenu(true); return; }
+      if (event.key === 'Tab') { closeMenu(false); return; }
+      if (['ArrowDown','ArrowUp','Home','End'].indexOf(event.key) < 0) return;
+      event.preventDefault();
+      var options = Array.from(menu.querySelectorAll('[role=option]'));
+      var index = options.indexOf(document.activeElement);
+      var next = event.key === 'Home' ? 0 : event.key === 'End' ? options.length - 1
+        : (index + (event.key === 'ArrowDown' ? 1 : -1) + options.length) % options.length;
+      if (options[next]) { options[next].focus({preventScroll:true}); options[next].scrollIntoView({block:'nearest'}); }
+    });
+    document.addEventListener('pointerdown', function (event) {
+      if (!host.querySelector('.ob-galaxy-tools').contains(event.target)) closeMenu(false);
+    });
+    var authCover = document.getElementById('auth-overlay');
+    if (authCover) new MutationObserver(function () {
+      if (authCover.style.display !== 'none') closeMenu(false);
+    }).observe(authCover, {attributes:true,attributeFilter:['style']});
+    new MutationObserver(function () {
+      if (view.style.display === 'none') closeMenu(false);
+    }).observe(view, {attributes:true,attributeFilter:['style']});
     host.querySelector('.c-close').addEventListener('click', closeCard);
     host.querySelector('.c-open').addEventListener('click', function () {
       if (current && typeof window.showDetail === 'function') window.showDetail(current.id);
     });
     function openCard(m, isCore) {
-      var s = m.s; current = s; picker.value = String(s.id);
+      var s = m.s; current = s; pickedId = String(s.id); syncPicker();
       card.querySelector('.t').textContent = (s.name && String(s.name).trim()) || String(s.content || '').slice(0, 16) || '（无题）';
       card.querySelector('.en').textContent = isCore ? CONFIG.coreEn : '';
       card.querySelector('.c-date').textContent = String(s.created || '').slice(0, 10).replace(/-/g, '.');
       card.querySelector('.c-tag').textContent = s.pinned ? '置顶记忆' : (s.importance >= 8 ? '重要记忆' : (s.domain || '记忆'));
+      var relatedCount = Number(host.dataset.constellationLinks) || 0;
+      card.querySelector('.c-related').textContent = relatedCount ? '已连接 ' + relatedCount + ' 颗同类记忆星' : '暂无同类记忆星';
       card.querySelector('.c-star').innerHTML = '<path d="M16 2l2.4 11.6L30 16l-11.6 2.4L16 30l-2.4-11.6L2 16l11.6-2.4z" fill="' + esc(m.color) + '" opacity=".9"/>';
       card.querySelector('.c-body').innerHTML = '<div>' + esc(s.content || '（这颗记忆还没有正文）') + '</div>';
       card.querySelector('.c-body').scrollTop = 0;
@@ -435,7 +518,7 @@
           }
           galaxy.onPick = function (m) { openCard(m, m.isCore); };
         }
-        var reopen = picker.value;
+        var reopen = pickedId;
         closeCard();
         galaxy.setStars(r[1]);
         fillPicker(galaxy.ids().map(function (id) { return r[1].find(function (s) { return s.id === id; }); }));

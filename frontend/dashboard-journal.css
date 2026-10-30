@@ -235,16 +235,24 @@ html[data-theme="dark"] .ob-galaxy{border-color:#2c2938;box-shadow:0 10px 30px #
 .ob-galaxy-head .count{margin:8px 0 0;font-size:11.5px;color:rgba(232,212,244,.62);letter-spacing:.14em}
 .ob-galaxy-head .count:empty{display:none}
 /* 右上角「寻找一颗记忆星」：选中后点亮对应的星并展开卡片 */
-.ob-galaxy-tools{position:absolute;top:24px;right:22px;z-index:11;width:min(240px,44%)}
+.ob-galaxy-tools{position:absolute;top:24px;right:22px;z-index:22;width:min(240px,44%)}
 .ob-galaxy-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 #ob-galaxy .ob-galaxy-picker{appearance:none;-webkit-appearance:none;width:100%;min-height:36px;margin:0;padding:7px 30px 7px 13px!important;
   font:13px/1.4 'Songti SC','STSong','Noto Serif SC',serif;letter-spacing:.06em;color:#f3e6f8!important;
   background:rgba(22,12,34,.78) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23e8d4f4' stroke-width='1.3' stroke-linecap='round'/%3E%3C/svg%3E") right 12px center/11px 8px no-repeat!important;
   border:1px solid rgba(220,190,240,.32)!important;border-radius:99px!important;box-shadow:0 0 18px rgba(190,140,230,.18)!important;
-  text-overflow:ellipsis;white-space:nowrap;overflow:hidden;cursor:pointer}
+  text-overflow:ellipsis;white-space:nowrap;overflow:hidden;cursor:pointer;text-align:left;display:block}
 #ob-galaxy .ob-galaxy-picker:hover,#ob-galaxy .ob-galaxy-picker:focus-visible{border-color:rgba(240,200,240,.6)!important;outline:none}
 #ob-galaxy .ob-galaxy-picker:disabled{opacity:.5;cursor:default}
-#ob-galaxy .ob-galaxy-picker option{color:#2f2840;background:#f8f4fb}
+.ob-galaxy-menu{position:absolute;top:calc(100% + 8px);right:0;width:100%;max-height:min(300px,46vh);overflow-y:auto;overscroll-behavior:contain;
+  padding:5px;background:#1b1029;border:1px solid rgba(220,190,240,.38);border-radius:12px;box-shadow:0 12px 28px #0007;scrollbar-width:thin;scrollbar-color:#9c79b5 #1b1029}
+.ob-galaxy-menu[hidden]{display:none!important}
+#ob-galaxy .ob-galaxy-menu .ob-galaxy-option{display:block;width:100%;min-height:40px;height:auto;margin:0;padding:9px 10px!important;
+  border:0!important;border-radius:6px!important;box-shadow:none!important;background:transparent!important;color:#f3e6f8!important;
+  font:13px/1.5 'Songti SC','STSong','Noto Serif SC',serif;text-align:left;white-space:normal;overflow-wrap:anywhere;cursor:pointer;transform:none}
+#ob-galaxy .ob-galaxy-menu .ob-galaxy-option:is(:hover,:focus-visible,[aria-selected=true]){background:#ac86c533!important;outline:none}
+#ob-galaxy .ob-galaxy-menu .ob-galaxy-option:focus-visible{outline:1px solid #e8d4f4!important;outline-offset:-2px}
+.ob-galaxy-card .c-related{font-size:11px;color:rgba(232,208,244,.75)}
 .ob-galaxy-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;margin:0;z-index:12;
   font:italic 16px OmbreCover,'Cormorant Garamond',serif;color:rgba(225,205,240,.55);letter-spacing:.12em;pointer-events:none}
 .ob-galaxy-hint{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);margin:0;z-index:7;white-space:nowrap;pointer-events:none;
@@ -259,7 +267,7 @@ html[data-theme="dark"] .ob-galaxy{border-color:#2c2938;box-shadow:0 10px 30px #
 .ob-galaxy-card .c-title{flex:1}
 .ob-galaxy-card .c-title .t{font-size:17px;color:#fcf0fa;line-height:1.3;font-weight:500}
 .ob-galaxy-card .c-title .en{font:italic 12.5px OmbreCover,'Cormorant Garamond',serif;color:rgba(230,205,242,.7);letter-spacing:.1em;margin-top:1px}
-.ob-galaxy-card .c-meta{display:flex;align-items:center;gap:10px;margin:8px 0 12px}
+.ob-galaxy-card .c-meta{display:flex;align-items:center;gap:10px;margin:8px 0 12px;flex-wrap:wrap}
 .ob-galaxy-card .c-date{font:italic 13px OmbreCover,'Cormorant Garamond',serif;color:rgba(232,208,244,.75)}
 .ob-galaxy-card .c-tag{font-size:11px;color:#f5d9ee;background:rgba(210,140,200,.2);padding:3px 11px;border-radius:99px;border:1px solid rgba(230,170,220,.25)}
 .ob-galaxy-card .c-body{overflow-y:auto;font-weight:300;font-size:14px;line-height:2.05;color:rgba(244,234,248,.9);white-space:pre-wrap;
@@ -410,7 +418,7 @@ html.ob-theme-fading body,html.ob-theme-fading body *,html.ob-theme-fading body:
 /* 2：方格纸 + 回形针 */
 .ob-journal .bucket-row:nth-child(4n+2){
   background-image:linear-gradient(var(--journal-grid) 1px,transparent 1px),linear-gradient(90deg,var(--journal-grid) 1px,transparent 1px)!important;background-size:16px 16px!important}
-.ob-journal .bucket-row:nth-child(4n+2)::after{top:-18px;right:30px;width:16px;height:46px;transform:rotate(8deg);background:var(--ob-sticker-clip) center/contain no-repeat}
+.ob-journal .bucket-row:nth-child(4n+2)::after{top:-16px;right:30px;width:12px;height:32px;transform:rotate(8deg);background:var(--ob-sticker-clip) center/contain no-repeat}
 /* 3：素纸 + 蝴蝶结 */
 .ob-journal .bucket-row:nth-child(4n+3){--tilt:.4deg}
 .ob-journal .bucket-row:nth-child(4n+3)::after{top:-16px;right:20px;width:46px;height:36px;transform:rotate(-8deg);background:var(--ob-sticker-bow) center/contain no-repeat;filter:drop-shadow(1px 2px 1px #5f5a8f2e)}
@@ -518,13 +526,14 @@ html[data-palette="mist"][data-theme="dark"] body.dreamcloud.ob-journal{
 
 /* ── 贴纸：从贴纸图里抠出来的蝴蝶结、胶带、邮戳、蕾丝，随色系换色 ── */
 .ob-journal .bucket-row::after,.ob-hero-num::after,.ob-journal::after,.ob-chime-img,.ob-chime-bow{filter:var(--journal-sticker-filter,none)}
-.ob-journal .bucket-row:nth-child(4n+1)::after{top:-20px;right:18px;width:104px;height:52px;transform:rotate(5deg);clip-path:none;
+/* 缩小后的贴纸跨在卡片上沿，标题在下方留出间距。 */
+.ob-journal .bucket-row:nth-child(4n+1)::after{top:-18px;right:18px;width:72px;height:36px;transform:rotate(5deg);clip-path:none;
   background:url('/static/sticker-tape-gingham.webp') center/contain no-repeat}
-.ob-journal .bucket-row:nth-child(4n+3)::after{top:-22px;right:14px;width:62px;height:56px;transform:rotate(-8deg);
+.ob-journal .bucket-row:nth-child(4n+3)::after{top:-20px;right:14px;width:42px;height:38px;transform:rotate(-8deg);
   background:url('/static/sticker-bow.webp') center/contain no-repeat;filter:var(--journal-sticker-filter,none) drop-shadow(1px 2px 1px #00000022)}
-.ob-journal .bucket-row:nth-child(8n+7)::after{top:-26px;right:18px;width:44px;height:58px;transform:rotate(10deg);
+.ob-journal .bucket-row:nth-child(8n+7)::after{top:-21px;right:18px;width:30px;height:40px;transform:rotate(10deg);
   background:url('/static/sticker-bow-heart.webp') center/contain no-repeat;filter:var(--journal-sticker-filter,none) drop-shadow(1px 2px 1px #00000022)}
-.ob-journal .bucket-row:nth-child(4n+4)::after{top:-19px;left:50%;width:110px;height:48px;margin-left:-55px;transform:rotate(-3deg);clip-path:none;
+.ob-journal .bucket-row:nth-child(4n+4)::after{top:-17px;left:50%;width:78px;height:34px;margin-left:-39px;transform:rotate(-3deg);clip-path:none;
   background:url('/static/sticker-tape-stripe.webp') center/contain no-repeat}
 .ob-journal .bucket-row:nth-child(8n+4) .bucket-row-bottom::after{width:66px;height:58px;opacity:.7;filter:var(--journal-sticker-filter,none);
   background:url('/static/sticker-stamp.webp') center/contain no-repeat}
@@ -622,7 +631,7 @@ body{min-height:calc(100vh * var(--ob-vk,1))}
 @media (max-width:700px){.ob-galaxy{height:max(420px,calc(100vh * var(--ob-vk,1) - 190px))}}
 /* 记忆桶卡片再小一号：只作用于列表卡片，详情与编辑面板保持原尺寸。 */
 .ob-journal .bucket-list{gap:18px}
-.ob-journal .bucket-row{padding:18px 16px 8px!important;row-gap:8px!important}
+.ob-journal .bucket-row{padding:24px 16px 8px!important;row-gap:8px!important}
 .ob-journal .bucket-row .icon{width:26px;height:26px;min-width:26px;border-radius:9px}
 .ob-journal .bucket-row .icon svg{width:14px;height:14px}
 .ob-journal .bucket-row .bucket-select{width:15px;height:15px}
@@ -634,7 +643,7 @@ body{min-height:calc(100vh * var(--ob-vk,1))}
 .ob-journal .ob-row-actions button{min-height:26px;padding:3px 9px;font-size:10.5px}
 @media(max-width:700px){
   .ob-journal .bucket-list{gap:16px}
-  .ob-journal .bucket-row{padding:16px 12px 7px!important}
+  .ob-journal .bucket-row{padding:24px 12px 7px!important}
   .ob-journal .bucket-row .bucket-row-bottom{padding-left:0}
   .ob-journal .bucket-row-top .name{font-size:13px!important}
   .ob-journal .ob-row-actions button{padding:3px 8px}

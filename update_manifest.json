@@ -102,13 +102,13 @@
     },
     {
       "path": "frontend/dashboard-galaxy.js",
-      "sha256": "af327dda6a3de2d96ff7ff596a40cdd5648aeaf52f19bab7579a6f0ca3433a30",
-      "size": 25887
+      "sha256": "ca176edbe3c447bf0b173db0497d6b30eea92934adbe636f1b1542dffeb406f2",
+      "size": 30442
     },
     {
       "path": "frontend/dashboard-journal.css",
-      "sha256": "282d2bf6817651e16aebdb75c9d48ac467169d13f50f8647f625853e242eee17",
-      "size": 56303
+      "sha256": "353239482a6372717afa4672438993d37b714105870dacff0d90bad69244f17f",
+      "size": 57460
     },
     {
       "path": "frontend/dashboard-journal.js",
