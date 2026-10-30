@@ -77,8 +77,8 @@
     },
     {
       "path": "frontend/dashboard-chime.js",
-      "sha256": "0c14398540b25347c5fc33e504a2713f8a2ea11aa43f798054fad5d059f20332",
-      "size": 15092
+      "sha256": "911dcdc754045d4675cd478d04dd09e0c769be8e484c2c594ba91fb0acc71b26",
+      "size": 14875
     },
     {
       "path": "frontend/dashboard-galaxy.js",

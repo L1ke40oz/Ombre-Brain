@@ -110,7 +110,7 @@
         en:tab.querySelector('.tab-en') ? tab.querySelector('.tab-en').textContent.trim() : ''};
     });
     if (typeof window.openSelfPanel === 'function') {
-      entries.splice(1, 0, {key:'self', zh:'我', en:'Me · You · Them', fallback:'breath',
+      entries.splice(1, 0, {key:'self', zh:'我', en:'Me · You · Them', image:'breath',
         action:function () { window.openSelfPanel(); }});
     }
 
@@ -128,13 +128,11 @@
       // 瓷釉吊牌图（丝带已画在图上）；图片缺失时退回内置 SVG。
       var img = document.createElement('img');
       img.className = 'ob-chime-img';
-      img.src = '/static/chime-' + key + '.webp';
+      img.src = '/static/chime-' + (entry.image || key) + '.webp';
       img.alt = '';
       img.draggable = false;
       img.decoding = 'async';
       img.addEventListener('error', function onError() {
-        // 专属吊牌图还没生成时先借用同形状的图，再不行就用内置 SVG。
-        if (entry.fallback && img.src.indexOf(entry.fallback) < 0) { img.src = '/static/chime-' + entry.fallback + '.webp'; return; }
         img.removeEventListener('error', onError);
         img.replaceWith(tagSvg(key));
       });
