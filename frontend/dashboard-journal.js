@@ -246,62 +246,6 @@
     }
   }
 
-  // 撕纸边遮罩：四条可平铺的锯齿边（SVG），由种子决定形状。随机游走出细碎毛边，偶尔撕出一道深口。
-  var TORN_DEPTH = 10;
-  var tornCache = new Map();
-  function seeded(text) {
-    var h = 2166136261;
-    for (var i = 0; i < text.length; i++) { h ^= text.charCodeAt(i); h = Math.imul(h, 16777619); }
-    return function () { h = Math.imul(h ^ (h >>> 15), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); h ^= h >>> 16; return (h >>> 0) / 4294967296; };
-  }
-  function tornStrip(rand, length) {
-    var d = TORN_DEPTH, points = [], x = 0, y = d * .45, start = y;
-    while (x < length) {
-      points.push([x, y]);
-      x += 2 + rand() * 5;
-      y += (rand() - .5) * 3.4;
-      if (rand() < .05) y = d * (.75 + rand() * .2);
-      if (rand() < .05) y = d * (.1 + rand() * .2);
-      y = Math.max(.8, Math.min(d - 1.2, y));
-    }
-    points.push([length, start]);
-    return points;
-  }
-  function tornSvg(points, length, vertical, flip) {
-    var d = TORN_DEPTH;
-    // p = [沿边位置, 撕口深度]；底边、右边把深度从另一侧量起
-    var path = points.map(function (p, i) {
-      var along = p[0], depth = flip ? d - p[1] : p[1];
-      var x = vertical ? depth : along, y = vertical ? along : depth;
-      return (i ? 'L' : 'M') + x.toFixed(1) + ' ' + y.toFixed(1);
-    }).join('');
-    // 封口：撕口以内（朝卡片中心的一侧）全部填满
-    var close = vertical
-      ? (flip ? 'L0 ' + length + 'L0 0Z' : 'L' + d + ' ' + length + 'L' + d + ' 0Z')
-      : (flip ? 'L' + length + ' 0L0 0Z' : 'L' + length + ' ' + d + 'L0 ' + d + 'Z');
-    var w = vertical ? d : length, h = vertical ? length : d;
-    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '"><path d="' + path + close + '"/></svg>';
-    return 'url("data:image/svg+xml,' + encodeURIComponent(svg) + '")';
-  }
-  function tornEdges(node, id) {
-    var key = String(id);
-    var edges = tornCache.get(key);
-    if (!edges) {
-      var rand = seeded(key);
-      edges = {
-        t: tornSvg(tornStrip(rand, 360), 360, false, false),
-        b: tornSvg(tornStrip(rand, 360), 360, false, true),
-        l: tornSvg(tornStrip(rand, 220), 220, true, false),
-        r: tornSvg(tornStrip(rand, 220), 220, true, true)
-      };
-      tornCache.set(key, edges);
-    }
-    node.style.setProperty('--torn-t', edges.t);
-    node.style.setProperty('--torn-b', edges.b);
-    node.style.setProperty('--torn-l', edges.l);
-    node.style.setProperty('--torn-r', edges.r);
-  }
-
   // 列表操作与行内编辑共享旧的表单和接口；刷新列表时移动现有节点保留草稿。
   function inlineMemories() {
     var view = document.getElementById('list-view');
@@ -316,14 +260,13 @@
       editors.forEach(function (state, id) { if (!live.has(id)) { state.host.remove(); editors.delete(id); } });
       view.querySelectorAll('#bucket-list .bucket-row[data-id],#forgotten-list .bucket-row[data-id]').forEach(function (row) {
         var id = row.dataset.id;
-        // 撕纸边：单独一层垫在卡片内容下面，编号签和胶带贴纸不会被裁掉；撕口按记忆 id 生成，每张不同且刷新不变
+        // 云朵花边纸：单独一层垫在卡片内容下面，编号签和胶带贴纸不会被花边裁掉
         if (!row.querySelector(':scope > .ob-row-paper')) {
           var paper = document.createElement('span');
           paper.className = 'ob-row-paper';
           paper.setAttribute('aria-hidden', 'true');
-          tornEdges(paper, id);
           row.insertBefore(paper, row.firstChild);
-          row.classList.add('ob-torn');
+          row.classList.add('ob-cloud');
         }
         var memory = data.find(function (b) { return String(b.id) === id; });
         if (!memory) return;
@@ -426,7 +369,54 @@
     decorate();
   }
 
-  function boot() { mount(); smoothTheme(); heroes(); inlineMemories(); }
+  function memoryRefresh() {
+    var button = document.getElementById('ob-refresh-memories');
+    if (!button) return;
+    var toast = document.createElement('div');
+    toast.className = 'ob-memory-toast';
+    toast.setAttribute('role', 'status');
+    toast.setAttribute('aria-live', 'polite');
+    toast.setAttribute('aria-atomic', 'true');
+    document.body.appendChild(toast);
+    var fadeMs = 180, holdMs = 1500, timer = null;
+    var cover = document.getElementById('auth-overlay');
+    function covered() { return cover && cover.style.display !== 'none'; }
+    function hideToast() {
+      clearTimeout(timer);
+      toast.classList.remove('is-visible');
+    }
+    function notify(message, failed) {
+      clearTimeout(timer);
+      toast.textContent = message;
+      toast.classList.toggle('is-error', !!failed);
+      toast.classList.add('is-visible');
+      // 淡入完成后完整停留 1.5 秒，再用 CSS 淡出。
+      var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      timer = setTimeout(hideToast, holdMs + (reduced ? 0 : fadeMs));
+    }
+    button.addEventListener('click', async function () {
+      if (button.disabled || covered()) return;
+      hideToast();
+      button.disabled = true;
+      button.setAttribute('aria-busy', 'true');
+      button.title = '正在刷新记忆…';
+      try {
+        var refreshed = await window.loadBuckets();
+        if (!covered()) notify(refreshed ? '已刷新' : '刷新失败，请重试', !refreshed);
+      } catch (_) {
+        if (!covered()) notify('刷新失败，请重试', true);
+      } finally {
+        button.disabled = false;
+        button.removeAttribute('aria-busy');
+        button.title = '刷新记忆';
+      }
+    });
+    if (cover) new MutationObserver(function () {
+      if (covered()) hideToast();
+    }).observe(cover, {attributes:true, attributeFilter:['style']});
+  }
+
+  function boot() { mount(); smoothTheme(); heroes(); inlineMemories(); memoryRefresh(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, {once:true});
   else boot();
 })();

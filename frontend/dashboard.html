@@ -2857,6 +2857,7 @@ html[data-palette="violet-mist"] .dreamcloud #memory-delete-confirm { color: var
     <button onclick="doSearch()" title="搜索"><i data-lucide="search"></i></button>
   </div>
   <div class="header-actions">
+    <button type="button" id="ob-refresh-memories" aria-label="刷新记忆" title="刷新记忆"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5M6.1 7a7 7 0 0 1 11.6-1L20 9M4 15l2.3 3A7 7 0 0 0 17.9 17"/></svg><span>刷新</span></button>
     <button type="button" id="theme-toggle" onclick="toggleDashboardTheme()" aria-label="切换到深色模式" title="切换到深色模式" aria-pressed="false"><span class="theme-toggle-icon" aria-hidden="true">☾</span><span class="theme-toggle-label">深色</span></button>
     <button id="btn-restart" onclick="restartService()" title="重启服务；红点表示有设置等待重启生效" style="height:32px;padding:0 12px;gap:5px;display:inline-flex;align-items:center;white-space:nowrap;font-size:12px;"><span class="restart-dot"></span><i data-lucide="power"></i> 重启</button>
 
@@ -6270,10 +6271,12 @@ async function loadBuckets() {
       renderBuckets(filterBuckets(allBuckets), true);
     }
     if (data.length === 0 && window.ObPet) window.ObPet.react('empty');
+    return true;
   } catch (e) {
     if (generation !== bucketLoadGeneration || requestedSort !== bucketSort) return;
     document.getElementById('bucket-list').innerHTML = '<div class="loading">加载失败: ' + esc(e.message) + '</div>';
     if (window.ObPet) window.ObPet.react('connection_error');
+    return false;
   }
 }
 

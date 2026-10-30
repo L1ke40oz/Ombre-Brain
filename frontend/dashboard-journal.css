@@ -169,6 +169,7 @@ body.dreamcloud.ob-journal::before{
   background-blend-mode:var(--journal-sky-blend,normal);
 }
 .ob-journal .header{
+  position:sticky!important;top:0;z-index:50;
   background:var(--theme-header)!important;backdrop-filter:none!important;
   border-bottom:1px dashed var(--journal-line)!important;
 }
@@ -645,38 +646,66 @@ html[data-theme="dark"] .ob-journal #letters-view .config-section:first-of-type:
 /* 斜放的贴纸不能把页面撑出横向滚动：裁剪放在 body（即屏幕边缘），页面内的贴纸如蝴蝶不会被截断 */
 body.ob-journal{overflow-x:clip}
 @media (max-width:700px){.ob-journal #letters-view .config-section:first-of-type::before{right:4px;top:-26px;width:54px;height:92px}}
-/* ── 记忆卡片：撕纸边 ──
-   卡片本身透明，纸张画在 .ob-row-paper：外层负责描边与投影（filter 先于遮罩生效，投影放外层）；
-   ::before 是纸面，四条撕口遮罩（--torn-*，由 dashboard-journal.js 按记忆 id 生成）拼出不规则毛边；
-   ::after 用同样的撕口、略大一圈的浅色纸，透出撕开处的白色纤维边。 */
-.ob-journal .bucket-row.ob-torn,.ob-journal .bucket-row.ob-torn:nth-child(n),.ob-journal .bucket-row.ob-torn:nth-child(n):hover{
+/* ── 记忆卡片：云朵花边纸 ──
+   卡片本身透明，纸张画在 .ob-row-paper 这一层：外层负责描边与投影（filter 先于遮罩生效，所以投影放外层），
+   ::before 是用遮罩剪出圆弧花边的纸面（含横线/方格/点阵纹理），::after 是内圈虚线缝线。 */
+.ob-journal .bucket-row.ob-cloud,.ob-journal .bucket-row.ob-cloud:nth-child(n),.ob-journal .bucket-row.ob-cloud:nth-child(n):hover{
   background:transparent!important;border-color:transparent!important;box-shadow:none!important;outline:0;isolation:isolate}
-.ob-row-paper{position:absolute;inset:0;z-index:-1;pointer-events:none;--d:10px;
-  filter:drop-shadow(0 0 .5px var(--journal-line,#c3bad8)) drop-shadow(1px 3px 2px var(--shadow-dark,rgba(110,98,140,.1)));
+.ob-row-paper{position:absolute;inset:0;z-index:-1;pointer-events:none;
+  filter:drop-shadow(0 0 .6px var(--journal-line,#c3bad8)) drop-shadow(1px 3px 2px var(--shadow-dark,rgba(110,98,140,.1)));
   transition:filter .2s}
-.ob-journal .bucket-row.ob-torn:hover .ob-row-paper{filter:drop-shadow(0 0 .5px var(--journal-line,#c3bad8)) drop-shadow(2px 6px 5px var(--shadow-dark,rgba(110,98,140,.14)))}
-.ob-row-paper::before,.ob-row-paper::after{content:'';position:absolute;inset:0;
+.ob-journal .bucket-row.ob-cloud:hover .ob-row-paper{filter:drop-shadow(0 0 .6px var(--journal-line,#c3bad8)) drop-shadow(2px 6px 5px var(--shadow-dark,rgba(110,98,140,.14)))}
+.ob-row-paper::before{content:'';position:absolute;inset:0;background-color:var(--journal-paper,#fffefd);
+  --r:11px;
   -webkit-mask:
-    linear-gradient(#000 0 0) center/calc(100% - 2*var(--d)) calc(100% - 2*var(--d)) no-repeat,
-    var(--torn-t) top/auto var(--d) round no-repeat,
-    var(--torn-b) bottom/auto var(--d) round no-repeat,
-    var(--torn-l) left/var(--d) auto no-repeat round,
-    var(--torn-r) right/var(--d) auto no-repeat round;
+    linear-gradient(#000 0 0) center/calc(100% - 2*var(--r)) calc(100% - 2*var(--r)) no-repeat,
+    radial-gradient(circle var(--r),#000 96%,#0000) top/calc(1.7*var(--r)) calc(2*var(--r)) round no-repeat,
+    radial-gradient(circle var(--r),#000 96%,#0000) bottom/calc(1.7*var(--r)) calc(2*var(--r)) round no-repeat,
+    radial-gradient(circle var(--r),#000 96%,#0000) left/calc(2*var(--r)) calc(1.7*var(--r)) no-repeat round,
+    radial-gradient(circle var(--r),#000 96%,#0000) right/calc(2*var(--r)) calc(1.7*var(--r)) no-repeat round;
   mask:
-    linear-gradient(#000 0 0) center/calc(100% - 2*var(--d)) calc(100% - 2*var(--d)) no-repeat,
-    var(--torn-t) top/auto var(--d) round no-repeat,
-    var(--torn-b) bottom/auto var(--d) round no-repeat,
-    var(--torn-l) left/var(--d) auto no-repeat round,
-    var(--torn-r) right/var(--d) auto no-repeat round}
-.ob-row-paper::before{z-index:1;background-color:var(--journal-paper,#fffefd);inset:2px}
-/* 撕口处的纤维白边：比纸面大一圈，颜色更浅 */
-.ob-row-paper::after{z-index:0;background:color-mix(in srgb,var(--journal-paper,#fffefd) 55%,#fff);opacity:.9}
-html[data-theme="dark"] .ob-row-paper::after{background:color-mix(in srgb,var(--journal-paper,#211e2f) 80%,#fff);opacity:.55}
-/* 四种纸纹照旧轮换，画在撕纸上 */
-.ob-journal .bucket-row.ob-torn:nth-child(4n+1) .ob-row-paper::before{background-image:repeating-linear-gradient(180deg,transparent 0 27px,var(--journal-rule) 27px 28px);background-position:0 14px}
-.ob-journal .bucket-row.ob-torn:nth-child(4n+2) .ob-row-paper::before{background-image:linear-gradient(var(--journal-grid) 1px,transparent 1px),linear-gradient(90deg,var(--journal-grid) 1px,transparent 1px);background-size:16px 16px}
-.ob-journal .bucket-row.ob-torn:nth-child(4n+4) .ob-row-paper::before{background-image:radial-gradient(var(--journal-dot) 1px,transparent 1.3px);background-size:14px 14px}
-/* 毛边会吃掉一点边距，内容往里收 */
-.ob-journal .bucket-row.ob-torn{padding-left:20px!important;padding-right:20px!important}
-@media(max-width:700px){.ob-journal .bucket-row.ob-torn{padding-left:16px!important;padding-right:16px!important}}
+    linear-gradient(#000 0 0) center/calc(100% - 2*var(--r)) calc(100% - 2*var(--r)) no-repeat,
+    radial-gradient(circle var(--r),#000 96%,#0000) top/calc(1.7*var(--r)) calc(2*var(--r)) round no-repeat,
+    radial-gradient(circle var(--r),#000 96%,#0000) bottom/calc(1.7*var(--r)) calc(2*var(--r)) round no-repeat,
+    radial-gradient(circle var(--r),#000 96%,#0000) left/calc(2*var(--r)) calc(1.7*var(--r)) no-repeat round,
+    radial-gradient(circle var(--r),#000 96%,#0000) right/calc(2*var(--r)) calc(1.7*var(--r)) no-repeat round}
+.ob-row-paper::after{content:'';position:absolute;inset:9px;border:1px dashed var(--journal-stitch,#c7bfd666);border-radius:16px}
+/* 四种纸纹照旧轮换，只是画在花边纸上 */
+.ob-journal .bucket-row.ob-cloud:nth-child(4n+1) .ob-row-paper::before{background-image:repeating-linear-gradient(180deg,transparent 0 27px,var(--journal-rule) 27px 28px);background-position:0 14px}
+.ob-journal .bucket-row.ob-cloud:nth-child(4n+2) .ob-row-paper::before{background-image:linear-gradient(var(--journal-grid) 1px,transparent 1px),linear-gradient(90deg,var(--journal-grid) 1px,transparent 1px);background-size:16px 16px}
+.ob-journal .bucket-row.ob-cloud:nth-child(4n+4) .ob-row-paper::before{background-image:radial-gradient(var(--journal-dot) 1px,transparent 1.3px);background-size:14px 14px}
+/* 花边比直边多占一点，内容往里收；编号签贴在花边上 */
+.ob-journal .bucket-row.ob-cloud{padding-left:20px!important;padding-right:20px!important}
+@media(max-width:700px){
+  .ob-row-paper::before{--r:9px}
+  .ob-row-paper::after{inset:8px;border-radius:13px}
+  .ob-journal .bucket-row.ob-cloud{padding-left:16px!important;padding-right:16px!important}
+}
+
+/* 右上角刷新记忆；轻量胶囊提示随当前纸色与重点色变化。 */
+.ob-journal .header #ob-refresh-memories{display:inline-flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap}
+#ob-refresh-memories svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+#ob-refresh-memories[aria-busy=true] svg{animation:ob-refresh-spin .8s linear infinite}
+#ob-refresh-memories:disabled{cursor:wait;opacity:.55}
+@keyframes ob-refresh-spin{to{transform:rotate(360deg)}}
+.ob-memory-toast{
+  position:fixed;top:max(76px,calc(env(safe-area-inset-top) + 16px));left:50%;z-index:500;
+  transform:translateX(-50%);max-width:calc(100% - 40px);padding:10px 24px;
+  border:1px solid var(--journal-edge,#cec5dd);border-radius:999px;
+  background:var(--journal-paper,#fffefd);color:var(--accent-ink,#5f5385);
+  box-shadow:0 4px 18px var(--shadow-dark-subtle,#c4b9d433);
+  font:500 13px/1.5 'Songti SC','STSong','Noto Serif SC',serif;letter-spacing:1px;text-align:center;
+  pointer-events:none;opacity:0;visibility:hidden;
+  transition:opacity .18s ease,visibility 0s linear .18s;
+}
+.ob-memory-toast.is-visible{opacity:1;visibility:visible;transition-delay:0s}
+.ob-memory-toast.is-error{color:var(--negative,#a45268)}
+@media(max-width:700px){
+  #ob-refresh-memories span{display:none}
+  .ob-journal .header-actions{gap:3px}
+}
+@media(prefers-reduced-motion:reduce){
+  #ob-refresh-memories[aria-busy=true] svg{animation:none}
+  .ob-memory-toast{transition:none}
+}
 
