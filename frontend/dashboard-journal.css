@@ -169,6 +169,7 @@ body.dreamcloud.ob-journal::before{
   background-blend-mode:var(--journal-sky-blend,normal);
 }
 .ob-journal .header{
+  position:sticky!important;top:0;z-index:50;
   background:var(--theme-header)!important;backdrop-filter:none!important;
   border-bottom:1px dashed var(--journal-line)!important;
 }
@@ -679,4 +680,31 @@ html[data-theme="dark"] .ob-row-paper::after{background:color-mix(in srgb,var(--
 /* 毛边会吃掉一点边距，内容往里收 */
 .ob-journal .bucket-row.ob-torn{padding-left:20px!important;padding-right:20px!important}
 @media(max-width:700px){.ob-journal .bucket-row.ob-torn{padding-left:16px!important;padding-right:16px!important}}
+
+/* 右上角刷新记忆；轻量胶囊提示随当前纸色与重点色变化。 */
+.ob-journal .header #ob-refresh-memories{display:inline-flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap}
+#ob-refresh-memories svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+#ob-refresh-memories[aria-busy=true] svg{animation:ob-refresh-spin .8s linear infinite}
+#ob-refresh-memories:disabled{cursor:wait;opacity:.55}
+@keyframes ob-refresh-spin{to{transform:rotate(360deg)}}
+.ob-memory-toast{
+  position:fixed;top:max(76px,calc(env(safe-area-inset-top) + 16px));left:50%;z-index:500;
+  transform:translateX(-50%);max-width:calc(100% - 40px);padding:10px 24px;
+  border:1px solid var(--journal-edge,#cec5dd);border-radius:999px;
+  background:var(--journal-paper,#fffefd);color:var(--accent-ink,#5f5385);
+  box-shadow:0 4px 18px var(--shadow-dark-subtle,#c4b9d433);
+  font:500 13px/1.5 'Songti SC','STSong','Noto Serif SC',serif;letter-spacing:1px;text-align:center;
+  pointer-events:none;opacity:0;visibility:hidden;
+  transition:opacity .18s ease,visibility 0s linear .18s;
+}
+.ob-memory-toast.is-visible{opacity:1;visibility:visible;transition-delay:0s}
+.ob-memory-toast.is-error{color:var(--negative,#a45268)}
+@media(max-width:700px){
+  #ob-refresh-memories span{display:none}
+  .ob-journal .header-actions{gap:3px}
+}
+@media(prefers-reduced-motion:reduce){
+  #ob-refresh-memories[aria-busy=true] svg{animation:none}
+  .ob-memory-toast{transition:none}
+}
 

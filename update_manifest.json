@@ -57,18 +57,18 @@
     },
     {
       "path": "frontend/dashboard-journal.css",
-      "sha256": "19bdda09d5aed87578fcf5528780e734463ad8ea3fc37f5acf91f92b92e5d021",
-      "size": 59158
+      "sha256": "6b1d6ae2ee017220299bfa51e43baa50a17b526f897dbdb20e513d82d51c4859",
+      "size": 60740
     },
     {
       "path": "frontend/dashboard-journal.js",
-      "sha256": "0b47864a2537384315956e3d30e7682faa76702ee8328843b163ab397458148f",
-      "size": 23512
+      "sha256": "9a1abb206ad852ae99eb502c2d381a01945bd00e74c1d1e1f802d151210d3080",
+      "size": 25423
     },
     {
       "path": "frontend/dashboard.html",
-      "sha256": "7e47deb12b9f70327d9038eb511cbf5963b4cdafb0f497ef372e1dc653abf61c",
-      "size": 620950
+      "sha256": "fde0aa55c3b65a5669879619a870b7bff4604b4581af004b06a1d14b80daaa09",
+      "size": 621254
     },
     {
       "path": "frontend/galaxy-engine-LICENSE.txt",

@@ -426,7 +426,54 @@
     decorate();
   }
 
-  function boot() { mount(); smoothTheme(); heroes(); inlineMemories(); }
+  function memoryRefresh() {
+    var button = document.getElementById('ob-refresh-memories');
+    if (!button) return;
+    var toast = document.createElement('div');
+    toast.className = 'ob-memory-toast';
+    toast.setAttribute('role', 'status');
+    toast.setAttribute('aria-live', 'polite');
+    toast.setAttribute('aria-atomic', 'true');
+    document.body.appendChild(toast);
+    var fadeMs = 180, holdMs = 1500, timer = null;
+    var cover = document.getElementById('auth-overlay');
+    function covered() { return cover && cover.style.display !== 'none'; }
+    function hideToast() {
+      clearTimeout(timer);
+      toast.classList.remove('is-visible');
+    }
+    function notify(message, failed) {
+      clearTimeout(timer);
+      toast.textContent = message;
+      toast.classList.toggle('is-error', !!failed);
+      toast.classList.add('is-visible');
+      // 淡入完成后完整停留 1.5 秒，再用 CSS 淡出。
+      var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      timer = setTimeout(hideToast, holdMs + (reduced ? 0 : fadeMs));
+    }
+    button.addEventListener('click', async function () {
+      if (button.disabled || covered()) return;
+      hideToast();
+      button.disabled = true;
+      button.setAttribute('aria-busy', 'true');
+      button.title = '正在刷新记忆…';
+      try {
+        var refreshed = await window.loadBuckets();
+        if (!covered()) notify(refreshed ? '已刷新' : '刷新失败，请重试', !refreshed);
+      } catch (_) {
+        if (!covered()) notify('刷新失败，请重试', true);
+      } finally {
+        button.disabled = false;
+        button.removeAttribute('aria-busy');
+        button.title = '刷新记忆';
+      }
+    });
+    if (cover) new MutationObserver(function () {
+      if (covered()) hideToast();
+    }).observe(cover, {attributes:true, attributeFilter:['style']});
+  }
+
+  function boot() { mount(); smoothTheme(); heroes(); inlineMemories(); memoryRefresh(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, {once:true});
   else boot();
 })();
