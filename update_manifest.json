@@ -67,8 +67,8 @@
     },
     {
       "path": "frontend/dashboard.html",
-      "sha256": "481056204d9906e0460c97d6dc44f5adab418b7f851a9e2856ab79892fce097d",
-      "size": 621456
+      "sha256": "36387dc0afdb360084ac7650b8c0fe2f343acf102b30745284f97cea23675a7a",
+      "size": 621672
     },
     {
       "path": "frontend/galaxy-engine-LICENSE.txt",
@@ -302,8 +302,8 @@
     },
     {
       "path": "src/github_sync.py",
-      "sha256": "c0e7e668a012874de6ef586cae1a20f89df6d4fac1079881c17a6195db5727bf",
-      "size": 53898
+      "sha256": "592a66795b49dc78f71447af6964bc6a4b23bb726dd73e544dea3e7e9f55e5b3",
+      "size": 62179
     },
     {
       "path": "src/import_memory.py",

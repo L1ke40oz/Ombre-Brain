@@ -53,6 +53,109 @@ def test_backup_manifest_refuses_dangling_source_reference():
         sync._build_backup_manifest({"dynamic/a.md": bucket})
 
 
+@pytest.mark.parametrize("scenario", ["restore", "damaged", "missing", "conflict", "public", "local-missing"])
+@pytest.mark.asyncio
+async def test_attachment_sync_and_restore(monkeypatch, tmp_path, scenario):
+    source = tmp_path / "source"
+    target = tmp_path / "target"
+    picture = b"\x89PNG\r\n\x1a\n\xffimage"
+    if scenario == "restore":
+        picture += b"\x00" * (3 * 1024 * 1024)
+    attachment = f"_media/a/{hashlib.sha256(picture).hexdigest()}.png"
+    bucket = frontmatter.dumps(frontmatter.Post("Test memory", media=[
+        {"path": attachment, "stored": True},
+        {"path": "/astrbot/data/temp/old.png"},
+    ])).encode()
+    (source / "dynamic").mkdir(parents=True)
+    (source / "dynamic/a.md").write_bytes(bucket)
+    (source / attachment).parent.mkdir(parents=True)
+    (source / attachment).write_bytes(picture)
+    (source / "_media/a/orphan.md").write_bytes(b"Unreferenced file")
+    sync = GitHubSync(token="token", repo="owner/repo")
+    tree = {}
+    blobs = {}
+    branch_head = "initial-head"
+    calls = []
+
+    def put_blob(content):
+        sha = hashlib.sha256(content).hexdigest()
+        blobs[sha] = content
+        return sha
+
+    async def fake_request(_client, method, url, *, json=None):
+        nonlocal branch_head
+        calls.append((method, url))
+        endpoint = url.split("/repos/owner/repo", 1)[1]
+        payload = None
+        if endpoint == "" and method == "GET":
+            payload = {"visibility": "public" if scenario == "public" else "private"}
+        elif endpoint == "/git/ref/heads/main" and method == "GET":
+            payload = {"object": {"sha": branch_head}}
+        elif endpoint.startswith("/git/commits/") and method == "GET":
+            payload = {"tree": {"sha": "tree"}}
+        elif endpoint == "/git/blobs" and method == "POST":
+            assert json["encoding"] == "base64"
+            payload = {"sha": put_blob(base64.b64decode(json["content"], validate=True))}
+        elif endpoint == "/git/trees" and method == "POST":
+            for entry in json["tree"]:
+                blob = entry.get("sha") or put_blob(entry["content"].encode())
+                tree[entry["path"]] = {"type": "blob", "path": entry["path"], "sha": blob, "size": len(blobs[blob])}
+            payload = {"sha": "tree"}
+        elif endpoint == "/git/commits" and method == "POST":
+            payload = {"sha": "backup-head"}
+        elif endpoint == "/git/refs/heads/main" and method == "PATCH":
+            branch_head = json["sha"]
+            payload = {"object": {"sha": branch_head}}
+        elif endpoint == "/git/trees/tree?recursive=1" and method == "GET":
+            payload = {"tree": list(tree.values())}
+        elif endpoint.startswith("/git/blobs/") and method == "GET":
+            content = blobs[endpoint.rsplit("/", 1)[1]]
+            payload = {"encoding": "base64", "content": base64.b64encode(content).decode()}
+        assert payload is not None, (method, endpoint)
+        return _json_response(method, url, 200, payload)
+
+    monkeypatch.setattr(sync, "_request", fake_request)
+    if scenario == "local-missing":
+        (source / attachment).unlink()
+        result = await sync.sync(str(source))
+        assert result["ok"] is False
+        assert "Referenced attachment is missing" in result["error"]
+        assert calls == []
+        return
+    result = await sync.sync(str(source))
+    if scenario == "public":
+        assert result["ok"] is False
+        assert all(method == "GET" for method, _ in calls)
+        return
+    assert result == {"ok": True, "uploaded": 2, "media_uploaded": 1}
+    assert set(tree) == {"ombre/dynamic/a.md", f"ombre/{attachment}", "ombre/_ombre_backup_manifest.json"}
+    assert blobs[tree[f"ombre/{attachment}"]["sha"]] == picture
+    if scenario == "damaged":
+        blobs[tree[f"ombre/{attachment}"]["sha"]] = b"corrupted"
+    elif scenario == "missing":
+        del tree[f"ombre/{attachment}"]
+    elif scenario == "conflict":
+        (target / attachment).parent.mkdir(parents=True)
+        (target / attachment).write_bytes(b"existing bytes")
+    else:
+        old_attachment = f"ombre/_media/a/{'0' * 64}.png"
+        tree[old_attachment] = {"type": "blob", "path": old_attachment, "sha": "stale", "size": 3}
+
+    restored = await sync.import_from_github(str(target))
+    if scenario in {"damaged", "missing", "conflict"}:
+        assert restored["ok"] is False
+        assert not (target / "dynamic/a.md").exists()
+        if scenario == "conflict":
+            assert (target / attachment).read_bytes() == b"existing bytes"
+    else:
+        assert restored["ok"] is True
+        assert restored["buckets_imported"] == 1
+        assert restored["media_imported"] == 1
+        assert (target / attachment).read_bytes() == picture
+        assert (target / "dynamic/a.md").read_bytes() == bucket
+        assert not (target / old_attachment.removeprefix("ombre/")).exists()
+
+
 @pytest.mark.asyncio
 async def test_sync_includes_transactional_you_snapshot(monkeypatch, tmp_path):
     vault = tmp_path / "vault"

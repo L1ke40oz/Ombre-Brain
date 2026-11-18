@@ -4102,7 +4102,7 @@ html[data-palette="violet-mist"] .dreamcloud #memory-delete-confirm { color: var
       <p style="font-size:12px;color:var(--text-light);margin:0 0 16px;line-height:1.7;">
         把你的记忆备份到自己的 GitHub 仓库，等于一份云端存档——换电脑、服务器挂了都能从这里拉回来。<br>
         <b>同步</b>＝把本地记忆<b>上传</b>到 GitHub；<b>导入</b>＝把 GitHub 上的记忆<b>拉回</b>本地。两个方向别搞反。<br>
-        <span style="color:var(--text-dim);">（只备份记忆本身；用于加速搜索的「向量索引」不上传，导入后会自动重建，不影响记忆内容。）</span>
+        <span style="color:var(--text-dim);">私有仓库可一并备份记忆引用的 _media 附件。向量索引在导入后重建。</span>
       </p>
 
       <div class="config-row">
@@ -8719,12 +8719,13 @@ async function runGithubSync() {
   var msg = document.getElementById('gh-msg');
   var btn = document.getElementById('gh-sync-btn');
   btn.disabled = true; btn.textContent = '同步中… / Syncing…';
-  msg.textContent = '正在上传 bucket 文件到 GitHub…'; msg.style.color = '';
+  msg.textContent = '正在备份记忆和已保存的附件…'; msg.style.color = '';
   try {
     var res = await authFetch('/api/github/sync', {method: 'POST'});
     var d = await readJsonSafe(res);
     if (d.ok) {
-      msg.innerHTML = _SV.ok + ' 同步完成，上传 ' + d.uploaded + ' 个文件';
+      var mediaCount = Number.isInteger(d.media_uploaded) ? d.media_uploaded : 0;
+      msg.innerHTML = _SV.ok + ' 同步完成，上传 ' + d.uploaded + ' 个文件（含 ' + mediaCount + ' 个附件）';
       msg.style.color = 'var(--success, green)';
       await loadGithubStatus();
     } else {
@@ -8754,7 +8755,8 @@ async function runGithubImport(force) {
       var restoredSources = Number.isInteger(d.sources_imported) && d.sources_imported > 0
         ? '，安装 ' + d.sources_imported + ' 份原文证据' : '';
       var extra = (d.skipped ? '，跳过 ' + d.skipped : '') + (d.truncated ? '（⚠️ 仓库文件过多被截断，部分未导入）' : '');
-      msg.innerHTML = _SV.ok + ' 导入完成：恢复 ' + restoredBuckets + ' 条记忆' + restoredSources + extra
+      var restoredMedia = Number.isInteger(d.media_imported) ? d.media_imported : 0;
+      msg.innerHTML = _SV.ok + ' 导入完成：恢复 ' + restoredBuckets + ' 条记忆' + restoredSources + '，恢复 ' + restoredMedia + ' 个附件' + extra
         + (d.pre_import_backup ? '<br><span style="color:var(--text-light)">本地备份：<code>' + esc(d.pre_import_backup) + '</code></span>' : '')
         + (d.integrity_warning ? '<br><span style="color:var(--negative)">' + _SV.warn + ' ' + esc(d.integrity_warning) + '</span>' : '');
       msg.style.color = d.integrity_warning ? 'var(--accent)' : 'var(--success, green)';
